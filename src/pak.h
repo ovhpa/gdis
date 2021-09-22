@@ -37,6 +37,7 @@ gchar filename[FILELEN];
 gint mode;              /* default render mode for atoms */
 gint perspective;
 gint antialias;
+gboolean scale_ball_size;
 gint shadowless;
 gint fog;
 gint axes;
@@ -82,8 +83,8 @@ gdouble fog_density;
 gdouble fog_start;
 
 /* geometry */
-gdouble ball_rad;
-gdouble stick_rad;
+gdouble ball_radius;
+gdouble stick_radius;
 gdouble stick_thickness;
 gdouble line_thickness;
 gdouble frame_thickness;
@@ -113,9 +114,9 @@ gdouble ghost_opacity;
 gdouble fg_colour[3];
 gdouble bg_colour[3];
 gdouble morph_colour[3];
-gdouble rsurf_colour[3];         /* re-entrant surface */
-gdouble label_colour[3];         /* geometry labels */
-gdouble title_colour[3];         /* axes titles */
+gdouble rsurf_colour[3];      /* re-entrant surface */
+gdouble label_colour[3];      /* geometry labels */
+gdouble title_colour[3];      /* axes titles */
 gdouble ribbon_colour[3];
 gchar *morph_finish;
 };
@@ -148,8 +149,8 @@ struct model_pak *diffract_model;
 GtkWidget *diffract_layer_total;
 GtkWidget *diffract_layer_order;
 /* globals for the atom properties dialog */
-GtkWidget *apd_label, *apd_type, *apd_charge, *apd_x, *apd_y, *apd_z;
-GtkWidget *apd_growth, *apd_region, *apd_translate;
+GtkWidget *apd_element, *apd_label, *apd_type, *apd_charge, *apd_mass, *apd_sof, \
+	  *apd_x, *apd_y, *apd_z, *apd_growth, *apd_region, *apd_translate;
 struct model_pak *apd_data;
 struct core_pak *apd_core;
 };
@@ -449,6 +450,7 @@ gint spacenum;
 gint lattice;
 gint pointgroup;
 gint cellchoice;
+gint originchoice;
 gint inversion;
 gint order;
 gchar centering;
@@ -1133,7 +1135,8 @@ gdouble zoom;
 gint show_names;
 gint show_title;
 gint show_frame_number;
-gint show_charge;
+gint show_core_charges;
+gint show_shell_charges;
 gint show_atom_charges;
 gint show_atom_labels;
 gint show_atom_types;
@@ -1155,6 +1158,14 @@ gint show_selection_labels;
 gint show_nmr_shifts;
 gint show_nmr_csa;
 gint show_nmr_efg;
+
+/* 2D regions */
+GtkWidget * custom_regions_frame;          //HACK HACK HACK
+GtkWidget * edit_regions_frame;            //HACK HACK HACK
+gint show_region1A;
+gint show_region1B;
+gint show_region2A;
+gint show_region2B;
 
 /* ghosts */
 gint num_atoms;

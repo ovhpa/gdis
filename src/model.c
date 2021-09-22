@@ -134,13 +134,14 @@ data->zmatrix = zmat_new();
 data->show_names = FALSE;
 data->show_title = TRUE;
 data->show_frame_number = TRUE;
-data->show_charge = FALSE;
 data->show_atom_charges = FALSE;
 data->show_atom_labels = FALSE;
 data->show_atom_types = FALSE;
 data->show_atom_index = FALSE;
 data->show_geom_labels = TRUE;
 data->show_cores = TRUE;
+data->show_core_charges = FALSE;
+data->show_shell_charges = FALSE;
 data->show_shells = FALSE;
 data->show_bonds = TRUE;
 data->show_hbonds = FALSE;
@@ -156,6 +157,12 @@ data->show_selection_labels = FALSE;
 data->show_nmr_shifts = FALSE;
 data->show_nmr_csa = FALSE;
 data->show_nmr_efg = FALSE;
+
+/* Marvin regions */
+data->show_region1A = TRUE;
+data->show_region1B = TRUE;
+data->show_region2A = TRUE;
+data->show_region2B = TRUE;
 
 /* NEW */
 data->property_table = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, property_free);
@@ -650,6 +657,8 @@ coords_init_units(data);
 /* convert input cartesian coords to fractional */
 if (!data->fractional)
   coords_make_fractional(data);
+else
+  check_fractional(data);
 
 /* initialize the spatial partitioning */
 zone_init(data);
@@ -675,7 +684,7 @@ data->region_max = region_max(data);
 if (data->periodic == 3)
   {
   if (!data->sginfo.spacenum)
-    data->sginfo.spacenum=1;
+    data->sginfo.spacenum = 1;
   if (space_lookup(data))
     gui_text_show(ERROR, "Error in Space Group lookup.\n");
 
@@ -722,16 +731,16 @@ if (data->gulp.ensemble == NPT)
   switch (data->periodic)
     {
     case 3:
-      n=6;
+      n = 6;
       break;
     case 2:
-      n=3;
+      n = 3;
       break;
     case 1:
-      n=1;
+      n = 1;
       break;
     default:
-      n=0;
+      n = 0;
     }
 
 /* cell vectors */
@@ -829,6 +838,34 @@ printf("end prep: %p\n", data);
 error_table_print_all();
 
 return(0);
+}
+
+/*****************************************/
+/* calculate density of 3D cell in g/cm3 */
+/*****************************************/
+gdouble model_density(struct model_pak *model)
+{
+gdouble density, volume;
+GSList *list;
+struct core_pak *core;
+
+density = 0.0;
+volume = model->volume;
+
+if ( volume != 0.0 )
+  {
+  /* loop over cores */
+  for (list=model->cores ; list ; list=g_slist_next(list))
+    {
+    core = list->data;
+    if( core->status & (DELETED | HIDDEN))
+      continue;
+    density += atom_mass(core);
+    }
+  density /= (AVOGADRO*volume*1e-24);
+  }
+
+return(density);
 }
 
 /*************************************************/
@@ -935,13 +972,13 @@ g_free(data->title);
 
 space_free(&data->sginfo);
 
-/*free vasp pointer*/
+/* free vasp pointer */
 if(data->vasp!=NULL){
 	free_vasp_out(data->vasp);
 	g_free(data->vasp);
 	data->vasp=NULL;
 }
-/*free uspex pointer*/
+/* free uspex pointer */
 if(data->uspex!=NULL){
 	free_uspex_out(data->uspex);
 	g_free(data->uspex);
@@ -1073,7 +1110,7 @@ sysenv.mal = g_slist_remove(sysenv.mal, model);
 g_free(model);
 
 /* update */
-sysenv.refresh_dialog=TRUE;
+sysenv.refresh_dialog = TRUE;
 canvas_shuffle();
 redraw_canvas(ALL);
 }
@@ -1204,7 +1241,7 @@ gchar *value;
  * thread.
  * FIX: use static allocation for value.
  */
-gchar value[MAX_VALUE_SIZE];//_BUG_OVHPA_1
+gchar value[MAX_VALUE_SIZE]; //_BUG_OVHPA_1
 };
 
 /*************************/
@@ -1237,6 +1274,7 @@ return(0);
 /* add a pre-ranked new model property */
 /***************************************/
 /* NB: property is not displayed if rank = 0 */
+#define DEBUG_PROPERTY 0
 void property_add_ranked(guint rank,
                          const gchar *key,
                          const gchar *value,
@@ -1249,30 +1287,33 @@ g_assert(model != NULL);
 /* check if label already exists */
 p = g_hash_table_lookup(model->property_table, key);
 if (p)
-  {//_BUG_OVHPA_1
-#define DEBUG_PROPERTY 0
-	if(value==NULL) return;/*refuse to update with a null value*/
-	if(value[0]=='\0') return;/*refuse to update with no value*/
-	if(g_strlcpy(p->value,value,MAX_VALUE_SIZE)>=MAX_VALUE_SIZE)
-		fprintf(stderr,"_BUG_ the MAX_VALUE_SIZE (=%i) must be increase and code recompiled!.\n",MAX_VALUE_SIZE);
-	p->rank = rank;
-	model->property_list = g_slist_remove(model->property_list, p);
+  { //_BUG_OVHPA_1
+  if (value == NULL)
+    return; /* refuse to update with a null value */
+  if (value[0] == '\0')
+    return; /* refuse to update with no value */
+  if (g_strlcpy(p->value, value, MAX_VALUE_SIZE) >= MAX_VALUE_SIZE)
+    fprintf(stderr, "_BUG_ the MAX_VALUE_SIZE (=%i) must be increased and code recompiled!.\n", MAX_VALUE_SIZE);
+  p->rank = rank;
+  model->property_list = g_slist_remove(model->property_list, p);
+
 #if DEBUG_PROPERTY
-fprintf(stdout,"#DBG: update old %i: %s %s -> ",p->rank,p->label,p->value);
-fprintf(stdout,"new %i: %s %s\n",rank,key,value);
-#endif//DEBUG_PROPERTY
+fprintf(stdout, "#DBG: update old %i: %s %s -> ", p->rank, p->label, p->value);
+fprintf(stdout, "new %i: %s %s\n", rank, key, value);
+#endif //DEBUG_PROPERTY
   }
 else
   {
 /* create new property */
   p = g_malloc(sizeof(struct property_pak));
-  if(g_strlcpy(p->value,value,MAX_VALUE_SIZE)>=MAX_VALUE_SIZE)
-		fprintf(stderr,"_BUG_ the MAX_VALUE_SIZE (=%i) must be increase and code recompiled!.\n",MAX_VALUE_SIZE);
+  if(g_strlcpy(p->value, value, MAX_VALUE_SIZE) >= MAX_VALUE_SIZE)
+    fprintf(stderr, "_BUG_ the MAX_VALUE_SIZE (=%i) must be increased and code recompiled!\n", MAX_VALUE_SIZE);
   p->label = g_strdup(key);
   p->rank = rank;
   g_hash_table_replace(model->property_table, p->label, p);
+
 #if DEBUG_PROPERTY
-fprintf(stdout,"#DBG: create new %i: %s %s\n",rank,key,value);
+fprintf(stdout, "#DBG: create new %i: %s %s\n", rank, key, value);
 #endif
   }
 
@@ -1286,15 +1327,39 @@ model->property_list = g_slist_insert_sorted(model->property_list, p, (gpointer)
 void model_content_refresh(struct model_pak *model)
 {
 gint n;
+gdouble density;
 gchar *text;
 
 g_assert(model != NULL);
 
-text = g_strdup_printf("%6.3f", model->gulp.qsum);
-property_add_ranked(1, "Total charge", text, model);
+calc_emp(model);
+if( model->periodic == 3 )
+  {
+  density = model_density(model);
+  text = g_strdup_printf("%6.3f", density);
+  property_add_ranked(1, "Density (g/cm3)", text, model);
+  g_free(text);
+  }
+else
+  property_add_ranked(0, "Density (g/cm3)", "dummy", model);
+
+if( model->periodic == 2 )
+  {
+  text = g_strdup_printf("%6.3f", fabs(model->gulp.sdipole)<1e-3?0.0:model->gulp.sdipole);
+  property_add_ranked(1, "Dipole (D)", text, model);
+  g_free(text);
+  }
+else
+  property_add_ranked(0, "Dipole (D)", "dummy", model);
+
+text = g_strdup_printf("%6.3f", fabs(model->gulp.qsum)<1e-3?0.0:model->gulp.qsum);
+property_add_ranked(1, "Total charge (e)", text, model);
 g_free(text);
 
-text = g_strdup_printf("%d", g_slist_length(model->moles));
+if (model->show_bonds)
+  text = g_strdup_printf("%d", g_slist_length(model->moles));
+else
+  text = g_strdup_printf("%d", g_slist_length(model->cores));
 property_add_ranked(1, "Total molecules", text, model);
 g_free(text);
 
@@ -1306,16 +1371,14 @@ g_free(text);
 */
 
 n = g_slist_length(model->shels);
-if (n)
-  {
-  text = g_strdup_printf("%d", n);
-  property_add_ranked(1, "Total shells", text, model);
-  g_free(text);
-  }
+text = g_strdup_printf("%d", n);
+property_add_ranked((n>0?1:0), "Total shells", text, model);
+g_free(text);
 
 text = g_strdup_printf("%d", g_slist_length(model->cores));
 property_add_ranked(1, "Total atoms", text, model);
 g_free(text);
+gui_refresh(GUI_MODEL_PROPERTIES);
 }
 
 /****************************************/

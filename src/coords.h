@@ -92,6 +92,9 @@ gdouble radius;
 /* charge info */
 gint lookup_charge;
 gdouble charge;
+/* mass info */
+gint lookup_mass;
+gdouble mass;
 /* fitting flags */
 gchar *flags;
 
@@ -135,6 +138,9 @@ gint pic[3];
 /* charge info */
 gint lookup_charge;
 gdouble charge;
+/* mass info */
+gint lookup_mass;
+gdouble mass;
 /* site occupancy factor */
 gint has_sof;
 gdouble sof;
@@ -211,6 +217,7 @@ void coords_make_cartesian(struct model_pak *);
 
 void fractional_clamp(gdouble *, gint *, gint);
 void fractional_min(gdouble *, gint);
+void check_fractional(struct model_pak *);
 
 void core_free(gpointer);
 void free_core_list(struct model_pak *);
@@ -235,6 +242,7 @@ struct core_pak *copy_core(struct core_pak *, struct model_pak *, struct model_p
 
 void delete_commit(struct model_pak *);
 void delete_core(struct core_pak *);
+void delete_shell(struct shel_pak *);
 void delete_duplicate_cores(struct model_pak *);
 void add_atom(gint, gint, struct model_pak *);
 
@@ -246,12 +254,15 @@ void model_colour_scheme(gint, struct model_pak *);
 void init_atom_colour(struct core_pak *, struct model_pak *);
 void init_atom_charge(struct core_pak *, struct model_pak *);
 void init_model_charges(struct model_pak *);
+void init_atom_mass(struct core_pak *, struct model_pak *);
+void init_model_masses(struct model_pak *);
+gdouble atom_mass(struct core_pak *);
 gdouble atom_charge(struct core_pak *);
 void calc_emp(struct model_pak *);
 
 GSList *find_unique(gint, struct model_pak *);
 
-void cor_calc_xlimits(gdouble *, gdouble *, GSList *);
+void core_calc_xlimits(gdouble *, gdouble *, GSList *);
 
 void shell_make_links(struct model_pak *);
 

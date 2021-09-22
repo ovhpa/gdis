@@ -393,11 +393,11 @@ printf("This [%s] has %d candidates.\n", core1->atom_label, n);
 
 /* central atom's colour */
       ARR3SET(p1->colour, core1->colour);
-      VEC3MUL(p1->colour, 1.0/65535.0);
+      VEC3MUL(p1->colour, INV_COLOUR_SCALE);
       ARR3SET(p2->colour, core1->colour);
-      VEC3MUL(p2->colour, 1.0/65535.0);
+      VEC3MUL(p2->colour, INV_COLOUR_SCALE);
       ARR3SET(p3->colour, core1->colour);
-      VEC3MUL(p3->colour, 1.0/65535.0);
+      VEC3MUL(p3->colour, INV_COLOUR_SCALE);
 
 /* triangle, defined by 3 surrounding bonds */
 /* compute midpoints */
@@ -476,7 +476,7 @@ v3->data = NULL;
 
 /* enforce an outwards pointing clockwise normal */
 /* TODO - prepend for speed */
-      if (angle < PI/2.0)
+      if (angle < G_PI*0.5)
         {
         vlist = g_slist_prepend(vlist, v3);
         vlist = g_slist_prepend(vlist, v2);
@@ -1243,7 +1243,7 @@ for (list=data->moles ; list ; list=g_slist_next(list))
     }
   }
 coords_compute(data);
-model_content_refresh(data); /* Added by C.Fisher 2005 */
+model_content_refresh(data);
 
 /* NEW - ensure core ordering in molecules is the same as in the main list */
 sort_mol_cores(data);
@@ -1349,7 +1349,7 @@ void connect_refresh(struct model_pak *model)
 {
 connect_bonds(model);
 connect_molecules(model);
-model_content_refresh(model); /* Added by C.Fisher 2005 */
+model_content_refresh(model);
 }
 
 /********************************************/
@@ -1366,6 +1366,6 @@ connect_bonds(model);
 connect_molecules(model);
 
 redraw_canvas(SINGLE);
-model_content_refresh(model); /* Added by C.Fisher 2005 */
+model_content_refresh(model);
 }
 

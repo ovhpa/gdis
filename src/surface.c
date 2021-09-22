@@ -447,7 +447,7 @@ if (!model->surface.ignore_symmetry)
 
 if (n == 100)
   {
-  printf("WARNING: screwed up systematic absence check.\n");
+  gui_text_show(WARNING, "Screwed up systematic absence check.\n");
   h /= 99;
   k /= 99;
   l /= 99;
@@ -482,7 +482,7 @@ if (len > FRACTION_TOLERANCE)
   }
 else
   {
-  gui_text_show(WARNING, "plane of zero length created.\n");
+  gui_text_show(WARNING, "Plane of zero length created.\n");
   }
 
 plane->esurf_shift = 0.0;
@@ -1457,7 +1457,7 @@ if (data->surface.ignore_bonding)
 /* allocate & init for surface data */
 surf = model_new();
 
-/* NEW - label it as MARVIN, so it's build mode follows the */
+/* NEW - label it as MARVIN, so its build mode follows the */
 /* source model, rather than the GULP setup data - see model_prep() */
 surf->id = MARVIN;
 

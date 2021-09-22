@@ -555,12 +555,14 @@ gui_button_x("Stick", render_mode_set, GINT_TO_POINTER(STICK), vbox);
 gui_button_x("Zone based (experimental)", render_mode_zone, NULL, vbox);
 gui_button_x("Wire frame molecules", render_wire_atoms, NULL, vbox);
 gui_button_x("Solid molecules", render_solid_atoms, NULL, vbox);
-gui_button_x("Axes type", toggle_axes_type, NULL, vbox);
+gui_button_x("Switch axes type", toggle_axes_type, NULL, vbox);
 
 /* extra toggles */
 vbox = gui_frame_vbox(NULL, FALSE, FALSE, vbox1);
 
 gui_direct_check("Antialias", &sysenv.render.antialias,
+                   render_refresh, NULL, vbox);
+gui_direct_check("CPK scaling for B&S atoms", &sysenv.render.scale_ball_size,
                    render_refresh, NULL, vbox);
 gui_direct_check("Wire frame surfaces", &sysenv.render.wire_surface,
                    render_refresh, NULL, vbox);
@@ -590,11 +592,11 @@ gui_direct_spin("Zone grid size ",
 vbox = gui_frame_vbox(NULL, FALSE, FALSE, vbox2);
 
 gui_direct_spin("Ball radius",
-                  &sysenv.render.ball_rad, 0.1, 0.5, 0.02,
+                  &sysenv.render.ball_radius, 0.1, 0.5, 0.02,
                   render_refresh, NULL, vbox);
 
 gui_direct_spin("Cylinder radius",
-                  &sysenv.render.stick_rad, 0.02, 0.5, 0.01,
+                  &sysenv.render.stick_radius, 0.02, 0.5, 0.01,
                   render_refresh, NULL, vbox);
 
 gui_direct_spin("Stick thickness",
@@ -606,7 +608,7 @@ gui_direct_spin("Line drawing width ",
                   render_refresh, NULL, vbox);
 
 gui_direct_spin("CPK scaling",
-                  &sysenv.render.cpk_scale, 0.1, 3.0, 0.05,
+                  &sysenv.render.cpk_scale, 0.1, 3.0, 0.02,
                   render_refresh, NULL, vbox);
 
 /* highlighting frame */
@@ -1818,9 +1820,12 @@ gui_direct_check("Right eye active ", &sysenv.render.stereo_right,
 void render_misc_section(GtkWidget *box)
 {
 GtkWidget *vbox1, *vbox2, *vbox, *hbox;
+GtkWidget *frame;
+//more sensitive boxes
+GtkWidget *region_render_sensitive_box;
 struct model_pak *model;
 
-/* TODO - allow render dialog even when no models, but dont draw */
+/* TODO - allow render dialog even when no models, but don't draw */
 /* or make insensitive model specific buttons */
 model = sysenv.active_model;
 /* FIXME - dont draw anything if no models are loaded (needs a better/dynamic fix) */
@@ -1846,10 +1851,12 @@ gui_auto_check("Show cell lengths", render_refresh, NULL, &model->show_cell_leng
 gui_auto_check("Show cores", render_refresh, NULL, &model->show_cores, vbox);
 gui_auto_check("Show shells", render_refresh, NULL, &model->show_shells, vbox);
 gui_auto_check("Show core-shell links", render_refresh, NULL, &model->show_links, vbox);
-gui_auto_check("Show core index", render_refresh, NULL, &model->show_atom_index, vbox);
-gui_auto_check("Show core label", render_refresh, NULL, &model->show_atom_labels, vbox);
-gui_auto_check("Show core type", render_refresh, NULL, &model->show_atom_types, vbox);
-gui_auto_check("Show core charge", render_refresh, NULL, &model->show_atom_charges, vbox);
+gui_auto_check("Show core indices", render_refresh, NULL, &model->show_atom_index, vbox);
+gui_auto_check("Show core labels", render_refresh, NULL, &model->show_atom_labels, vbox);
+gui_auto_check("Show core types", render_refresh, NULL, &model->show_atom_types, vbox);
+gui_auto_check("Show core charges", render_refresh, NULL, &model->show_core_charges, vbox);
+gui_auto_check("Show shell charges", render_refresh, NULL, &model->show_shell_charges, vbox);
+gui_auto_check("Show atom charges", render_refresh, NULL, &model->show_atom_charges, vbox);
 
 /*VZ*/
 gui_auto_check("Show NMR shielding", render_refresh, NULL, &model->show_nmr_shifts, vbox);
@@ -1862,8 +1869,6 @@ gui_auto_check("Show normal bonds", connect_refresh_global, NULL, &model->build_
 gui_auto_check("Show hydrogen bonds", connect_refresh_global, NULL, &model->build_hydrogen, vbox);
 gui_auto_check("Show zeolite bonds", connect_refresh_global, NULL, &model->build_zeolite, vbox);
 
-gui_auto_check("Show total charge", render_refresh, NULL, &model->show_charge, vbox);
-
 gui_auto_check("Show labels on selection ", render_refresh, NULL, &model->show_selection_labels, vbox);
 
 /* next frame */
@@ -1875,6 +1880,28 @@ gui_direct_check("Show energy", &sysenv.render.show_energy, render_refresh, NULL
 
 gui_auto_check("Show spatial text ", morph_toggle, NULL, &model->morph_label, vbox);
 gui_auto_check("Show camera waypoints ", morph_toggle, NULL, &model->show_waypoints, vbox);
+
+/* Region options for surfaces */
+frame = gtk_frame_new("Regions");
+gtk_box_pack_start(GTK_BOX(vbox2), frame, FALSE, FALSE, 0);
+region_render_sensitive_box = gtk_vbox_new(TRUE, PANEL_SPACING);
+model->custom_regions_frame = region_render_sensitive_box;
+
+gtk_container_add(GTK_CONTAINER(frame), region_render_sensitive_box);
+
+gtk_container_set_border_width(GTK_CONTAINER(region_render_sensitive_box), PANEL_SPACING);
+
+/* gui_auto_check("Show growth slice only", render_refresh, NULL, &model->show_growth_slice, region_render_sensitive_box); */
+
+gui_auto_check("Show region 1", render_refresh, NULL, &model->show_region1A, region_render_sensitive_box);
+
+gui_auto_check("Show region 2", render_refresh, NULL, &model->show_region2A, region_render_sensitive_box);
+
+gui_auto_check("Show region 3", render_refresh, NULL, &model->show_region1B, region_render_sensitive_box);
+
+gui_auto_check("Show region 4", render_refresh, NULL, &model->show_region2B, region_render_sensitive_box);
+
+gtk_widget_set_sensitive(GTK_WIDGET(model->custom_regions_frame), TRUE);
 }
 
 /***************************/

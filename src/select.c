@@ -152,6 +152,7 @@ for (list=model->selection ; list ; list=g_slist_next(list))
   }
 g_slist_free(model->selection);
 model->selection=NULL;
+gui_refresh_selection();
 }
 
 /******************/
@@ -161,7 +162,7 @@ void select_copy(void)
 {
 struct model_pak *model;
 
-/* setup & check */
+/* set up & check */
 model = sysenv.active_model;
 if (!model)
   return;
@@ -187,6 +188,12 @@ if (data == NULL || src == NULL)
   return;
 if (data->id == NODATA || !src->selection)
   return;
+
+if (data->num_frames > 1)
+  {
+  gui_text_show(WARNING, "Atoms cannot be added to multiframe model.\n");
+  return;
+  }
 
 /* copy the selection - just in case src == data */
 slist = g_slist_copy(src->selection);
@@ -245,7 +252,7 @@ for (list=model->selection ; list ; list=g_slist_next(list))
   core = list->data;
 
   ARR3SET(core->colour, colour);
-  VEC3MUL(core->colour, 65535.0);
+  VEC3MUL(core->colour, COLOUR_SCALE);
   }
 #else  //USE_DEPRECATED_GTK
 GdkColor colour;
@@ -298,6 +305,12 @@ data = sysenv.active_model;
 if (!data)
   return;
 
+if (data->num_frames > 1)
+  {
+  gui_text_show(WARNING, "Atoms cannot be deleted from multiframe model.\n");
+  return;
+  }
+
 /* delete */
 list = data->selection;
 while (list)
@@ -320,7 +333,9 @@ delete_commit(data);
 data->selection = NULL;
 sysenv.select_source = NULL;
 
+gui_refresh(GUI_MODEL_PROPERTIES);
 redraw_canvas(SINGLE);
+//model_content_refresh(data);
 }
 
 /******************/
@@ -331,6 +346,7 @@ void select_hide(void)
 GSList *list;
 struct model_pak *data;
 struct core_pak *core;
+struct shel_pak *shell;
 
 /* deletion for the active model only */
 data = sysenv.active_model;
@@ -346,6 +362,11 @@ for (list=data->selection ; list ; list=g_slist_next(list))
   core = list->data;
   core->status |= HIDDEN;
   core->status &= ~SELECT;
+  if (core->shell)
+    {
+    shell = core->shell;
+    shell->status |= HIDDEN;
+    }
   }
 sysenv.select_source = NULL;
 
@@ -356,6 +377,41 @@ data->selection = NULL;
 
 /* update */
 redraw_canvas(SINGLE);
+gui_refresh(GUI_MODEL_PROPERTIES);
+}
+
+/***************************/
+/* hide non-selected atoms */
+/***************************/
+void unselect_hide(void)
+{
+GSList *list;
+struct model_pak *data;
+struct core_pak *core;
+struct shel_pak *shell;
+
+/* deletion for the active model only */
+data = sysenv.active_model;
+if (!data)
+  return;
+
+/* hide unselected atoms */
+for (list=data->cores ; list ; list=g_slist_next(list))
+  {
+  core = list->data;
+  if (core->status & SELECT)
+    continue;
+  core->status |= HIDDEN;
+  if (core->shell)
+    {
+    shell = core->shell;
+    shell->status |= HIDDEN;
+    }
+  }
+
+/* update */
+redraw_canvas(SINGLE);
+gui_refresh(GUI_MODEL_PROPERTIES);
 }
 
 /********************/
@@ -373,8 +429,14 @@ if (!data)
   return;
 
 /* assign the new selection */
-g_slist_free(data->selection);
-data->selection = g_slist_copy(data->cores);
+select_clear(data);
+for (list=data->cores ; list ; list=g_slist_next(list))
+  {
+  core = list->data;
+  if (core->status & (DELETED | HIDDEN))
+     continue;
+  data->selection = g_slist_append(data->selection, core);
+  }
 
 /* update the highlighting */
 for (list=data->selection ; list ; list=g_slist_next(list))
@@ -383,6 +445,7 @@ for (list=data->selection ; list ; list=g_slist_next(list))
   core->status |= SELECT;
   }
 redraw_canvas(SINGLE);
+gui_refresh(GUI_MODEL_PROPERTIES);
 }
 
 /************************/
@@ -402,13 +465,20 @@ if (!data)
 /* copy the core list */
 new = g_slist_copy(data->cores);
 
-/* remove the old selection */
-for (list=data->selection ; list ; list=g_slist_next(list))
+for (list=data->cores ; list ; list=g_slist_next(list))
   {
   core = list->data;
 
-  core->status &= ~SELECT;
-  new = g_slist_remove(new, core);
+/* Don't select hidden atoms */
+  if (core->status & HIDDEN)
+    new = g_slist_remove(new, core);
+
+/* remove the old selection */
+  if (g_slist_find(data->selection, core))
+    {
+    core->status &= ~SELECT;
+    new = g_slist_remove(new, core);
+    }
   }
 
 /* assign the new selection */
@@ -1741,11 +1811,11 @@ printf("ribbon segment: [%d] - [%d]\n", ribbon1->id1, ribbon1->id2);
 /* "consistent" normal enforcement */
 /* of dubious value, since ribbon lighing will be two sided */
 /* also, not as easy as this (eg twisted ribbon) ... good enough though? */
-  if (via(ribbon1->x1, ribbon1->u1, 3) > PI/2.0)
+  if (via(ribbon1->x1, ribbon1->u1, 3) > G_PI*0.5)
     {
     VEC3MUL(ribbon1->u1, -1.0);
     }
-  if (via(ribbon1->x2, ribbon1->u2, 3) > PI/2.0)
+  if (via(ribbon1->x2, ribbon1->u2, 3) > G_PI*0.5)
     {
     VEC3MUL(ribbon1->u2, -1.0);
     }

@@ -82,6 +82,8 @@ GtkWidget *scrolled_window, *clist;
 gint pane_width=65;
 /* current viewing mode combo box */
 GtkWidget *viewing_mode;
+/* angle for rotating model */
+GtkWidget *angle_spin;
 
 /************************/
 /* EVENT - button press */
@@ -147,7 +149,7 @@ if (data->graph_active)
   return(FALSE);
   }
 
-/* can we assoc. with a single atom */
+/* can we assoc. with a single atom? */
 core = gl_seek_core(x, y, data);
 
 /* allow shift+click to add/remove single atoms in the selection */
@@ -305,6 +307,7 @@ return(FALSE);
 /************************/
 /* EVENT - mouse scroll */
 /************************/
+#define DEBUG_SCROLL 0
 gint gui_scroll_event(GtkWidget *w, GdkEventScroll *event)
 {
 /* change zoom -- based on "zoom section" of gui_press_event() */
@@ -335,6 +338,9 @@ switch (event->direction)
 }
 scroll *= PIX2SCALE;
 
+#if DEBUG_SCROLL
+printf("Scroll %f\n", scroll);
+#endif
 if (camera->perspective)
   {
   ARR3SET(v, camera->v);
@@ -601,6 +607,7 @@ void unhide_atoms(void)
 GSList *list;
 struct model_pak *data;
 struct core_pak *core;
+struct shel_pak *shell;
 
 /* deletion for the active model only */
 data = sysenv.active_model;
@@ -610,10 +617,16 @@ for (list=data->cores ; list ; list=g_slist_next(list))
   {
   core = list->data;
   core->status &= ~HIDDEN;
+  if (core->shell)
+    {
+    shell = core->shell;
+    shell->status &= ~HIDDEN;
+    }
   }
 
 /* update */
 redraw_canvas(SINGLE);
+model_content_refresh(data);
 }
 
 /****************/
@@ -754,7 +767,7 @@ g_assert(tv == NULL);
   tv = gtk_tree_view_new_with_model(GTK_TREE_MODEL(ls));
   gtk_box_pack_start(GTK_BOX(box), tv, TRUE, TRUE, 0);
 
-/* setup cell renderers */
+/* set up cell renderers */
   renderer = gtk_cell_renderer_text_new();
   column = gtk_tree_view_column_new_with_attributes(" ", renderer, "text", 0, NULL);
   gtk_tree_view_append_column(GTK_TREE_VIEW(tv), column);
@@ -875,7 +888,7 @@ module_ts = gtk_tree_store_new(2, G_TYPE_STRING, G_TYPE_POINTER);
 module_tv = gtk_tree_view_new_with_model(GTK_TREE_MODEL(module_ts));
 gtk_box_pack_start(GTK_BOX(box), module_tv, TRUE, TRUE, 0);
 
-/* setup the text rendering colum */
+/* set up the text rendering colum */
 renderer = gtk_cell_renderer_text_new();
 column = gtk_tree_view_column_new_with_attributes("a", renderer, "text", 0, NULL);
 gtk_tree_view_append_column(GTK_TREE_VIEW(module_tv), column);
@@ -884,7 +897,7 @@ gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(module_tv), FALSE);
 /* fill in with valid modules */
 module_widget_redraw();
 
-/* setup the selection handler */
+/* set up the selection handler */
 g_signal_connect(G_OBJECT(module_tv), "row-activated",
                  G_CALLBACK(cb_module_activate),
                  NULL);
@@ -951,7 +964,7 @@ struct model_pak *model = sysenv.active_model;
 
 if (model)
   {
-  camera_init(model);
+  camera_reset(model);
   camera = model->camera;
   quat_concat_euler(camera->q, YAW, 0.5*G_PI);
   gui_model_select(model);
@@ -968,7 +981,7 @@ struct model_pak *model = sysenv.active_model;
 
 if (model)
   {
-  camera_init(model);
+  camera_reset(model);
   camera = model->camera;
   quat_concat_euler(camera->q, YAW, G_PI);
   gui_model_select(model);
@@ -985,7 +998,7 @@ struct model_pak *model = sysenv.active_model;
 
 if (model)
   {
-  camera_init(model);
+  camera_reset(model);
   camera = model->camera;
   quat_concat_euler(camera->q, PITCH, -0.5*G_PI);
   gui_model_select(model);
@@ -997,7 +1010,39 @@ if (model)
 /************************/
 void gui_view_a(void)
 {
-gui_view_x();
+gdouble angle, a[3], v[3];
+struct camera_pak *camera;
+struct model_pak *model = sysenv.active_model;
+
+if (model && (model->periodic > 1 || model->id == MORPH))
+  {
+  camera_reset(model);
+  camera = model->camera;
+
+/* a axis vector */
+  VEC3SET(a, -1.0, 0.0, 0.0);
+  vecmat(model->latmat, a);
+
+/* angle */
+  angle = via(camera->v, a, 3);
+
+/* rotation axis */
+  crossprod(v, camera->v, a);
+  normalize(v, 3);
+
+  if ( v[0] < 1e-6 && v[1] < 1e-6 && v[2] < 1e-6)
+    VEC3SET(v, 1.0, 0.0, 0.0);
+
+/* align */
+  if ( fabs(v[0]) < 1e-6 && fabs(v[1]) < 1e-6 && fabs(v[2]) < 1e-6)
+    quat_concat_euler(camera->q, YAW, 0.5*G_PI);
+  else
+    quat_concat(camera->q, v, angle);
+
+  gui_model_select(model);
+  }
+else
+  gui_view_x();
 }
 
 /************************/
@@ -1005,21 +1050,36 @@ gui_view_x();
 /************************/
 void gui_view_b(void)
 {
+gdouble angle, b[3], v[3];
 struct camera_pak *camera;
 struct model_pak *model = sysenv.active_model;
 
-if (model)
+if (model && (model->periodic > 1 || model->id == MORPH))
   {
-  if (model->periodic > 1 || model->id == MORPH)
-    {
-    gui_view_x();
-    camera = model->camera;
-    quat_concat_euler(camera->q, YAW, model->pbc[5]);
-    gui_model_select(model);
-    }
+  camera_reset(model);
+  camera = model->camera;
+
+/* b axis vector */
+  VEC3SET(b, 0.0, -1.0, 0.0);
+  vecmat(model->latmat, b);
+
+/* angle */
+  angle = via(camera->v, b, 3);
+
+/* rotation axis */
+  crossprod(v, camera->v, b);
+  normalize(v, 3);
+
+/* align */
+  if ( fabs(v[0]) < 1e-6 && fabs(v[1]) < 1e-6 && fabs(v[2]) < 1e-6)
+    quat_concat_euler(camera->q, YAW, G_PI);
   else
-    gui_view_y();
+    quat_concat(camera->q, v, angle);
+
+  gui_model_select(model);
   }
+else
+  gui_view_y();
 }
 
 /************************/
@@ -1031,31 +1091,96 @@ gdouble a, c[3], v[3];
 struct camera_pak *camera;
 struct model_pak *model = sysenv.active_model;
 
-if (model)
+if (model && (model->periodic > 2 || model->id == MORPH))
   {
-  if (model->periodic > 2 || model->id == MORPH)
-    {
-    camera_init(model);
-    camera = model->camera;
+  camera_reset(model);
+  camera = model->camera;
 
 /* c axis vector */
-    VEC3SET(c, 0.0, 0.0, -1.0);
-    vecmat(model->latmat, c);
+  VEC3SET(c, 0.0, 0.0, -1.0);
+  vecmat(model->latmat, c);
 
 /* angle */
-    a = via(camera->v,c,3);
+  a = via(camera->v,c,3);
 
 /* rotation axis */
-    crossprod(v, camera->v, c);
-    normalize(v, 3);
+   crossprod(v, camera->v, c);
+  normalize(v, 3);
 
 /* align */
-    quat_concat(camera->q, v, a);
+  quat_concat(camera->q, v, a);
 
-    gui_model_select(model);
-    }
-  else
-    gui_view_z();
+  gui_model_select(model);
+  }
+else
+  gui_view_z();
+}
+
+/***************************/
+/* rotate about the x axis */
+/***************************/
+void gui_rotate_x(void)
+{
+gdouble angle;
+struct camera_pak *camera;
+struct model_pak *model = sysenv.active_model;
+
+angle = SPIN_IVAL(GTK_SPIN_BUTTON(angle_spin));
+
+angle *= D2R;
+if (model )
+/* if (model && (model->periodic > 1 || model->id == MORPH)) */
+  {
+  camera = model->camera;
+  quat_concat_euler(camera->q, PITCH, angle);
+
+  gui_model_select(model);
+  }
+}
+
+/***************************/
+/* rotate about the y axis */
+/***************************/
+void gui_rotate_y(void)
+{
+gdouble angle;
+struct camera_pak *camera;
+struct model_pak *model = sysenv.active_model;
+
+angle = SPIN_IVAL(GTK_SPIN_BUTTON(angle_spin));
+
+angle *= D2R;
+
+if (model )
+/* if (model && (model->periodic > 1 || model->id == MORPH)) */
+  {
+  camera = model->camera;
+
+  quat_concat_euler(camera->q, ROLL, angle);
+  gui_model_select(model);
+  }
+}
+
+/***************************/
+/* rotate about the z axis */
+/***************************/
+void gui_rotate_z(void)
+{
+gdouble angle;
+struct camera_pak *camera;
+struct model_pak *model = sysenv.active_model;
+
+angle = SPIN_IVAL(GTK_SPIN_BUTTON(angle_spin));
+
+angle *= D2R;
+
+if (model )
+/* if (model && (model->periodic > 1 || model->id == MORPH)) */
+  {
+  camera = model->camera;
+  quat_concat_euler(camera->q, YAW, angle);
+
+  gui_model_select(model);
   }
 }
 
@@ -1109,6 +1234,8 @@ if (sysenv.canvas)
 /* tags */
     gtk_text_buffer_create_tag(buffer, "fg_blue", "foreground", "blue", NULL);  
     gtk_text_buffer_create_tag(buffer, "fg_red", "foreground", "red", NULL);
+    gtk_text_buffer_create_tag(buffer, "fg_green", "foreground", "#008000", NULL);
+    gtk_text_buffer_create_tag(buffer, "fg_orange", "foreground", "#ff5e13", NULL);
     gtk_text_buffer_create_tag(buffer, "italic", "style", PANGO_STYLE_ITALIC, NULL);
 /* position iterator */
     gtk_text_buffer_get_iter_at_line(buffer, &iter, 0);
@@ -1122,9 +1249,14 @@ if (sysenv.canvas)
         (buffer, &iter, message, -1, "fg_red", NULL); 
       break;
 
-    case WARNING:
+    case INFO:
       gtk_text_buffer_insert_with_tags_by_name
        (buffer, &iter, message, -1, "fg_blue", NULL); 
+      break;
+
+    case WARNING:
+      gtk_text_buffer_insert_with_tags_by_name
+       (buffer, &iter, message, -1, "fg_orange", NULL); 
       break;
 
     case ITALIC:
@@ -1329,13 +1461,13 @@ gui_mode_switch(FREE);
 static GtkItemFactoryEntry menu_items[] = 
 {
   { "/_File",                 NULL, NULL, 0, "<Branch>" },
-/*
-  { "/File/_New",             NULL, create_new_model, 1, NULL },
-  { "/File/sep1",             NULL, NULL, 0, "<Separator>" },
-*/
-  { "/File/_Open...",         NULL, file_load_dialog, 1, NULL },
-  { "/File/_Save...",         NULL, file_save_dialog, 1, NULL },
-  { "/File/_Close",           NULL, tree_select_delete, 1, NULL },
+
+  { "/File/_New",             "<CTRL>N", edit_model_create, 1, NULL },
+/*  { "/File/sep1",             NULL, NULL, 0, "<Separator>" }, */
+
+  { "/File/_Open...",         "<CTRL>O", file_load_dialog, 1, NULL },
+  { "/File/_Save...",         "<CTRL>S", file_save_dialog, 1, NULL },
+  { "/File/_Close",           "<CTRL>W", tree_select_delete, 1, NULL },
   { "/File/sep1",             NULL, NULL, 0, "<Separator>" },
 
   { "/File/Import",              NULL, NULL, 0, "<Branch>" },
@@ -1348,24 +1480,23 @@ static GtkItemFactoryEntry menu_items[] =
   { "/File/Export/Graph data...",       NULL, analysis_export_dialog, 1, NULL },
 
   { "/File/sep1",             NULL, NULL, 0, "<Separator>" },
-  { "/File/_Quit",            NULL, gdis_exit_test, 0, NULL },
+  { "/File/_Quit",            "<CTRL>Q", gdis_exit_test, 0, NULL },
 
   { "/_Edit",               NULL, NULL, 0, "<Branch>" },
-  { "/Edit/_Copy",          NULL, select_copy, 0, NULL },
-  { "/Edit/_Paste",         NULL, select_paste, 0, NULL },
-  { "/Edit/sep1",           NULL, NULL, 0, "<Separator>" },
-
-  { "/Edit/Delete",         NULL, select_delete, 0, NULL },
-  { "/Edit/Undo",           NULL, undo_active, 0, NULL },
+  { "/Edit/Undo",           "<CTRL>Z", undo_active, 0, NULL },
+  { "/Edit/_Copy",          "<CTRL>C", select_copy, 0, NULL },
+  { "/Edit/_Paste",         "<CTRL>V", select_paste, 0, NULL },
 
   { "/Edit/sep1",           NULL, NULL, 0, "<Separator>" },
 
   { "/Edit/Colour...",      NULL, select_colour, 0, NULL },
-  { "/Edit/Hide",           NULL, select_hide, 0, NULL },
-  { "/Edit/Unhide all",     NULL, unhide_atoms, 0, NULL },
   { "/Edit/sep1",           NULL, NULL, 0, "<Separator>" },
-  { "/Edit/Select all",     NULL, select_all, 0, NULL },
-  { "/Edit/Invert",         NULL, select_invert, 0, NULL },
+  { "/Edit/Delete selected",  NULL, select_delete, 0, NULL },
+  { "/Edit/Select all",     "<CTRL>A", select_all, 0, NULL },
+  { "/Edit/Invert selection", "<CTRL>I", select_invert, 0, NULL },
+  { "/Edit/Hide selected",  "<CTRL>H", select_hide, 0, NULL },
+  { "/Edit/Hide unselected",  "<CTRL>U", unselect_hide, 0, NULL },
+  { "/Edit/Unhide all",     "<CTRL><SHIFT>U", unhide_atoms, 0, NULL },
 
   { "/_Tools",                                NULL, NULL, 0, "<Branch>" },
   { "/Tools/Visualization",                   NULL, NULL, 0, "<Branch>" },
@@ -1374,7 +1505,7 @@ static GtkItemFactoryEntry menu_items[] =
   { "/Tools/Visualization/Periodic table...", NULL, gui_gperiodic_dialog, 0, NULL },
 
   { "/Tools/Building",                           NULL, NULL, 0, "<Branch>" },
-  { "/Tools/Building/Editing...",                NULL, gui_edit_dialog, 0, NULL },
+  { "/Tools/Building/Editing...",                "<CTRL>E", gui_edit_dialog, 0, NULL },
   { "/Tools/Building/Dislocations...",           NULL, gui_defect_dialog, 0, NULL },
   { "/Tools/Building/Docking...",                NULL, gui_dock_dialog, 0, NULL },
   { "/Tools/Building/Dynamics...",               NULL, gui_mdi_dialog, 0, NULL },
@@ -1396,9 +1527,9 @@ static GtkItemFactoryEntry menu_items[] =
   { "/Tools/Analysis/Plots...",               NULL, gui_plots_dialog, 0, NULL },
 
   { "/_View",                       NULL, NULL, 0, "<Branch>"},
-  { "/View/Display properties...",  NULL, gui_render_dialog, 0, NULL},
+  { "/View/Display properties...",  "<CTRL>D", gui_render_dialog, 0, NULL},
   { "/View/sep1",                   NULL, NULL, 0, "<Separator>"},
-  { "/View/Reset model images",     NULL, space_image_widget_reset, 0, NULL},
+  { "/View/Reset model images",     "<CTRL>R", space_image_widget_reset, 0, NULL},
   { "/View/sep1",                   NULL, NULL, 0, "<Separator>"},
   { "/View/Normal mode",            NULL, gui_mode_default, 0, NULL},
   { "/View/Recording mode",         NULL, gui_mode_record, 0, NULL},
@@ -1414,9 +1545,9 @@ static GtkItemFactoryEntry menu_items[] =
   { "/_Help",                  NULL, NULL, 0, "<Branch>"},
 
 /* about info -> manual acknowlegements */
-/*
-  { "/Help/About...",          NULL, gui_help_dialog, 0, NULL},
-*/
+
+  { "/Help/About...",          NULL, gui_about_dialog, 0, NULL},
+
   { "/Help/Manual...",         NULL, gui_help_dialog, 0, NULL},
 };
 
@@ -1425,11 +1556,23 @@ static GtkItemFactoryEntry menu_items[] =
 /********************************/
 gint cb_key_press(GtkWidget *w, GdkEventKey *event, gpointer dummy)
 {
+#ifdef UNUSED_BUT_SET
+GdkModifierType state;
+
+state = (GdkModifierType) event->state;
+
+if ((state & GDK_CONTROL_MASK))
+  ctrl = TRUE;
+
+if ((state & GDK_MOD1_MASK))
+  alt = TRUE;
+#endif
+
 switch(event->keyval)
   {
-/* selection delete */
+/* colour settings */
   case GDK_Insert:
-    undo_active();
+    select_colour();
     break;
 
 /* selection delete */
@@ -1474,7 +1617,18 @@ switch(event->keyval)
     stereo_close_window();
     redraw_canvas(SINGLE);
     break;
+
+/* about dialog */
+  case GDK_F9:
+    gui_about_dialog();
+    break;
+
+/* manual */
+  case GDK_F12:
+    gui_help_dialog();
+    break;
   }
+
 return(FALSE);
 }
 
@@ -1504,7 +1658,7 @@ return(TRUE);
 /*****************************/
 /* schedule widget update(s) */
 /*****************************/
-/* TODO - include all update request (including canvas) */
+/* TODO - include all update requests (including canvases) */
 /* TODO - make type a mask so that multiple updates can be done */
 void gui_refresh(gint type)
 {
@@ -1555,7 +1709,7 @@ if (g_strrstr(line, "Type"))
   }
 if (g_strrstr(line, "Elements"))
   {
-  if (g_strrstr(line, "molecule"))
+  if (g_strrstr(line, "Molecule"))
     sysenv.select_mode = ELEM_MOL;
   else
     sysenv.select_mode = ELEM;
@@ -1566,7 +1720,7 @@ if (g_strrstr(line, "Molecules"))
   sysenv.select_mode = MOL;
   return;
   }
-if (g_strrstr(line, "fragments"))
+if (g_strrstr(line, "Fragments"))
   {
   sysenv.select_mode = FRAGMENT;
   gui_mode_switch(SELECT_FRAGMENT);
@@ -1732,9 +1886,9 @@ for (list=active_list ; list ; list=g_list_next(list))
   }
 }
 
-/*********************************/
-/* setup the active model widget */
-/*********************************/
+/**********************************/
+/* set up the active model widget */
+/**********************************/
 void gui_active_setup(GtkWidget *box)
 {
 gpointer entry;
@@ -1808,11 +1962,15 @@ GdkPixmap *gdis_pix=NULL;
 GdkPixbuf *pixbuf;
 GtkStyle *style;
 GtkItemFactory *item;
+GtkAccelGroup *accel;
 GdkColor colour;
 
 gtk_init(&argc, &argv);
 gdk_gl_init(&argc, &argv);
 gtk_gl_init(&argc, &argv);
+
+/* Make an accelerator group (shortcut keys) */
+accel = gtk_accel_group_new();
 
 /* enforce true colour (fixes SG problems) */
 sysenv.visual = gdk_visual_get_best_with_type(GDK_VISUAL_TRUE_COLOR);
@@ -1839,7 +1997,7 @@ image_table_init();
 
 /* main window */
 window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-sysenv.main_window = window;/*FIXME: move to sysenv. --OVHPA*/
+sysenv.main_window = window; /* FIXME: move to sysenv. --OVHPA */
 gtk_window_set_policy(GTK_WINDOW(window), TRUE, TRUE, FALSE);
 gtk_window_set_title(GTK_WINDOW(window),"GTK Display Interface for Structures");
 gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
@@ -1853,9 +2011,10 @@ vbox = gtk_vbox_new(FALSE, 0);
 gtk_container_add(GTK_CONTAINER(window), vbox);
 
 /* item factory menu creation */
-item = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<main>", NULL);
+item = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<main>", accel);
 gtk_item_factory_create_items(item, nmenu_items, menu_items, NULL);
 menu_bar = gtk_item_factory_get_widget(item, "<main>");
+gtk_window_add_accel_group(GTK_WINDOW (window), accel);
 
 /* FALSE,FALSE => don't expand to fill (eg on resize) */
 gtk_box_pack_start(GTK_BOX(vbox), menu_bar, FALSE, FALSE, 0);
@@ -1918,17 +2077,6 @@ gtk_toolbar_append_item(GTK_TOOLBAR (toolbar),
 
 gtk_toolbar_append_space(GTK_TOOLBAR(toolbar));
 
-/* animation */
-pixbuf = image_table_lookup("image_animate");
-gdis_wid = gtk_image_new_from_pixbuf(pixbuf);
-gtk_toolbar_append_item(GTK_TOOLBAR (toolbar),
-                        NULL,
-                        "Animation",
-                        "Private",
-                        gdis_wid,
-                        GTK_SIGNAL_FUNC(gui_animate_dialog),
-                        NULL);
-
 /* model editing */
 pixbuf = image_table_lookup("image_tools");
 gdis_wid = gtk_image_new_from_pixbuf(pixbuf);
@@ -1940,15 +2088,15 @@ gtk_toolbar_append_item(GTK_TOOLBAR (toolbar),
                         GTK_SIGNAL_FUNC(gui_edit_dialog),
                         NULL);
 
-/* iso surfaces */
-pixbuf = image_table_lookup("image_isosurface");
+/* display properties */
+pixbuf = image_table_lookup("image_palette");
 gdis_wid = gtk_image_new_from_pixbuf(pixbuf);
 gtk_toolbar_append_item(GTK_TOOLBAR (toolbar),
                         NULL,
-                        "Iso-surfaces",
+                        "Display properties",
                         "Private",
                         gdis_wid,
-                        GTK_SIGNAL_FUNC(gui_isosurf_dialog),
+                        GTK_SIGNAL_FUNC(gui_render_dialog),
                         NULL);
 
 /* gperiodic button */
@@ -1963,6 +2111,39 @@ gtk_toolbar_append_item(GTK_TOOLBAR (toolbar),
                         NULL);
 
 gtk_toolbar_append_space(GTK_TOOLBAR(toolbar));
+
+/* select_all */
+pixbuf = image_table_lookup("image_select_all");
+gdis_wid = gtk_image_new_from_pixbuf(pixbuf);
+gtk_toolbar_append_item(GTK_TOOLBAR (toolbar),
+                        NULL,
+                        "Select all atoms",
+                        "Private",
+                        gdis_wid,
+                        GTK_SIGNAL_FUNC(select_all),
+                        NULL);
+
+/* geometry button */
+pixbuf = image_table_lookup("image_compass");
+gdis_wid = gtk_image_new_from_pixbuf(pixbuf);
+gtk_toolbar_append_item(GTK_TOOLBAR (toolbar),
+                        NULL,
+                        "Measurements",
+                        "Private",
+                        gdis_wid,
+                        GTK_SIGNAL_FUNC(gui_measure_dialog),
+                        NULL);
+
+/* iso surfaces */
+pixbuf = image_table_lookup("image_isosurface");
+gdis_wid = gtk_image_new_from_pixbuf(pixbuf);
+gtk_toolbar_append_item(GTK_TOOLBAR (toolbar),
+                        NULL,
+                        "Iso-surfaces",
+                        "Private",
+                        gdis_wid,
+                        GTK_SIGNAL_FUNC(gui_isosurf_dialog),
+                        NULL);
 
 /* diffraction button */
 pixbuf = image_table_lookup("image_diffraction");
@@ -1986,43 +2167,6 @@ gtk_toolbar_append_item(GTK_TOOLBAR (toolbar),
                         GTK_SIGNAL_FUNC(surface_dialog),
                         NULL);
 
-gtk_toolbar_append_space(GTK_TOOLBAR(toolbar));
-
-/* geometry button */
-pixbuf = image_table_lookup("image_compass");
-gdis_wid = gtk_image_new_from_pixbuf(pixbuf);
-gtk_toolbar_append_item(GTK_TOOLBAR (toolbar),
-                        NULL,
-                        "Measurements",
-                        "Private",
-                        gdis_wid,
-                        GTK_SIGNAL_FUNC(gui_measure_dialog),
-                        NULL);
-
-gtk_toolbar_append_space(GTK_TOOLBAR(toolbar));
-
-/* display properties */
-pixbuf = image_table_lookup("image_palette");
-gdis_wid = gtk_image_new_from_pixbuf(pixbuf);
-gtk_toolbar_append_item(GTK_TOOLBAR (toolbar),
-                        NULL,
-                        "Display properties",
-                        "Private",
-                        gdis_wid,
-                        GTK_SIGNAL_FUNC(gui_render_dialog),
-                        NULL);
-
-/* model geomtry */
-pixbuf = image_table_lookup("image_axes");
-gdis_wid = gtk_image_new_from_pixbuf(pixbuf);
-gtk_toolbar_append_item(GTK_TOOLBAR(toolbar),
-                        NULL,
-                        "Reset model geometry",
-                        "Private",
-                        gdis_wid,
-                        GTK_SIGNAL_FUNC(gui_view_default),
-                        NULL);
-
 /* model images */
 pixbuf = image_table_lookup("image_periodic");
 gdis_wid = gtk_image_new_from_pixbuf(pixbuf);
@@ -2033,17 +2177,6 @@ gtk_toolbar_append_item(GTK_TOOLBAR(toolbar),
                         gdis_wid,
                         GTK_SIGNAL_FUNC(space_image_widget_reset),
                         NULL);
-
-/* transformation record button */
-pixbuf = image_table_lookup("image_camera");
-gdis_wid = gtk_image_new_from_pixbuf(pixbuf);
-gtk_toolbar_append_item(GTK_TOOLBAR (toolbar),
-                        NULL,
-                        "Record mode",
-                        "Private",
-                        gdis_wid,
-                        GTK_SIGNAL_FUNC(gtk_mode_switch),
-                        GINT_TO_POINTER(RECORD));
 
 gtk_toolbar_append_space(GTK_TOOLBAR(toolbar));
 
@@ -2082,6 +2215,148 @@ gtk_toolbar_append_item(GTK_TOOLBAR (toolbar),
 
 gtk_toolbar_append_space(GTK_TOOLBAR(toolbar));
 
+/* model geometry */
+pixbuf = image_table_lookup("image_axes");
+gdis_wid = gtk_image_new_from_pixbuf(pixbuf);
+gtk_toolbar_append_item(GTK_TOOLBAR(toolbar),
+                        NULL,
+                        "Reset model view",
+                        "Private",
+                        gdis_wid,
+                        GTK_SIGNAL_FUNC(gui_view_default),
+                        NULL);
+
+/* view down x axis */
+pixbuf = image_table_lookup("image_xview");
+gdis_wid = gtk_image_new_from_pixbuf(pixbuf);
+gtk_toolbar_append_item(GTK_TOOLBAR (toolbar),
+                        NULL,
+                        "View down x axis",
+                        "Private",
+                        gdis_wid,
+                        GTK_SIGNAL_FUNC(gui_view_x),
+                        NULL);
+
+/* view down y axis */
+pixbuf = image_table_lookup("image_yview");
+gdis_wid = gtk_image_new_from_pixbuf(pixbuf);
+gtk_toolbar_append_item(GTK_TOOLBAR (toolbar),
+                        NULL,
+                        "View down y axis",
+                        "Private",
+                        gdis_wid,
+                        GTK_SIGNAL_FUNC(gui_view_y),
+                        NULL);
+
+/* view down z axis */
+pixbuf = image_table_lookup("image_zview");
+gdis_wid = gtk_image_new_from_pixbuf(pixbuf);
+gtk_toolbar_append_item(GTK_TOOLBAR (toolbar),
+                        NULL,
+                        "View down z axis",
+                        "Private",
+                        gdis_wid,
+                        GTK_SIGNAL_FUNC(gui_view_z),
+                        NULL);
+
+/* view down a axis */
+pixbuf = image_table_lookup("image_aview");
+gdis_wid = gtk_image_new_from_pixbuf(pixbuf);
+gtk_toolbar_append_item(GTK_TOOLBAR (toolbar),
+                        NULL,
+                        "View down a axis",
+                        "Private",
+                        gdis_wid,
+                        GTK_SIGNAL_FUNC(gui_view_a),
+                        NULL);
+
+/* view down b axis */
+pixbuf = image_table_lookup("image_bview");
+gdis_wid = gtk_image_new_from_pixbuf(pixbuf);
+gtk_toolbar_append_item(GTK_TOOLBAR (toolbar),
+                        NULL,
+                        "View down b axis",
+                        "Private",
+                        gdis_wid,
+                        GTK_SIGNAL_FUNC(gui_view_b),
+                        NULL);
+
+/* view down c axis */
+pixbuf = image_table_lookup("image_cview");
+gdis_wid = gtk_image_new_from_pixbuf(pixbuf);
+gtk_toolbar_append_item(GTK_TOOLBAR (toolbar),
+                        NULL,
+                        "View down c axis",
+                        "Private",
+                        gdis_wid,
+                        GTK_SIGNAL_FUNC(gui_view_c),
+                        NULL);
+
+/* rotate about x axis */
+pixbuf = image_table_lookup("image_rotate1");
+gdis_wid = gtk_image_new_from_pixbuf(pixbuf);
+gtk_toolbar_append_item(GTK_TOOLBAR (toolbar),
+                        NULL,
+                        "Rotate about canvas axis 1",
+                        "Private",
+                        gdis_wid,
+                        GTK_SIGNAL_FUNC(gui_rotate_x),
+                        NULL);
+
+/* rotate about y axis */
+pixbuf = image_table_lookup("image_rotate2");
+gdis_wid = gtk_image_new_from_pixbuf(pixbuf);
+gtk_toolbar_append_item(GTK_TOOLBAR (toolbar),
+                        NULL,
+                        "Rotate about canvas axis 2",
+                        "Private",
+                        gdis_wid,
+                        GTK_SIGNAL_FUNC(gui_rotate_y),
+                        NULL);
+
+/* rotate about z axis */
+pixbuf = image_table_lookup("image_rotate3");
+gdis_wid = gtk_image_new_from_pixbuf(pixbuf);
+gtk_toolbar_append_item(GTK_TOOLBAR (toolbar),
+                        NULL,
+                        "Rotate about canvas axis 3",
+                        "Private",
+                        gdis_wid,
+                        GTK_SIGNAL_FUNC(gui_rotate_z),
+                        NULL);
+
+/* rotation angle spinner */
+angle_spin = gtk_spin_button_new_with_range(-360, 360, 0.1);
+gtk_spin_button_set_value (GTK_SPIN_BUTTON(angle_spin), DEFAULT_ANGLE);
+gtk_toolbar_append_widget(GTK_TOOLBAR (toolbar),
+                        angle_spin,
+                        "Rotation angle",
+                        NULL);
+
+gtk_toolbar_append_space(GTK_TOOLBAR(toolbar));
+
+/* animation */
+pixbuf = image_table_lookup("image_animate");
+gdis_wid = gtk_image_new_from_pixbuf(pixbuf);
+gtk_toolbar_append_item(GTK_TOOLBAR (toolbar),
+                        NULL,
+                        "Animation",
+                        "Private",
+                        gdis_wid,
+                        GTK_SIGNAL_FUNC(gui_animate_dialog),
+                        NULL);
+
+/* transformation record button */
+pixbuf = image_table_lookup("image_camera");
+gdis_wid = gtk_image_new_from_pixbuf(pixbuf);
+gtk_toolbar_append_item(GTK_TOOLBAR (toolbar),
+                        NULL,
+                        "Record mode",
+                        "Private",
+                        gdis_wid,
+                        GTK_SIGNAL_FUNC(gtk_mode_switch),
+                        GINT_TO_POINTER(RECORD));
+
 /* normal viewing button */
 pixbuf = image_table_lookup("image_arrow");
 gdis_wid = gtk_image_new_from_pixbuf(pixbuf);
@@ -2092,6 +2367,8 @@ gtk_toolbar_append_item(GTK_TOOLBAR (toolbar),
                         gdis_wid,
                         GTK_SIGNAL_FUNC(gtk_mode_switch),
                         GINT_TO_POINTER(FREE));
+
+gtk_toolbar_append_space(GTK_TOOLBAR(toolbar));
 
 /* plot control button */
 pixbuf = image_table_lookup("image_plots");
@@ -2263,8 +2540,8 @@ gtk_paned_pack2(GTK_PANED(vpaned), sysenv.tpane, TRUE, TRUE);
 gtk_widget_set_size_request(sysenv.tpane, -1, sysenv.tray_height);
 gtk_widget_show(sysenv.tpane);
 
-text = g_strdup_printf("This is free software, distributed under the terms of the GNU public license (GPL).\nFor more information visit http://www.gnu.org\n");
-gui_text_show(WARNING, text);
+text = g_strdup_printf("This is free software, distributed under the terms of the GNU public license (GPL).\nFor more information visit http://www.gnu.org/\n");
+gui_text_show(INFO, text);
 g_free(text);
 
 text = g_strdup_printf("Welcome to GDIS version %4.2f.%d (%d), brought to you by Sean Fleming, Okadome Valencia, and Andrew Rohl\n",VERSION,PATCH,YEAR);

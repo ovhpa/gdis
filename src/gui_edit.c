@@ -249,25 +249,27 @@ update_transmat();
 /********************************************/
 /* put text entry values into actual matrix */
 /********************************************/
-void change_transmat(GtkWidget *w)
+void change_transmat(GtkWidget *w, gpointer ptr)
 {
-gint i;
+gint i = GPOINTER_TO_INT(ptr);
 const gchar *text;
+
 if(w==NULL) return;
-for(i=0;i<12;i++){
-	text = gtk_entry_get_text(GTK_ENTRY(CEDIT.transmat[i]));
-	if (i < 9)
-	  CEDIT.tmat[i] = str_to_float(text);
-	else
-	  CEDIT.tvec[i-9] = str_to_float(text);
-	}
+
+text = gtk_entry_get_text(GTK_ENTRY(CEDIT.transmat[i]));
+if (i < 9)
+  CEDIT.tmat[i] = str_to_float(text);
+else
+  CEDIT.tvec[i-9] = str_to_float(text);
+
 }
 
 /************************************************/
 /* apply the current transformation/translation */
 /************************************************/
-void apply_transmat(GtkWidget *w, gint mode)
+void apply_transmat(GtkWidget *w, gpointer ptr)
 {
+gint mode = GPOINTER_TO_INT(ptr);
 GSList *item, *list=NULL;
 struct model_pak *data;
 struct core_pak *core;
@@ -324,6 +326,7 @@ zone_init(data);
 connect_bonds(data);
 connect_molecules(data);
 
+model_content_refresh(data);
 redraw_canvas(SINGLE);
 }
 
@@ -438,6 +441,166 @@ gui_text_show(STANDARD, txt);
 redraw_canvas(SINGLE);
 }
 
+/********************************************/
+/* change region of selection               */
+/********************************************/
+#define DEBUG_REGION_CHANGE 0
+void region_change(GtkWidget *w, gint region)
+{
+GSList *list;
+struct model_pak *data;
+struct core_pak *core;
+
+data = sysenv.active_model;
+
+/* checks */
+if (!data)
+  return;
+if (!data->selection)
+  {
+  gui_text_show(WARNING, "Empty selection.\n");
+  return;
+  }
+
+#if DEBUG_REGION_CHANGE
+printf(stderr, "New region: %d\n", region);
+#endif
+
+/* change all atoms in selection */
+for (list=data->selection ; list ; list=g_slist_next(list))
+  {
+  core = list->data;
+  switch (region)
+    {
+    case REGION1A:
+      core->region = REGION1A;
+      if (core->shell)
+        (core->shell)->region = REGION1A;
+      break;
+    case REGION2A:
+      core->region = REGION2A;
+      if (core->shell)
+        (core->shell)->region = REGION2A;
+      break;
+    case REGION1B:
+      core->region = REGION1B;
+      if (core->shell)
+        (core->shell)->region = REGION1B;
+      break;
+    case REGION2B:
+      core->region = REGION2B;
+      if (core->shell)
+        (core->shell)->region = REGION2B;
+      break;
+    default:
+      break;
+    }
+  }
+
+redraw_canvas(SINGLE);
+}
+
+/********************************************/
+/* add/remove from growth slice             */
+/********************************************/
+#define DEBUG_GROWTH_CHANGE 0
+void region_growth_slice(GtkWidget *w, gint growth)
+{
+GSList *list;
+struct model_pak *data;
+struct core_pak *core;
+
+data = sysenv.active_model;
+
+/* checks */
+if (!data)
+  return;
+if (data->periodic != 2)
+  return;
+if (!data->selection)
+  {
+  gui_text_show(WARNING, "Empty selection.\n");
+  return;
+  }
+
+/* change all atoms in selection */
+for (list=data->selection ; list ; list=g_slist_next(list))
+  {
+  core = list->data;
+  switch (growth)
+    {
+    case GROWTH_ADD:
+      core->growth = TRUE;
+      break;
+    case GROWTH_DEL:
+      core->growth = FALSE;
+      break;
+    default:
+      break;
+    }
+  }
+
+redraw_canvas(SINGLE);
+}
+
+/**********************************************/
+/* change the atom labels to elemental symbol */
+/**********************************************/
+#define DEBUG_ATOM_LABELS 0
+void label_change(GtkWidget *w, gint label)
+{
+GSList *list;
+struct model_pak *data;
+struct core_pak *core;
+struct shel_pak *shel;
+struct elem_pak elem_data;
+
+data = sysenv.active_model;
+
+/* checks */
+if (!data)
+  return;
+
+switch (label)
+  {
+  case ELEM:
+     for (list=data->cores ; list ; list=g_slist_next(list))
+       {
+       core = list->data;
+       get_elem_data(core->atom_code, &elem_data, data);
+       g_free(core->atom_label);
+       core->atom_label = g_strdup(elem_data.symbol);
+       /* update atttached shell */
+        if (core->shell)
+          {
+          shel = core->shell;
+          g_free(shel->shell_label);
+          shel->shell_label = g_strdup(elem_data.symbol);
+          }
+       }
+    break;
+  case SELECT:
+     for (list=data->selection ; list ; list=g_slist_next(list))
+       {
+       core = list->data;
+       get_elem_data(core->atom_code, &elem_data, data);
+       g_free(core->atom_label);
+       core->atom_label = g_strdup(elem_data.symbol);
+       /* update atttached shell */
+        if (core->shell)
+          {
+          shel = core->shell;
+          g_free(shel->shell_label);
+          shel->shell_label = g_strdup(elem_data.symbol);
+          }
+       }
+    break;
+  default:
+    break;
+  }
+gui_refresh_selection();
+redraw_canvas(SINGLE);
+}
 /****************************/
 /* connectivity only update */
 /****************************/
@@ -466,7 +629,7 @@ struct model_pak *data;
 data = model_new();
 sysenv.active_model = data;
 
-/* setup model parameters */
+/* set up model parameters */
 data->id = CREATOR;
 strcpy(data->filename, "new_model");
 g_free(data->basename);
@@ -539,6 +702,7 @@ g_slist_free(data->unique_atom_list);
 data->unique_atom_list = find_unique(ELEMENT, data);
 init_atom_colour(core, data);
 init_atom_charge(core, data);
+init_atom_mass(core, data);
 calc_emp(data);
 
 /* done */
@@ -563,7 +727,7 @@ if (!model)
 /* remove all symmetry and convert to cartesian */
 space_make_p1(model);
 
-/* make coordinates cartesian for the prep stqage */
+/* make coordinates cartesian for the prep stage */
 for (list=model->cores ; list ; list=g_slist_next(list))
   {
   core = list->data;
@@ -579,6 +743,15 @@ for (list=model->shels ; list ; list=g_slist_next(list))
 matmat(CEDIT.tmat, model->latmat);
 model->fractional = FALSE;
 model->construct_pbc = TRUE;
+
+/* Set lattice matrix to identity matrix for non-periodic systems */
+if( model->periodic == 0 )
+  {
+  matrix_identity(model->latmat);
+  matrix_identity(model->ilatmat);
+  matrix_identity(model->rlatmat);
+  }
+
 model_prep(model);
 
 /* GUI updates */
@@ -613,7 +786,7 @@ n = (guint)SPIN_IVAL(GTK_SPIN_BUTTON(CEDIT.periodicity_spin));
 /* if we're increasing the periodicity, we need repeat vector info */
 if (n > model->periodic)
   {
-/* check if its the unit vector (ie likely unchanged from default) */
+/* check if it's the unit vector (ie likely unchanged from default) */
   for (i=model->periodic ; i<n ; i++)
     {
     VEC3SET(x, CEDIT.tmat[i], CEDIT.tmat[i+3], CEDIT.tmat[i+6]);
@@ -624,7 +797,9 @@ if (n > model->periodic)
                                       GTK_DIALOG_DESTROY_WITH_PARENT,
                                       GTK_MESSAGE_WARNING,
                                       GTK_BUTTONS_YES_NO,
-                                     "Are you sure the transformation matrix contains the appropriate repeat vectors for this change in periodicity?");
+                                      "Are you sure the transformation matrix contains "
+                                      "the appropriate repeat vectors for this change "
+                                      "in periodicity?");
 
       button = gtk_dialog_run(GTK_DIALOG(dialog));
       gtk_widget_destroy(dialog);
@@ -636,10 +811,13 @@ if (n > model->periodic)
     }
   }
 
+/* remove all images */
+space_image_widget_reset();
+
 /* remove all symmetry and convert to cartesian */
 space_make_p1(model);
 
-/* make coordinates cartesian for the prep stqage */
+/* make coordinates cartesian for the prep stage */
 for (list=model->cores ; list ; list=g_slist_next(list))
   {
   core = list->data;
@@ -651,7 +829,7 @@ for (list=model->shels ; list ; list=g_slist_next(list))
   vecmat(model->latmat, shell->x);
   }
 
-/* set the (extra) new lattice matrix periodicty */
+/* set the (extra) new lattice matrix periodicity */
 for (i=model->periodic ; i<n ; i++)
   {
   model->latmat[i+0] = CEDIT.tmat[i+0];
@@ -662,8 +840,20 @@ for (i=model->periodic ; i<n ; i++)
 /* init new lattice */
 model->periodic = n;
 model->fractional = FALSE;
-model->construct_pbc = TRUE;
+	
+/* Reset pbc's for non-periodic structure */
+if (n == 0) 
+  {
+  VEC3SET(&model->pbc[0], 1.0, 1.0, 1.0);
+  VEC3SET(&model->pbc[3], 0.5*G_PI, 0.5*G_PI, 0.5*G_PI);
+  model->construct_pbc = FALSE;
+  model->axes_type = CARTESIAN;
+  }
+else
+  model->construct_pbc = TRUE; 
+
 model_prep(model);
+model_content_refresh(model);
 
 /* GUI updates */
 /* REFRESH */
@@ -793,7 +983,7 @@ for (i=imin ; i<=imax ; i++)
       p[1] /= VEC3MAGSQ(t);
 
 /* clamp to one unit's worth of atoms */
-      dummy[0]=0;dummy[1]=0;//see the fractional_clamp _BUG_
+      dummy[0]=0; dummy[1]=0; // see fractional_clamp _BUG_
       fractional_clamp(p, dummy, 2);
 
 /* choose basis atom type */
@@ -883,9 +1073,22 @@ gui_refresh(GUI_CANVAS);
 /***********************/
 void edit_atom_add(void)
 {
-if (!sysenv.active_model)
+struct model_pak *model;
+
+model = sysenv.active_model;
+
+if (model)
+  {
+  if (model->num_frames > 1)
+    {
+    gui_text_show(WARNING, "Atoms cannot be added to multiframe model.\n");
+    return;
+    }
+  gui_mode_switch(ATOM_ADD);
+  }
+else
   edit_model_create();
-gui_mode_switch(ATOM_ADD);
+
 }
 
 /********************************/
@@ -901,6 +1104,12 @@ struct model_pak *model;
 model = sysenv.active_model;
 if (model)
   {
+  if (model->num_frames > 1)
+    {
+    gui_text_show(WARNING, "Shells cannot be added to multiframe model.\n");
+    return;
+    }
+
   for (list=model->selection ; list ; list=g_slist_next(list))
     {
     core = list->data;
@@ -926,6 +1135,48 @@ if (model)
       }
     }
   }
+  model_content_refresh(model);
+}
+
+/*************************************/
+/* delete shells from selected cores */
+/*************************************/
+void edit_shells_delete(void)
+{
+GSList *list;
+struct core_pak *core;
+struct model_pak *model;
+gdouble charge, mass;
+
+model = sysenv.active_model;
+if (model)
+  {
+  if (model->num_frames > 1)
+    {
+    gui_text_show(INFO, "Shells cannot be deleted from multiframe model.\n");
+    return;
+    }
+
+  for (list=model->selection ; list ; list=g_slist_next(list))
+    {
+    core = list->data;
+
+/* delete shell if present */
+    if (core->shell)
+      {
+      charge = atom_charge(core);
+      mass = atom_mass(core);
+
+      core->charge = charge;
+      core->mass = mass;
+      delete_shell(core->shell);
+      core->shell = NULL;
+      }
+    }
+  }
+delete_commit(model);
+redraw_canvas(SINGLE);
+model_content_refresh(model);
 }
 
 /*****************************/
@@ -963,6 +1214,8 @@ struct model_pak *model = sysenv.active_model;
 if (model)
   {
   model->show_bonds ^= 1;
+  model->surface.ignore_bonding ^= 1;
+  model_content_refresh(model);
 
   redraw_canvas(SINGLE);
   }
@@ -986,6 +1239,7 @@ gui_button_x("Add atoms", edit_atom_add, NULL, vbox);
 gui_button_x("Confine atoms to cell", edit_confine, (gpointer) CORE, vbox);
 gui_button_x("Confine molecules to cell", edit_confine, (gpointer) MOL, vbox);
 gui_button_x("Add shells to selected cores", edit_shells_add, NULL, vbox);
+gui_button_x("Remove shells to selected cores", edit_shells_delete, NULL, vbox);
 
 /* Frame */
 /* FIXME - fix up user bonds then re-introduce */
@@ -2127,6 +2381,51 @@ else
   gui_text_show(WARNING, "Empty or missing Forcefield.\n");
 }
 
+/***********************/
+/* region manipulation */
+/***********************/
+void regions_page(GtkWidget *box, gpointer dialog)
+{
+GtkWidget *frame;
+GtkWidget *vbox;
+/* GtkWidget *region_edit_sensitive_box; */
+//struct model_pak *model;
+
+// g_assert(box != NULL);
+
+/* TODO - allow regions dialog even when no models, but dont draw */
+/* or make insensitive model specific buttons */
+/* model = sysenv.active_model; */
+/* FIXME - dont draw anything if no models are loaded (needs a better/dynamic fix) */
+/* if (!model || model->periodic != 2)
+  return;
+*/
+/* Region options */
+
+frame = gtk_frame_new(NULL);
+gtk_box_pack_start(GTK_BOX (box), frame, FALSE, FALSE, 0);
+
+vbox = gtk_vbox_new(TRUE, 1);
+gtk_container_add(GTK_CONTAINER(frame), vbox);
+gtk_container_set_border_width(GTK_CONTAINER (vbox), PANEL_SPACING);
+gui_button_x("Move selection up", region_move, (gpointer) UP, vbox);
+gui_button_x("Move selection down", region_move, (gpointer) DOWN, vbox);
+gui_button_x("Add selected atoms to region 1", region_change, GINT_TO_POINTER(REGION1A), vbox);
+gui_button_x("Add selected atoms to region 2", region_change, GINT_TO_POINTER(REGION2A), vbox);
+gui_button_x("Add selected atoms to region 3", region_change, GINT_TO_POINTER(REGION1B), vbox);
+gui_button_x("Add selected atoms to region 4", region_change, GINT_TO_POINTER(REGION2B), vbox);
+gui_button_x("Add selected atoms to growth slice", region_growth_slice, (gpointer) GROWTH_ADD, vbox);
+gui_button_x("Remove selected atoms from growth slice", region_growth_slice, (gpointer) GROWTH_DEL, vbox);
+
+/* if (model->periodic == 0 || model->periodic == 2)
+  gtk_widget_set_sensitive(GTK_WIDGET(model->edit_regions_frame), TRUE);
+else
+  gtk_widget_set_sensitive(GTK_WIDGET(model->edit_regions_frame), FALSE);
+*/
+gtk_widget_show_all(box);
+
+}
+
 /*******************************/
 /* core labelling manipulation */
 /*******************************/
@@ -2134,12 +2433,15 @@ void labelling_page(GtkWidget *box, gpointer dialog)
 {
 GtkWidget *w, *vbox, *hbox;
 
-/* Surface options */
-vbox = gui_frame_vbox("Regions", FALSE, FALSE, box);
+/* struct model_pak *model; */
 
-gui_button_x("Move selection up", region_move, (gpointer) UP, vbox);
-gui_button_x("Move selection down", region_move, (gpointer) DOWN, vbox);
-
+/* TODO - allow render dialog even when no models, but dont draw */
+/* or make insensitive model specific buttons */
+/* model = sysenv.active_model; */
+/* FIXME - dont draw anything if no models are loaded (needs a better/dynamic fix) */
+/* if (!model)
+  return;
+*/
 #define FF_TYPING 1
 #if FF_TYPING
 {
@@ -2313,6 +2615,12 @@ trans_page(page);
 
 /* add page */
 page = gtk_vbox_new(FALSE,0);
+label = gtk_label_new("Regions");
+gtk_notebook_append_page(GTK_NOTEBOOK(notebook), page, label);
+regions_page(page, dialog);
+
+/* add page */
+page = gtk_vbox_new(FALSE,0);
 label = gtk_label_new("Labelling");
 gtk_notebook_append_page(GTK_NOTEBOOK(notebook), page, label);
 labelling_page(page, dialog);
@@ -2331,16 +2639,10 @@ gtk_widget_show_all(window);
  
 /* init the transformation values */
 reset_transmat();
-//for (i=0 ; i<12; i++)
-//  g_signal_connect(GTK_OBJECT(CEDIT.transmat[i]), "changed", 
-//                   GTK_SIGNAL_FUNC(change_transmat), (gpointer) i);
-//p_i=0;
-//for(i=0;i<12;p_i++ , i++)
-//  g_signal_connect(GTK_OBJECT(CEDIT.transmat[i]), "changed",
-//                   GTK_SIGNAL_FUNC(change_transmat), p_i);
+
 for(i=0;i<12;i++)
 	g_signal_connect(GTK_OBJECT(CEDIT.transmat[i]), "changed",
-			GTK_SIGNAL_FUNC(change_transmat), NULL);
+			GTK_SIGNAL_FUNC(change_transmat), GINT_TO_POINTER(i));
 }
 
 /***********************************************/
@@ -2351,7 +2653,8 @@ for(i=0;i<12;i++)
 void selection_properties_change(gint type)
 {
 gint n, growth, region, translate;
-gdouble charge;
+gdouble charge, sof;
+gdouble mass, coord, centre=0;
 const gchar *text;
 GSList *list;
 struct elem_pak edata;
@@ -2366,14 +2669,54 @@ if (!model->selection)
 
 switch (type)
   {
+  case ELEMENT:
+    text = gtk_entry_get_text(GTK_ENTRY(CEDIT.apd_element));
+    n = elem_symbol_test(text);
+    if (n)
+      {
+      get_elem_data(n, &edata, model);
+/* make sure we allow enough space for the string and the \0 */
+      for (list=model->selection ; list ; list=g_slist_next(list))
+        {
+        core = list->data;
+        core->atom_code = n;
+/* update attached shell */
+        if (core->shell)
+          {
+          struct shel_pak *shell = core->shell;
+          shell->atom_code = n;
+          }
+/* NEW - don't update element specific data if the element type was not */
+/* changed - ie the user has just made a labelling change (eg C -> C1) */
+        if (edata.number != core->atom_code)
+          {
+          core->atom_code = edata.number;
+          core->bond_cutoff = edata.cova;
+          if (core->shell)
+            {
+            struct shel_pak *shell = core->shell;
+            shell->atom_code = edata.number;
+            }
+          }
+        init_atom_colour(core, model);
+        init_atom_charge(core, model);
+        init_atom_mass(core, model);
+        }
+/* model updates */
+      g_slist_free(model->unique_atom_list);
+      model->unique_atom_list = find_unique(ELEMENT, model);
+      calc_emp(model);
+      }
+    break;
+
   case NAME:
     text = gtk_entry_get_text(GTK_ENTRY(CEDIT.apd_label));
     n = elem_symbol_test(text);
     if (n)
       {
       get_elem_data(n, &edata, model);
-/* make sure we alow enough space for the string and the \0 */
-//    n = (LABEL_SIZE-1 > strlen(text)) ? strlen(text) : LABEL_SIZE-1;/*FIX e1c506*/
+/* make sure we allow enough space for the string and the \0 */
+//    n = (LABEL_SIZE-1 > strlen(text)) ? strlen(text) : LABEL_SIZE-1; /* FIX e1c506 */
       for (list=model->selection ; list ; list=g_slist_next(list))
         {
         core = list->data;
@@ -2386,16 +2729,7 @@ switch (type)
           g_free(shell->shell_label);
           shell->shell_label = g_strdup(text);
           }
-/* NEW - don't update element specific data if the element type was not */
-/* changed - ie the user has just made a labelling change (eg C -> C1) */
-        if (edata.number != core->atom_code)
-          {
-          core->atom_code = edata.number;
-          core->bond_cutoff = edata.cova;
-          }
-        init_atom_colour(core, model);
-        init_atom_charge(core, model);
-        }
+        } 
 /* model updates */
       g_slist_free(model->unique_atom_list);
       model->unique_atom_list = find_unique(ELEMENT, model);
@@ -2411,13 +2745,124 @@ switch (type)
 /* core updates */
       core->charge = charge;
       core->lookup_charge = FALSE;
+      if (core->shell)
+        {
+        (core->shell)->charge = 0.0;
+        (core->shell)->lookup_charge = TRUE;
+        }
       }
     calc_emp(model);
     break;
 
+  case WEIGHT:
+    mass = str_to_float(gtk_entry_get_text(GTK_ENTRY(CEDIT.apd_mass)));
+    for (list=model->selection ; list ; list=g_slist_next(list))
+      {
+      core = list->data;
+/* core updates */
+      core->mass = mass;
+      core->lookup_mass = FALSE;
+      if (core->shell)
+        {
+        (core->shell)->mass = 0.0;
+        (core->shell)->lookup_mass = TRUE;
+        }
+      }
+    break;
+
+    case COORD_X:
+    coord = str_to_float(gtk_entry_get_text(GTK_ENTRY(CEDIT.apd_x)));
+    for (list=model->selection ; list ; list=g_slist_next(list))
+      {
+      core = list->data;
+      centre += core->x[0];
+      }
+    centre /= g_slist_length(model->selection);
+    for (list=model->selection ; list ; list=g_slist_next(list))
+      {
+      core = list->data;
+      core->x[0] += (coord - centre);
+/* update attached shell */
+      if (core->shell)
+        {
+        struct shel_pak *shell = core->shell;
+        shell->x[0] += (coord - centre);
+        }
+      }
+    coords_compute(model);
+    connect_refresh(model);
+    break;
+
+  case COORD_Y:
+    coord = str_to_float(gtk_entry_get_text(GTK_ENTRY(CEDIT.apd_y)));
+    for (list=model->selection ; list ; list=g_slist_next(list))
+      {
+      core = list->data;
+      centre += core->x[1];
+      }
+    centre /= g_slist_length(model->selection);
+    for (list=model->selection ; list ; list=g_slist_next(list))
+      {
+      core = list->data;
+      core->x[1] += (coord - centre);
+/* update attached shell */
+      if (core->shell)
+        {
+        struct shel_pak *shell = core->shell;
+        shell->x[1] += (coord - centre);
+        }
+      }
+    coords_compute(model);
+    connect_refresh(model);
+    break;
+ 
+  case COORD_Z:
+    coord = str_to_float(gtk_entry_get_text(GTK_ENTRY(CEDIT.apd_z)));
+    for (list=model->selection ; list ; list=g_slist_next(list))
+      {
+      core = list->data;
+      centre += core->x[2];
+      }
+    centre /= g_slist_length(model->selection);
+    for (list=model->selection ; list ; list=g_slist_next(list))
+      {
+      core = list->data;
+      core->x[2] += (coord - centre);
+/* update attached shell */
+      if (core->shell)
+        {
+        struct shel_pak *shell = core->shell;
+        shell->x[2] += (coord - centre);
+        }
+      }
+    coords_compute(model);
+    connect_refresh(model);
+    break;
+
+  case SOF:
+    sof = str_to_float(gtk_entry_get_text(GTK_ENTRY(CEDIT.apd_sof)));
+    for (list=model->selection ; list ; list=g_slist_next(list))
+      {
+      core = list->data;
+/* core updates */
+      if (sof <= 11 && sof > 0)
+        {
+        core->sof = sof;
+        core->has_sof = TRUE;
+        if (core->shell)
+          {
+          (core->shell)->sof = sof;
+          core->has_sof = TRUE;
+          }
+        }
+      }
+    break;
+
   case CORE_GROWTH_SLICE:
-    growth = str_to_float(gtk_entry_get_text(GTK_ENTRY(CEDIT.apd_growth)));
-    growth = CLAMP(growth, 0, 1);
+    growth = 0;
+    text = gtk_entry_get_text(GTK_ENTRY(CEDIT.apd_growth));
+    if (g_ascii_tolower(text[0]) == 't' || text[0] == '1' || text[0] == 'y')
+       growth = 1;
     for (list=model->selection ; list ; list=g_slist_next(list))
       {
       core = list->data;
@@ -2428,10 +2873,12 @@ switch (type)
     break;
 
   case CORE_REGION:
-    region = str_to_float(gtk_entry_get_text(GTK_ENTRY(CEDIT.apd_region)));
+    text = gtk_entry_get_text(GTK_ENTRY(CEDIT.apd_region));
+    region = str_to_float(text)-1;
     if (region > model->region_max)
       model->region_max = region;
-
+    if (region < 1)
+      region = 0;
     for (list=model->selection ; list ; list=g_slist_next(list))
       {
       core = list->data;
@@ -2445,8 +2892,10 @@ switch (type)
     break;
 
   case CORE_TRANSLATE:
-    translate = str_to_float(gtk_entry_get_text(GTK_ENTRY(CEDIT.apd_translate)));
-    translate = CLAMP(translate, 0, 1);
+    translate = 0;
+    text = gtk_entry_get_text(GTK_ENTRY(CEDIT.apd_translate));
+    if (g_ascii_tolower(text[0]) == 't' || text[0] == '1' || text[0] == 'y')
+       translate = 1;
     for (list=model->selection ; list ; list=g_slist_next(list))
       {
       core = list->data;
@@ -2481,12 +2930,19 @@ gui_refresh(GUI_CANVAS);
 void atom_properties_change(GtkWidget *w, gint type)
 {
 gint n, growth, region, translate;
+gdouble temp;
 const gchar *text;
 struct elem_pak edata;
 struct model_pak *model;
-if(w==NULL) return;
+
+if(w == NULL)
+  return;
+
 model = sysenv.active_model;
 if (!model)
+  return;
+
+if (g_slist_length(model->selection) == 0)
   return;
 
 /* act on multiple atoms? */
@@ -2501,6 +2957,36 @@ if (!CEDIT.apd_core)
 
 switch(type)
   {
+  case ELEMENT:
+    text = gtk_entry_get_text(GTK_ENTRY(CEDIT.apd_element));
+    n = elem_symbol_test(text);
+    CEDIT.apd_core->atom_code = n;
+
+/* if recognized -> update */
+    if (n)
+      {
+      get_elem_data(n, &edata, model);
+
+/* NEW - don't update element specific data if the element type was not */
+/* changed - ie the user has just made a labelling change (eg C -> C1) */
+      if (n != CEDIT.apd_core->atom_code)
+        {
+        CEDIT.apd_core->atom_code = n;
+        CEDIT.apd_core->bond_cutoff = edata.cova;
+        }
+      init_atom_colour(CEDIT.apd_core, model);
+      init_atom_charge(CEDIT.apd_core, model);
+      init_atom_mass(CEDIT.apd_core, model);
+
+      g_slist_free(model->unique_atom_list);
+      model->unique_atom_list = find_unique(ELEMENT, model);
+      calc_emp(model);
+
+/* REFRESH */
+      gui_refresh(GUI_MODEL_PROPERTIES);
+      }
+    break;
+
   case NAME:
     text = gtk_entry_get_text(GTK_ENTRY(CEDIT.apd_label));
     g_free(CEDIT.apd_core->atom_label);
@@ -2529,6 +3015,7 @@ if (CEDIT.apd_core->shell)
         }
       init_atom_colour(CEDIT.apd_core, model);
       init_atom_charge(CEDIT.apd_core, model);
+      init_atom_mass(CEDIT.apd_core, model);
 
       g_slist_free(model->unique_atom_list);
       model->unique_atom_list = find_unique(ELEMENT, model);
@@ -2553,6 +3040,12 @@ if (CEDIT.apd_core->shell)
     calc_emp(model);
     break;
 
+  case WEIGHT:
+    text = gtk_entry_get_text(GTK_ENTRY(CEDIT.apd_mass));
+    CEDIT.apd_core->mass = str_to_float(text);
+    CEDIT.apd_core->lookup_mass = FALSE;
+    break;
+  
   case COORD_X:
     text = gtk_entry_get_text(GTK_ENTRY(CEDIT.apd_x));
     CEDIT.apd_core->x[0] = str_to_float(text);
@@ -2571,9 +3064,25 @@ if (CEDIT.apd_core->shell)
     coords_compute(model);
     break;
 
+  case SOF:
+    temp = str_to_float(gtk_entry_get_text(GTK_ENTRY(CEDIT.apd_sof)));
+    if (temp <= 1.0 && temp > 0)
+      {
+      CEDIT.apd_core->sof = temp;
+      CEDIT.apd_core->has_sof = TRUE;
+      if (CEDIT.apd_core->shell)
+        {
+        (CEDIT.apd_core->shell)->sof = temp;
+        CEDIT.apd_core->has_sof = TRUE;
+        }
+      }
+    break;
+
   case CORE_GROWTH_SLICE:
+    growth = 0;
     text = gtk_entry_get_text(GTK_ENTRY(CEDIT.apd_growth));
-    growth = CLAMP(str_to_float(text), 0, 1);
+    if (g_ascii_tolower(text[0]) == 't' || text[0] == '1' || text[0] == 'y')
+       growth = 1;
     CEDIT.apd_core->growth = growth;
     if (model->colour_scheme == GROWTH_SLICE)
       atom_colour_scheme(GROWTH_SLICE, CEDIT.apd_core, model);
@@ -2581,9 +3090,11 @@ if (CEDIT.apd_core->shell)
 
   case CORE_REGION:
     text = gtk_entry_get_text(GTK_ENTRY(CEDIT.apd_region));
-    region = str_to_float(text);
+    region = str_to_float(text)-1;
     if (region > model->region_max)
       model->region_max = region;
+    if (region < 1)
+      region = 0;
     CEDIT.apd_core->region = region;
     if (CEDIT.apd_core->shell)
       (CEDIT.apd_core->shell)->region = region;
@@ -2592,8 +3103,10 @@ if (CEDIT.apd_core->shell)
     break;
 
   case CORE_TRANSLATE:
+    translate = 0;
     text = gtk_entry_get_text(GTK_ENTRY(CEDIT.apd_translate));
-    translate = CLAMP(str_to_float(text), 0, 1);
+    if (g_ascii_tolower(text[0]) == 't' || text[0] == '1' || text[0] == 'y')
+       translate = 1;
     CEDIT.apd_core->translate = translate;
     if (CEDIT.apd_core->shell)
       (CEDIT.apd_core->shell)->translate = translate;
@@ -2612,44 +3125,45 @@ gui_refresh(GUI_CANVAS);
 /*************************************/
 void gui_refresh_selection(void)
 {
-gint n, cflag=FALSE;
-gdouble q, centroid[3];
-gchar *element, *label, *type, *charge, *x, *y, *z, *growth, *region, *translate;
-struct core_pak *core;
+gint n=0;
+gdouble q=0, m=0, s=0, centroid[3];
+gchar *element, *label, *type, *charge, *x, *y, *z;
+gchar *mass, *sof, *growth, *region, *translate;
+struct core_pak *core=NULL;
 struct model_pak *model;
 GSList *list;
 
 model = sysenv.active_model;
-core = NULL;
-if (model)
+if (!model)
+  return;
+
+VEC3SET(centroid, 0.0, 0.0, 0.0);
+if (model->selection)
   {
-  list = model->selection;
-  n = g_slist_length(list);
-  switch (n)
+  n = g_slist_length(model->selection);
+  if( n == 1)
+    core = (model->selection)->data;
+  else
     {
-    case -1:
-      g_assert_not_reached();
-    case 0:
-      break;
-    case 1:
+    for (list=model->selection ; list ; list=g_slist_next(list))
+      {
       core = list->data;
-      break;
-
-    default:
-      VEC3SET(centroid, 0.0, 0.0, 0.0);
-      for (list=model->selection ; list ; list=g_slist_next(list))
-        {
-        core = list->data;
-        ARR3ADD(centroid, core->x);
-        }
-      VEC3MUL(centroid, 1.0 / (gdouble) n);
+      ARR3ADD(centroid, core->x);
+      q += atom_charge(core);
+      m += atom_mass(core);
+      if (core->has_sof)
+        s += core->sof;
+      else
+        s += 1.0;
+      }
+    s /= (gdouble) n;
+    VEC3MUL(centroid, 1.0 / (gdouble) n);
 /* special print case - centroid display */
-      cflag = TRUE;
-      core = NULL;
-    }
+    core = NULL;
   }
+}
 
-if (core && model)
+if (core)
   {
 /* data available */
   element = g_strdup(elements[core->atom_code].symbol);
@@ -2660,16 +3174,23 @@ if (core && model)
   else
     type = g_strdup("");
 
-  q = atom_charge(core); /* Replaced by C. Fisher 2004 */
+  q = atom_charge(core);
   charge = g_strdup_printf("%9.4f", q);
+
+  m = atom_mass(core);
+  mass = g_strdup_printf("%9.4f", m);
 
   x = g_strdup_printf("%9.4f", core->x[0]);
   y = g_strdup_printf("%9.4f", core->x[1]);
   z = g_strdup_printf("%9.4f", core->x[2]);
 
-  growth = g_strdup_printf("%d", core->growth);
-  region = g_strdup_printf("%d", core->region);
-  translate = g_strdup_printf("%d", core->translate);
+  if (core->has_sof)
+    sof = g_strdup_printf("%9.4f", core->sof);
+  else
+    sof = g_strdup("  1.0000");
+  growth = g_strdup_printf("%s", (core->growth?"Yes":"No"));
+  region = g_strdup_printf("%d", core->region+1); /* Regions 1 to 4 stored as 0 to 3 */
+  translate = g_strdup_printf("%s", (core->translate?"Yes":"No"));
 
   CEDIT.apd_core = core;
   }
@@ -2678,14 +3199,16 @@ else
 /* otherwise defaults */
   element = g_strdup("");
   type = g_strdup("");
-  charge = g_strdup("");
 
-  if (cflag)
+  if (n > 1)
     {
     label = g_strdup("centroid");
     x = g_strdup_printf("%9.4f", centroid[0]);
     y = g_strdup_printf("%9.4f", centroid[1]);
     z = g_strdup_printf("%9.4f", centroid[2]);
+    charge = g_strdup_printf("%9.4f", q);
+    mass = g_strdup_printf("%9.4f", m);
+    sof = g_strdup_printf("%9.4f", s);
     }
   else
     {
@@ -2693,6 +3216,9 @@ else
     x = g_strdup("");
     y = g_strdup("");
     z = g_strdup("");
+    charge = g_strdup("");
+    mass = g_strdup("");
+    sof = g_strdup("");
     }
 
   growth = g_strdup("");
@@ -2704,37 +3230,43 @@ else
 CEDIT.apd_data = NULL;
 
 /* entry updates */
+gtk_entry_set_text(GTK_ENTRY(CEDIT.apd_element), element);
 gtk_entry_set_text(GTK_ENTRY(CEDIT.apd_label), label);
 gtk_entry_set_text(GTK_ENTRY(CEDIT.apd_type), type);
 gtk_entry_set_text(GTK_ENTRY(CEDIT.apd_charge), charge);
+gtk_entry_set_text(GTK_ENTRY(CEDIT.apd_mass), mass);
 gtk_entry_set_text(GTK_ENTRY(CEDIT.apd_x), x);
 gtk_entry_set_text(GTK_ENTRY(CEDIT.apd_y), y);
 gtk_entry_set_text(GTK_ENTRY(CEDIT.apd_z), z);
+gtk_entry_set_text(GTK_ENTRY(CEDIT.apd_sof), sof);
 gtk_entry_set_text(GTK_ENTRY(CEDIT.apd_growth), growth);
 gtk_entry_set_text(GTK_ENTRY(CEDIT.apd_region), region);
 gtk_entry_set_text(GTK_ENTRY(CEDIT.apd_translate), translate);
 
 CEDIT.apd_data = model;
 
-/* cleanup */
+/* clean up */
 g_free(element);
 g_free(label);
 g_free(type);
 g_free(charge);
+g_free(mass);
 g_free(x);
 g_free(y);
 g_free(z);
+g_free(sof);
 g_free(growth);
 g_free(region);
 g_free(translate);
 }
 
-/*******************************************/
-/* display the properties of a single atom */
-/*******************************************/
+/******************************************************/
+/* display the properties of a selected atom or atoms */
+/******************************************************/
 void gui_edit_widget(GtkWidget *box)
 {
 GtkWidget *frame, *hbox, *vbox, *entry;
+GSList *list = NULL, *labels = NULL;
 
 /* checks */
 g_return_if_fail(box != NULL);
@@ -2747,56 +3279,33 @@ gtk_box_pack_start(GTK_BOX(box), hbox, TRUE, TRUE, 0);
 vbox = gtk_vbox_new(TRUE, 0);
 gtk_box_pack_start(GTK_BOX(hbox), vbox, TRUE, TRUE, 0);
 
-/* TODO - put in a for loop? */
+labels = g_slist_prepend(labels, "Translate");
+labels = g_slist_prepend(labels, "Region");
+labels = g_slist_prepend(labels, "Growth");
+labels = g_slist_prepend(labels, "Occupancy");
+labels = g_slist_prepend(labels, "Mass");
+labels = g_slist_prepend(labels, "Charge");
+labels = g_slist_prepend(labels, "z");
+labels = g_slist_prepend(labels, "y");
+labels = g_slist_prepend(labels, "x");
+labels = g_slist_prepend(labels, "FF Type");
+labels = g_slist_prepend(labels, "Label");
+labels = g_slist_prepend(labels, "Element");
 
-entry = gtk_entry_new();
-gtk_entry_set_text(GTK_ENTRY(entry), "Label");
-gtk_entry_set_editable(GTK_ENTRY(entry), FALSE);
-gtk_box_pack_start(GTK_BOX(vbox), entry, FALSE, FALSE, 0);
-
-entry = gtk_entry_new();
-gtk_entry_set_text(GTK_ENTRY(entry), "FF Type");
-gtk_entry_set_editable(GTK_ENTRY(entry), FALSE);
-gtk_box_pack_start(GTK_BOX(vbox), entry, FALSE, FALSE, 0);
-
-entry = gtk_entry_new();
-gtk_entry_set_text(GTK_ENTRY(entry), "X");
-gtk_entry_set_editable(GTK_ENTRY(entry), FALSE);
-gtk_box_pack_start(GTK_BOX(vbox), entry, FALSE, FALSE, 0);
-
-entry = gtk_entry_new();
-gtk_entry_set_text(GTK_ENTRY(entry), "Y");
-gtk_entry_set_editable(GTK_ENTRY(entry), FALSE);
-gtk_box_pack_start(GTK_BOX(vbox), entry, FALSE, FALSE, 0);
-
-entry = gtk_entry_new();
-gtk_entry_set_text(GTK_ENTRY(entry), "Z");
-gtk_entry_set_editable(GTK_ENTRY(entry), FALSE);
-gtk_box_pack_start(GTK_BOX(vbox), entry, FALSE, FALSE, 0);
-
-entry = gtk_entry_new();
-gtk_entry_set_text(GTK_ENTRY(entry), "Charge");
-gtk_entry_set_editable(GTK_ENTRY(entry), FALSE);
-gtk_box_pack_start(GTK_BOX(vbox), entry, FALSE, FALSE, 0);
-
-entry = gtk_entry_new();
-gtk_entry_set_text(GTK_ENTRY(entry), "Growth");
-gtk_entry_set_editable(GTK_ENTRY(entry), FALSE);
-gtk_box_pack_start(GTK_BOX(vbox), entry, FALSE, FALSE, 0);
-
-entry = gtk_entry_new();
-gtk_entry_set_text(GTK_ENTRY(entry), "Region");
-gtk_entry_set_editable(GTK_ENTRY(entry), FALSE);
-gtk_box_pack_start(GTK_BOX(vbox), entry, FALSE, FALSE, 0);
-
-entry = gtk_entry_new();
-gtk_entry_set_text(GTK_ENTRY(entry), "Translate");
-gtk_entry_set_editable(GTK_ENTRY(entry), FALSE);
-gtk_box_pack_start(GTK_BOX(vbox), entry, FALSE, FALSE, 0);
+for (list=labels ; list ; list=g_slist_next(list))
+  {
+  entry = gtk_entry_new();
+  gtk_entry_set_text(GTK_ENTRY(entry), list->data);
+  gtk_entry_set_editable(GTK_ENTRY(entry), FALSE);
+  gtk_box_pack_start(GTK_BOX(vbox), entry, FALSE, FALSE, 0);
+  }
 
 /* right vbox - data */
 vbox = gtk_vbox_new(TRUE, 0);
 gtk_box_pack_end(GTK_BOX(hbox), vbox, TRUE, TRUE, 0);
+
+CEDIT.apd_element = gtk_entry_new();
+gtk_box_pack_start(GTK_BOX(vbox), CEDIT.apd_element, FALSE, FALSE, 0);
 
 CEDIT.apd_label = gtk_entry_new();
 gtk_box_pack_start(GTK_BOX(vbox), CEDIT.apd_label, FALSE, FALSE, 0);
@@ -2816,6 +3325,12 @@ gtk_box_pack_start(GTK_BOX(vbox), CEDIT.apd_z, FALSE, FALSE, 0);
 CEDIT.apd_charge = gtk_entry_new();
 gtk_box_pack_start(GTK_BOX(vbox), CEDIT.apd_charge, FALSE, FALSE, 0);
 
+CEDIT.apd_mass = gtk_entry_new();
+gtk_box_pack_start(GTK_BOX(vbox), CEDIT.apd_mass, FALSE, FALSE, 0);
+
+CEDIT.apd_sof = gtk_entry_new();
+gtk_box_pack_start(GTK_BOX(vbox), CEDIT.apd_sof, FALSE, FALSE, 0);
+
 CEDIT.apd_growth = gtk_entry_new();
 gtk_box_pack_start(GTK_BOX(vbox), CEDIT.apd_growth, FALSE, FALSE, 0);
 
@@ -2826,6 +3341,8 @@ CEDIT.apd_translate = gtk_entry_new();
 gtk_box_pack_start(GTK_BOX(vbox), CEDIT.apd_translate, FALSE, FALSE, 0);
 
 /* attach callbacks (NB: set initial data first) */
+g_signal_connect(GTK_OBJECT(CEDIT.apd_element), "activate",
+                 GTK_SIGNAL_FUNC(atom_properties_change), GINT_TO_POINTER(ELEMENT));
 g_signal_connect(GTK_OBJECT(CEDIT.apd_label), "activate",
                  GTK_SIGNAL_FUNC(atom_properties_change), GINT_TO_POINTER(NAME));
 g_signal_connect(GTK_OBJECT(CEDIT.apd_type), "activate",
@@ -2840,6 +3357,12 @@ g_signal_connect(GTK_OBJECT(CEDIT.apd_z), "activate",
 
 g_signal_connect(GTK_OBJECT(CEDIT.apd_charge), "activate",
                  GTK_SIGNAL_FUNC(atom_properties_change), GINT_TO_POINTER(CHARGE));
+
+g_signal_connect(GTK_OBJECT(CEDIT.apd_mass), "activate",
+                 GTK_SIGNAL_FUNC(atom_properties_change), GINT_TO_POINTER(WEIGHT));
+
+g_signal_connect(GTK_OBJECT(CEDIT.apd_sof), "activate",
+                 GTK_SIGNAL_FUNC(atom_properties_change), GINT_TO_POINTER(SOF));
 
 g_signal_connect(GTK_OBJECT(CEDIT.apd_growth), "activate",
                  GTK_SIGNAL_FUNC(atom_properties_change),
@@ -2870,4 +3393,5 @@ gtk_container_add(GTK_CONTAINER(frame), vbox);
 
 gui_button_x("Mark as ghost", select_flag_ghost, NULL, vbox);
 gui_button_x("Mark as normal", select_flag_normal, NULL, vbox);
+
 }

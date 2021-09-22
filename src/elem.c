@@ -140,7 +140,7 @@ g_assert(key < n);
                 elem.colour[2] = str_to_float(*(buff+3));
 if (VEC3MAGSQ(elem.colour) > 3.0)
   {
-  VEC3MUL(elem.colour, 1.0/65535.0);
+  VEC3MUL(elem.colour, INV_COLOUR_SCALE);
   }
                 set[key]++;
                 break; 
@@ -397,11 +397,59 @@ struct elem_pak elem_data;
 
 get_elem_data(core->atom_code, &elem_data, model);
 ARR3SET(core->colour, elem_data.colour);
-VEC3MUL(core->colour, 65535.0);
+VEC3MUL(core->colour, COLOUR_SCALE);
 if (core->ghost)
   core->colour[3] = 0.5;
 else
   core->colour[3] = 1.0;
+}
+
+/***********************/
+/* set the atom weight */
+/***********************/
+void init_atom_mass(struct core_pak *core, struct model_pak *model)
+{
+struct elem_pak elem_data;
+struct shel_pak *shell;
+
+if (core->lookup_mass)
+  {
+  get_elem_data(core->atom_code, &elem_data, model);
+  core->mass = elem_data.weight;
+  if (core->shell)
+    {
+    shell = core->shell;
+    shell->mass = 0.0;
+    }
+  }
+}
+
+/************************/
+/* set the atom weights */
+/************************/
+void init_model_masses(struct model_pak *model)
+{
+GSList *list;
+
+for (list=model->cores ; list ; list=g_slist_next(list))
+  init_atom_mass(list->data, model);
+}
+
+/*******************************************/
+/* net mass on atom (ie including shell)   */
+/*******************************************/
+gdouble atom_mass(struct core_pak *core)
+{
+gdouble m;
+struct shel_pak *shell;
+
+m = core->mass;
+if (core->shell)
+  {
+  shell = core->shell;
+  m += shell->mass;
+  }
+return(m);
 }
 
 /***********************/
@@ -463,7 +511,7 @@ core->atom_code = elem.number;
 core->bond_cutoff = elem.cova;
 core->charge = elem.charge;
 ARR3SET(core->colour, elem.colour);
-VEC3MUL(core->colour, 65535.0);
+VEC3MUL(core->colour, COLOUR_SCALE);
 }
 
 /*********************************************************/
@@ -491,7 +539,7 @@ for (list=data->cores ; list ; list=g_slist_next(list))
   if (core->region != REGION1A)
     continue;
 */
-  if (core->status & DELETED)
+  if (core->status & (DELETED | HIDDEN))
     continue;
 
   ARR3SET(x, core->x);
@@ -503,7 +551,7 @@ for (list=data->cores ; list ; list=g_slist_next(list))
 /* monopole */
   qsum += core->charge;
 
-/* NB: add shell constribution at the core's z location */
+/* NB: add shell contribution at the core's z location */
   if (core->shell)
     {
     shell = core->shell;
@@ -938,7 +986,7 @@ if (t < 0.0)
   }
 
 ARR3SET(core->colour, elem.colour);
-VEC3MUL(core->colour, 65535.0);
+VEC3MUL(core->colour, COLOUR_SCALE);
 }
 
 /*************************************/
