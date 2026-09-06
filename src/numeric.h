@@ -22,6 +22,10 @@ The GNU GPL can also be found at http://www.gnu.org
 
 /* prototypes */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void init_math(void);
 
 gdouble tbl_sin(gdouble);
@@ -51,3 +55,6 @@ void spline(double *, double *, int, double, double, double *);
 void splint(double *, double *, double *, int, double, double *);
 void fft(gdouble *, gint, gint);
 
+#ifdef __cplusplus
+}
+#endif

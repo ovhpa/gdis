@@ -1,6 +1,6 @@
 /*
 Copyright (C) 2003 by Sean David Fleming
- 
+
 sean@ivec.org
 
 This program is free software; you can redistribute it and/or
@@ -29,32 +29,32 @@ The GNU GPL can also be found at http://www.gnu.org
 #include "numeric.h"
 
 #define T_STEP 0.001
-#define T_STEP_INV 1.0/T_STEP
+#define T_STEP_INV 1.0 / T_STEP
 
 #define ITMAX 100
 #define EPS 3.0e-7
 
 gdouble *s_data;
-gint s_size=0;
-gint sqrt_method=0;
+gint s_size = 0;
+gint sqrt_method = 0;
 
 /**********/
 /* timing */
 /**********/
 gulong mytimer(void)
 {
-gulong usec;
-struct timeval tv;
+  gulong usec;
+  struct timeval tv;
 
 #ifndef __WIN32
-gettimeofday(&tv, NULL);
+  gettimeofday(&tv, NULL);
 #else
 /* TODO */
 #endif
 
-usec = tv.tv_usec + 1000000*tv.tv_sec;
+  usec = tv.tv_usec + 1000000 * tv.tv_sec;
 
-return(usec);
+  return (usec);
 }
 
 /************************************/
@@ -63,25 +63,25 @@ return(usec);
 #define DEBUG_TRIG 0
 void init_trig(void)
 {
-gint i;
-gdouble a,s;
+  gint i;
+  gdouble a, s;
 
-/* alloc */
-s_size = G_PI/T_STEP + 1;
-s_data = (gdouble *) g_malloc(s_size * sizeof(gdouble));
+  /* alloc */
+  s_size = G_PI / T_STEP + 1;
+  s_data = (gdouble *) g_malloc(s_size * sizeof(gdouble));
 
 #if DEBUG_TRIG
-printf("Initializing table: %d points\n", s_size);
+  printf("Initializing table: %d points\n", s_size);
 #endif
 
-i=0;
-for (a=0.0 ; a<=G_PI ; a+= T_STEP)
+  i = 0;
+  for (a = 0.0; a <= G_PI; a += T_STEP)
   {
-  s = sin(a);
-  *(s_data+i) = s;
-  i++;
+    s = sin(a);
+    *(s_data + i) = s;
+    i++;
   }
-g_assert(i == s_size);
+  g_assert(i == s_size);
 }
 
 /********************/
@@ -89,83 +89,80 @@ g_assert(i == s_size);
 /********************/
 gdouble tbl_sin(gdouble angle)
 {
-gint quad, idx, idx2;
-gdouble s,a,s1,s2,rem;
+  gint quad, idx, idx2;
+  gdouble s, a, s1, s2, rem;
 
-/* enforce range [0, 2PI] */
-ca_rad(&angle);
+  /* enforce range [0, 2PI] */
+  ca_rad(&angle);
 
-/* determine quadrant */
-a = angle;
-quad = 0;
-while (a > G_PI*0.5)
+  /* determine quadrant */
+  a = angle;
+  quad = 0;
+  while (a > G_PI * 0.5)
   {
-  a -= G_PI*0.5;
-  quad++;
+    a -= G_PI * 0.5;
+    quad++;
   }
-/* setup angle and sign accordingly */
-s = 1.0;
-switch (quad)
+  /* setup angle and sign accordingly */
+  s = 1.0;
+  switch (quad)
   {
   case 1:
-    a += G_PI*0.5;
+    a += G_PI * 0.5;
     break;
   case 3:
-    a += G_PI*0.5;
+    a += G_PI * 0.5;
   case 2:
     s *= -1.0;
     break;
   }
-/* init retrieval indices */
-idx2 = idx = (gint) (T_STEP_INV * a);
-if (idx2)
-  idx2--;
-else
-  idx2++;
+  /* init retrieval indices */
+  idx2 = idx = (gint) (T_STEP_INV * a);
+  if (idx2)
+    idx2--;
+  else
+    idx2++;
 
-g_assert(idx < s_size);
-g_assert(idx2 >= 0);
+  g_assert(idx < s_size);
+  g_assert(idx2 >= 0);
 
-/* get the two values */
-s1 = *(s_data+idx) * s;
-s2 = *(s_data+idx2) * s;
-/* weighted average */
-rem = T_STEP_INV * a - (gint) (T_STEP_INV * a);
-s = (rem*s2 + (1.0-rem)*s1);
+  /* get the two values */
+  s1 = *(s_data + idx) * s;
+  s2 = *(s_data + idx2) * s;
+  /* weighted average */
+  rem = T_STEP_INV * a - (gint) (T_STEP_INV * a);
+  s = (rem * s2 + (1.0 - rem) * s1);
 
-return(s);
+  return (s);
 }
 
 /**********************/
 /* COSINE replacement */
 /**********************/
-gdouble tbl_cos(gdouble angle)
-{
-return(tbl_sin(angle + G_PI*0.5));
-}
+gdouble tbl_cos(gdouble angle) { return (tbl_sin(angle + G_PI * 0.5)); }
 
 /*******************************************/
 /* get angle made with x axis of 2D vector */
 /*******************************************/
 gdouble angle_x_compute(gdouble x, gdouble y)
 {
-gdouble angle;
+  gdouble angle;
 
-if (x == 0.0)
-  x = G_MINDOUBLE;
-if (fabs(y) <= 0.0001)
-  y = G_MINDOUBLE;
+  if (x == 0.0)
+    x = G_MINDOUBLE;
+  if (fabs(y) <= 0.0001)
+    y = G_MINDOUBLE;
 
-angle = atan(y/x);
+  angle = atan(y / x);
 
-if (y >= 0.0 && x < 0.0)
-  angle += G_PI;
-else if (y < 0.0 && x < 0.0)
-  angle += G_PI;
-else if (y < 0.0 && x > 0.0)
-  angle += 2.0*G_PI;
+  if (y >= 0.0 && x < 0.0)
+    angle += G_PI;
+  else if (y < 0.0 && x < 0.0)
+    angle += G_PI;
+  else if (y < 0.0 && x > 0.0)
+    angle += 2.0 * G_PI;
 
-return(angle);
+  return (angle);
 }
 
 /***************************/
@@ -173,14 +170,14 @@ return(angle);
 /***************************/
 void ca_rad(gdouble *angle)
 {
-gint m;
+  gint m;
 
-m = *angle/(2.0*G_PI);
+  m = *angle / (2.0 * G_PI);
 
-*angle -= (gdouble) m*2.0*G_PI;
+  *angle -= (gdouble) m * 2.0 * G_PI;
 
-if (*angle < 0.0)
-  *angle += 2.0*G_PI;
+  if (*angle < 0.0)
+    *angle += 2.0 * G_PI;
 }
 
 /***************************/
@@ -188,14 +185,14 @@ if (*angle < 0.0)
 /***************************/
 void ca_deg(gdouble *angle)
 {
-gint m;
+  gint m;
 
-m = *angle/360.0;
+  m = *angle / 360.0;
 
-*angle -= (gdouble) m*360.0;
+  *angle -= (gdouble) m * 360.0;
 
-if (*angle < 0.0)
-  *angle += 360.0;
+  if (*angle < 0.0)
+    *angle += 360.0;
 }
 
 /********************/
@@ -203,23 +200,21 @@ if (*angle < 0.0)
 /********************/
 gdouble fast_sqrt(gdouble s)
 {
-gdouble ds, r;
+  gdouble ds, r;
 
-if (sqrt_method)
+  if (sqrt_method)
   {
-/* NB: applicable range [0.1, 1.0] */
-  r = 0.188030699 + 1.48359853*s - 1.0979059*s*s + 0.430357353*s*s*s;
-  do
+    /* NB: applicable range [0.1, 1.0] */
+    r = 0.188030699 + 1.48359853 * s - 1.0979059 * s * s + 0.430357353 * s * s * s;
+    do
     {
-    ds = s - r*r;
-    r += 0.5*ds/r;
-    }
-  while (ds > FRACTION_TOLERANCE);
-  }
-else
-  return(sqrt(s));
+      ds = s - r * r;
+      r += 0.5 * ds / r;
+    } while (ds > FRACTION_TOLERANCE);
+  } else
+    return (sqrt(s));
 
-return(r);
+  return (r);
 }
 
 /**************************************************/
@@ -227,8 +222,8 @@ return(r);
 /**************************************************/
 void init_sqrt(void)
 {
-/* TODO - test if it is faster */
-sqrt_method = 1;
+  /* TODO - test if it is faster */
+  sqrt_method = 1;
 }
 
 /*******************/
@@ -236,8 +231,8 @@ sqrt_method = 1;
 /*******************/
 void init_math(void)
 {
-init_trig();
-init_sqrt();
+  init_trig();
+  init_sqrt();
 }
 
 /***************************************************/
@@ -245,13 +240,13 @@ init_sqrt();
 /***************************************************/
 gint nearest_int(gdouble x)
 {
-gint i;
+  gint i;
 
-if (x > 0.0)
-  i = (x+0.5);
-else
-  i = (x-0.5);
-return(i);
+  if (x > 0.0)
+    i = (x + 0.5);
+  else
+    i = (x - 0.5);
+  return (i);
 }
 
 /********************/
@@ -259,15 +254,15 @@ return(i);
 /********************/
 gdouble decimal_round(gdouble x, gint dp)
 {
-gint i;
-gdouble y, f;
+  gint i;
+  gdouble y, f;
 
-f = pow(10.0, dp);
-y = x * f;
-i = nearest_int(y);
-y = i;
-y /= f;
-return(y);
+  f = pow(10.0, dp);
+  y = x * f;
+  i = nearest_int(y);
+  y = i;
+  y /= f;
+  return (y);
 }
 
 /**********/
@@ -275,20 +270,19 @@ return(y);
 /**********/
 gdouble gammln(gdouble xx)
 {
-gint j;
-gdouble x,tmp,ser;
-static gdouble cof[6]={76.18009173,-86.50532033,24.01409822,
-                       -1.231739516,0.120858003e-2,-0.536382e-5};
-x = xx-1.0;
-tmp = x+5.5;
-tmp -= (x+0.5)*log(tmp);
-ser = 1.0;
-for (j=0 ; j<=5 ; j++)
+  gint j;
+  gdouble x, tmp, ser;
+  static gdouble cof[6] = {76.18009173, -86.50532033, 24.01409822, -1.231739516, 0.120858003e-2, -0.536382e-5};
+  x = xx - 1.0;
+  tmp = x + 5.5;
+  tmp -= (x + 0.5) * log(tmp);
+  ser = 1.0;
+  for (j = 0; j <= 5; j++)
   {
-  x += 1.0;
-  ser += cof[j]/x;
+    x += 1.0;
+    ser += cof[j] / x;
   }
-return -tmp+log(2.50662827465*ser);
+  return -tmp + log(2.50662827465 * ser);
 }
 
 /*******/
@@ -296,10 +290,10 @@ return -tmp+log(2.50662827465*ser);
 /*******/
 gint gcd(gint p, gint q)
 {
-if (q == 0)
-  return(abs(p));
-else
-  return(gcd(q, p%q));
+  if (q == 0)
+    return (abs(p));
+  else
+    return (gcd(q, p % q));
 }
 
 /*******/
@@ -307,34 +301,34 @@ else
 /*******/
 void gcf(gdouble *gammcf, gdouble a, gdouble x, gdouble *gln)
 {
-gint n;
-gdouble gold=0.0,g,fac=1.0,b1=1.0;
-gdouble b0=0.0,anf,ana,an,a1,a0=1.0;
+  gint n;
+  gdouble gold = 0.0, g, fac = 1.0, b1 = 1.0;
+  gdouble b0 = 0.0, anf, ana, an, a1, a0 = 1.0;
 
-*gln=gammln(a);
-a1=x;
-for (n=1 ; n<=ITMAX ; n++)
+  *gln = gammln(a);
+  a1 = x;
+  for (n = 1; n <= ITMAX; n++)
   {
-  an = (gdouble) n;
-  ana = an-a;
-  a0 = (a1+a0*ana)*fac;
-  b0 = (b1+b0*ana)*fac;
-  anf = an*fac;
-  a1 = x*a0+anf*a1;
-  b1 = x*b0+anf*b1;
-  if (a1) 
+    an = (gdouble) n;
+    ana = an - a;
+    a0 = (a1 + a0 * ana) * fac;
+    b0 = (b1 + b0 * ana) * fac;
+    anf = an * fac;
+    a1 = x * a0 + anf * a1;
+    b1 = x * b0 + anf * b1;
+    if (a1)
     {
-    fac = 1.0/a1;
-    g = b1*fac;
-    if (fabs((g-gold)/g) < EPS)
+      fac = 1.0 / a1;
+      g = b1 * fac;
+      if (fabs((g - gold) / g) < EPS)
       {
-      *gammcf = exp(-x+a*log(x)-(*gln))*g;
-      return;
+        *gammcf = exp(-x + a * log(x) - (*gln)) * g;
+        return;
       }
-    gold = g;
+      gold = g;
     }
   }
-g_assert_not_reached();
+  g_assert_not_reached();
 }
 
 /********/
@@ -342,34 +336,33 @@ g_assert_not_reached();
 /********/
 void gser(gdouble *gamser, gdouble a, gdouble x, gdouble *gln)
 {
-gint n;
-gdouble sum,del,ap;
+  gint n;
+  gdouble sum, del, ap;
 
-*gln = gammln(a);
-if (x <= 0.0)
+  *gln = gammln(a);
+  if (x <= 0.0)
   {
-  if (x < 0.0)
-    g_assert_not_reached();
-  *gamser=0.0;
-  return;
-  }
-else
+    if (x < 0.0)
+      g_assert_not_reached();
+    *gamser = 0.0;
+    return;
+  } else
   {
-  ap = a;
-  del = sum=1.0/a;
-  for (n=1 ; n<=ITMAX ; n++)
+    ap = a;
+    del = sum = 1.0 / a;
+    for (n = 1; n <= ITMAX; n++)
     {
-    ap += 1.0;
-    del *= x/ap;
-    sum += del;
-    if (fabs(del) < fabs(sum)*EPS)
+      ap += 1.0;
+      del *= x / ap;
+      sum += del;
+      if (fabs(del) < fabs(sum) * EPS)
       {
-      *gamser = sum*exp(-x+a*log(x)-(*gln));
-      return;
+        *gamser = sum * exp(-x + a * log(x) - (*gln));
+        return;
       }
     }
-  g_assert_not_reached();
-  return;
+    g_assert_not_reached();
+    return;
   }
 }
 
@@ -378,20 +371,19 @@ else
 /*********/
 gdouble gammp(gdouble a, gdouble x)
 {
-gdouble gamser,gammcf,gln;
+  gdouble gamser, gammcf, gln;
 
-g_assert(x >= 0.0);
-g_assert(a > 0.0);
+  g_assert(x >= 0.0);
+  g_assert(a > 0.0);
 
-if (x < (a+1.0))
+  if (x < (a + 1.0))
   {
-  gser(&gamser,a,x,&gln);
-  return gamser;
-  }
-else
+    gser(&gamser, a, x, &gln);
+    return gamser;
+  } else
   {
-  gcf(&gammcf,a,x,&gln);
-  return 1.0-gammcf;
+    gcf(&gammcf, a, x, &gln);
+    return 1.0 - gammcf;
   }
 }
 
@@ -400,20 +392,19 @@ else
 /*********/
 gdouble gammq(gdouble a, gdouble x)
 {
-gdouble gamser,gammcf,gln;
+  gdouble gamser, gammcf, gln;
 
-g_assert(x >= 0.0);
-g_assert(a > 0.0);
+  g_assert(x >= 0.0);
+  g_assert(a > 0.0);
 
-if (x < (a+1.0))
+  if (x < (a + 1.0))
   {
-  gser(&gamser,a,x,&gln);
-  return 1.0-gamser;
-  }
-else
+    gser(&gamser, a, x, &gln);
+    return 1.0 - gamser;
+  } else
   {
-  gcf(&gammcf,a,x,&gln);
-  return gammcf;
+    gcf(&gammcf, a, x, &gln);
+    return gammcf;
   }
 }
 
@@ -422,14 +413,14 @@ else
 /******************/
 gdouble erf(gdouble x)
 {
-gdouble val;
+  gdouble val;
 
-val = gammp(0.5, x*x);
+  val = gammp(0.5, x * x);
 
-if (x < 0.0)
-  val *= -1.0;
+  if (x < 0.0)
+    val *= -1.0;
 
-return(val);
+  return (val);
 }
 
 /********************************/
@@ -437,14 +428,14 @@ return(val);
 /********************************/
 gdouble erfc(gdouble x)
 {
-gdouble val;
+  gdouble val;
 
-if (x < 0.0)
-  val = 1.0 + gammp(0.5, x*x);
-else
-  val = gammq(0.5, x*x);
+  if (x < 0.0)
+    val = 1.0 + gammp(0.5, x * x);
+  else
+    val = gammq(0.5, x * x);
 
-return(val);
+  return (val);
 }
 
 /****************/
@@ -452,24 +443,24 @@ return(val);
 /****************/
 void sort(gint size, gdouble *array)
 {
-gint i, swap;
-gdouble tmp;
+  gint i, swap;
+  gdouble tmp;
 
-swap=1;
-while (swap)
+  swap = 1;
+  while (swap)
   {
-  swap=0;
-  for (i=1 ; i<size ; i++)
+    swap = 0;
+    for (i = 1; i < size; i++)
     {
-/* TODO - direction flag for ascending or descending */
-    if (array[i-1] > array[i])
+      /* TODO - direction flag for ascending or descending */
+      if (array[i - 1] > array[i])
       {
-/* swap elements in array */
-      tmp = array[i-1];
-      array[i-1] = array[i];
-      array[i] = tmp;
-/* elements were swapped */
-      swap++;
+        /* swap elements in array */
+        tmp = array[i - 1];
+        array[i - 1] = array[i];
+        array[i] = tmp;
+        /* elements were swapped */
+        swap++;
       }
     }
   }
@@ -480,18 +471,18 @@ while (swap)
 /***************/
 gdouble min(gint size, gdouble *x)
 {
-gint i;
-gdouble val;
+  gint i;
+  gdouble val;
 
-g_assert(size > 0);
+  g_assert(size > 0);
 
-val = x[0];
+  val = x[0];
 
-for (i=1; i<size ; i++)
-  if (x[i] < val)
-    val = x[i];
+  for (i = 1; i < size; i++)
+    if (x[i] < val)
+      val = x[i];
 
-return(val);
+  return (val);
 }
 
 /***************/
@@ -499,18 +490,18 @@ return(val);
 /***************/
 gdouble max(gint size, gdouble *x)
 {
-gint i;
-gdouble val;
+  gint i;
+  gdouble val;
 
-g_assert(size > 0);
+  g_assert(size > 0);
 
-val = x[0];
+  val = x[0];
 
-for (i=1; i<size ; i++)
-  if (x[i] > val)
-    val = x[i];
+  for (i = 1; i < size; i++)
+    if (x[i] > val)
+      val = x[i];
 
-return(val);
+  return (val);
 }
 
 /************************************/
@@ -518,43 +509,43 @@ return(val);
 /************************************/
 void spline(double *x, double *y, int n, double yp1, double ypn, double *y2)
 {
-int i, k;
-double p, qn, sig, un, *u;
+  int i, k;
+  double p, qn, sig, un, *u;
 
-/* allocate 1 extra double as some people insist on starting at 1 */
-u = g_malloc(n*sizeof(double));
+  /* allocate 1 extra double as some people insist on starting at 1 */
+  u = g_malloc(n * sizeof(double));
 
-if (yp1 > 0.99e30)
-  y2[1] = u[1] = 0.0;
-else
+  if (yp1 > 0.99e30)
+    y2[1] = u[1] = 0.0;
+  else
   {
-  y2[1] = -0.5;
-  u[1] = (3.0/(x[2]-x[1]))*((y[2]-y[1])/(x[2]-x[1])-yp1);
+    y2[1] = -0.5;
+    u[1] = (3.0 / (x[2] - x[1])) * ((y[2] - y[1]) / (x[2] - x[1]) - yp1);
   }
 
-for (i=2 ; i<=n-1 ; i++)
+  for (i = 2; i <= n - 1; i++)
   {
-  sig = (x[i]-x[i-1])/(x[i+1]-x[i-1]);
-  p = sig*y2[i-1]+2.0;
-  y2[i] = (sig-1.0)/p;
-  u[i] = (y[i+1]-y[i])/(x[i+1]-x[i]) - (y[i]-y[i-1])/(x[i]-x[i-1]);
-  u[i] = (6.0*u[i]/(x[i+1]-x[i-1])-sig*u[i-1])/p;
+    sig = (x[i] - x[i - 1]) / (x[i + 1] - x[i - 1]);
+    p = sig * y2[i - 1] + 2.0;
+    y2[i] = (sig - 1.0) / p;
+    u[i] = (y[i + 1] - y[i]) / (x[i + 1] - x[i]) - (y[i] - y[i - 1]) / (x[i] - x[i - 1]);
+    u[i] = (6.0 * u[i] / (x[i + 1] - x[i - 1]) - sig * u[i - 1]) / p;
   }
 
-if (ypn > 0.99e30)
-  qn = un = 0.0;
-else
+  if (ypn > 0.99e30)
+    qn = un = 0.0;
+  else
   {
-  qn = 0.5;
-  un = (3.0/(x[n]-x[n-1]))*(ypn-(y[n]-y[n-1])/(x[n]-x[n-1]));
+    qn = 0.5;
+    un = (3.0 / (x[n] - x[n - 1])) * (ypn - (y[n] - y[n - 1]) / (x[n] - x[n - 1]));
   }
 
-y2[n] = (un-qn*u[n-1])/(qn*y2[n-1]+1.0);
+  y2[n] = (un - qn * u[n - 1]) / (qn * y2[n - 1] + 1.0);
 
-for (k=n-1 ; k>=1 ; k--)
-  y2[k] = y2[k]*y2[k+1]+u[k];
+  for (k = n - 1; k >= 1; k--)
+    y2[k] = y2[k] * y2[k + 1] + u[k];
 
-g_free(u);
+  g_free(u);
 }
 
 /********************************************/
@@ -562,87 +553,89 @@ g_free(u);
 /********************************************/
 void splint(double *xa, double *ya, double *y2a, int n, double x, double *y)
 {
-int klo, khi, k;
-double h, b, a;
+  int klo, khi, k;
+  double h, b, a;
 
-klo = 1;
-khi = n;
+  klo = 1;
+  khi = n;
 
-while (khi-klo > 1)
+  while (khi - klo > 1)
   {
-  k = (khi+klo) >> 1;
-  if (xa[k] > x)
-    khi = k;
-  else
-    klo = k;
+    k = (khi + klo) >> 1;
+    if (xa[k] > x)
+      khi = k;
+    else
+      klo = k;
   }
 
-h = xa[khi]-xa[klo];
-if (h == 0.0)
-  printf("splint(): bad xa input.\n");
+  h = xa[khi] - xa[klo];
+  if (h == 0.0)
+    printf("splint(): bad xa input.\n");
 
-a = (xa[khi]-x)/h;
-b = (x-xa[klo])/h;
-    
-*y = a*ya[klo]+b*ya[khi]+((a*a*a-a)*y2a[klo]+(b*b*b-b)*y2a[khi])*(h*h) / 6.0;
+  a = (xa[khi] - x) / h;
+  b = (x - xa[klo]) / h;
+
+  *y = a * ya[klo] + b * ya[khi] + ((a * a * a - a) * y2a[klo] + (b * b * b - b) * y2a[khi]) * (h * h) / 6.0;
 }
 
 /****************************************/
 /* numerical recipes - Cooley-Tukey FFT */
 /****************************************/
-#define SWAP(a, b) tempr=(a) ; (a) = (b) ; (b) = tempr;
+#define SWAP(a, b)                                                                                                     \
+  tempr = (a);                                                                                                         \
+  (a) = (b);                                                                                                           \
+  (b) = tempr;
 void fft(gdouble *x, gint nn, gint isign)
 {
-gint n, mmax, m, j, istep, i;
-gdouble wtemp, wr, wpr, wpi, wi, theta;
-gdouble tempr, tempi;
-gdouble *data = --x;    /* silly fortran programmers */
+  gint n, mmax, m, j, istep, i;
+  gdouble wtemp, wr, wpr, wpi, wi, theta;
+  gdouble tempr, tempi;
+  gdouble *data = --x; /* silly fortran programmers */
 
-n = nn << 1;
-j = 1;
+  n = nn << 1;
+  j = 1;
 
-for (i=1 ; i<n ; i+=2)
+  for (i = 1; i < n; i += 2)
   {
-  if (j > i)
+    if (j > i)
     {
-    SWAP(data[j], data[i]);
-    SWAP(data[j+1], data[i+1]);
+      SWAP(data[j], data[i]);
+      SWAP(data[j + 1], data[i + 1]);
     }
-  m = n >> 1;
-  while (m >= 2 && j > m)
+    m = n >> 1;
+    while (m >= 2 && j > m)
     {
-    j -= m;
-    m >>= 1;
+      j -= m;
+      m >>= 1;
     }
-  j += m;
+    j += m;
   }
 
-mmax = 2;
-while (n > mmax)
+  mmax = 2;
+  while (n > mmax)
   {
-  istep = 2 * mmax;
-  theta = 2.0 * G_PI / (isign * mmax);
-  wtemp = sin(0.5*theta);
-  wpr = -2.0 * wtemp * wtemp;
-  wpi = sin(theta);
-  wr = 1.0;
-  wi = 0.0;
-  for (m=1 ; m<mmax ; m+=2 )
+    istep = 2 * mmax;
+    theta = 2.0 * G_PI / (isign * mmax);
+    wtemp = sin(0.5 * theta);
+    wpr = -2.0 * wtemp * wtemp;
+    wpi = sin(theta);
+    wr = 1.0;
+    wi = 0.0;
+    for (m = 1; m < mmax; m += 2)
     {
-    for (i=m ; i<=n ; i+=istep)
+      for (i = m; i <= n; i += istep)
       {
-      j = i + mmax;
-      tempr =  wr * data[j] - wi * data[j+1];
-      tempi =  wr * data[j+1] - wi * data[j];
-      data[j] = data[i] - tempr;
-      data[j+1] = data[i+1] - tempi;
-      data[i] += tempr;
-      data[i+1] += tempi;
+        j = i + mmax;
+        tempr = wr * data[j] - wi * data[j + 1];
+        tempi = wr * data[j + 1] - wi * data[j];
+        data[j] = data[i] - tempr;
+        data[j + 1] = data[i + 1] - tempi;
+        data[i] += tempr;
+        data[i + 1] += tempi;
       }
-    wr = (wtemp = wr) * wpr - wi * wpi + wr;
-    wi = wi * wpr + wtemp * wpi + wi;
+      wr = (wtemp = wr) * wpr - wi * wpi + wr;
+      wi = wi * wpr + wtemp * wpi + wi;
     }
-  mmax = istep;
+    mmax = istep;
   }
 }
-

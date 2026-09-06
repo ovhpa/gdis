@@ -27,4 +27,3 @@ void vector_point2plane(gdouble *, gdouble *, gdouble *);
 void vector_v_project(gdouble *, gdouble *);
 
 gdouble vector_angle(gdouble *, gdouble *, gint);
-

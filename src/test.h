@@ -21,4 +21,3 @@ The GNU GPL can also be found at http://www.gnu.org
 */
 
 void test_run(gchar *);
-

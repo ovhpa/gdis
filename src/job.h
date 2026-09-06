@@ -22,5 +22,4 @@ The GNU GPL can also be found at http://www.gnu.org
 
 gint job_new(const gchar *, struct model_pak *);
 
-enum {JOB_UNKNOWN, JOB_GAMESS, JOB_GULP};
-
+enum { JOB_UNKNOWN, JOB_GAMESS, JOB_GULP };

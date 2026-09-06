@@ -32,4 +32,3 @@ GSList *zone_area_cores(gint, gpointer, gpointer);
 
 void zone_display_init(gpointer, struct model_pak *);
 void zone_visible_init(struct model_pak *);
-

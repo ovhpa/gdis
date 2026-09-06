@@ -23,4 +23,3 @@ The GNU GPL can also be found at http://www.gnu.org
 void mdi_free(gpointer);
 gpointer mdi_new(void);
 gpointer mdi_model_new(gpointer);
-

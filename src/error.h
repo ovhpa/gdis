@@ -25,4 +25,3 @@ void error_table_entry(const gchar *);
 void error_table_print_all(void);
 void error_table_disable(void);
 void error_table_enable(void);
-

@@ -30,5 +30,5 @@ gchar *scan_get_line(gpointer);
 gchar *scan_cur_line(gpointer);
 gchar **scan_get_tokens(gpointer, gint *);
 gboolean scan_put_line(gpointer);
-gpointer scan_offset_get(gpointer); 
+gpointer scan_offset_get(gpointer);
 void scan_frame_new(gpointer, struct model_pak *);

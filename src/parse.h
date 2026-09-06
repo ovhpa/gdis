@@ -1,3 +1,6 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
 /*
 Copyright (C) 2003 by Sean David Fleming
 
@@ -45,3 +48,7 @@ gchar *parse_strip(const gchar *);
 gchar *parse_getline_hidden(void);
 void parse_char_replace(gchar *, gchar, gchar);
 void parse_decimal_fraction(gdouble *);
+
+#ifdef __cplusplus
+}
+#endif

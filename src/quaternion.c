@@ -32,15 +32,15 @@ The GNU GPL can also be found at http://www.gnu.org
 /*****************************/
 void quat_mult(gdouble *q1, gdouble *q2)
 {
-gdouble q[4];
+  gdouble q[4];
 
-q[0] = q1[0]*q2[0] - q1[1]*q2[1] - q1[2]*q2[2] - q1[3]*q2[3];
-q[1] = q1[0]*q2[1] + q1[1]*q2[0] + q1[2]*q2[3] - q1[3]*q2[2];
-q[2] = q1[0]*q2[2] - q1[1]*q2[3] + q1[2]*q2[0] + q1[3]*q2[1];
-q[3] = q1[0]*q2[3] + q1[1]*q2[2] - q1[2]*q2[1] + q1[3]*q2[0];
+  q[0] = q1[0] * q2[0] - q1[1] * q2[1] - q1[2] * q2[2] - q1[3] * q2[3];
+  q[1] = q1[0] * q2[1] + q1[1] * q2[0] + q1[2] * q2[3] - q1[3] * q2[2];
+  q[2] = q1[0] * q2[2] - q1[1] * q2[3] + q1[2] * q2[0] + q1[3] * q2[1];
+  q[3] = q1[0] * q2[3] + q1[1] * q2[2] - q1[2] * q2[1] + q1[3] * q2[0];
 
-/* place the result in q1 */
-ARR4SET(q1, q);
+  /* place the result in q1 */
+  ARR4SET(q1, q);
 }
 
 /***********************************************/
@@ -48,18 +48,18 @@ ARR4SET(q1, q);
 /***********************************************/
 void quat_convert_matrix(gdouble *mat, gdouble *q)
 {
-gdouble s, trace;
+  gdouble s, trace;
 
-trace = 1.0 + mat[0] + mat[4] + mat[8];
+  trace = 1.0 + mat[0] + mat[4] + mat[8];
 
-if (trace < FRACTION_TOLERANCE)
-  printf("WARNING: ");
+  if (trace < FRACTION_TOLERANCE)
+    printf("WARNING: ");
 
-s = 2.0 * sqrt(trace);
-q[0] = (mat[7] - mat[5]) / s;
-q[1] = (mat[2] - mat[6]) / s;
-q[2] = (mat[3] - mat[1]) / s;
-q[3] = 0.25 * s;
+  s = 2.0 * sqrt(trace);
+  q[0] = (mat[7] - mat[5]) / s;
+  q[1] = (mat[2] - mat[6]) / s;
+  q[2] = (mat[3] - mat[1]) / s;
+  q[3] = 0.25 * s;
 }
 
 /***********************************************************/
@@ -67,13 +67,13 @@ q[3] = 0.25 * s;
 /***********************************************************/
 void quat_concat(gdouble *q, gdouble *v, gdouble a)
 {
-gdouble ha, sa, qr[4];
+  gdouble ha, sa, qr[4];
 
-/* create and apply the desired quaternion rotation */
-ha = 0.5*a;
-sa = sin(ha);
-VEC4SET(qr, cos(ha), v[0]*sa, v[1]*sa, v[2]*sa);
-quat_mult(q, qr);
+  /* create and apply the desired quaternion rotation */
+  ha = 0.5 * a;
+  sa = sin(ha);
+  VEC4SET(qr, cos(ha), v[0] * sa, v[1] * sa, v[2] * sa);
+  quat_mult(q, qr);
 }
 
 /*********************************/
@@ -81,9 +81,9 @@ quat_mult(q, qr);
 /*********************************/
 void quat_concat_euler(gdouble *q, gint type, gdouble a)
 {
-gdouble v[3];
+  gdouble v[3];
 
-switch (type)
+  switch (type)
   {
   case PITCH:
     VEC3SET(v, 1.0, 0.0, 0.0);
@@ -97,8 +97,8 @@ switch (type)
     break;
   }
 
-/* general axis rotation */
-quat_concat(q, v, a);
+  /* general axis rotation */
+  quat_concat(q, v, a);
 }
 
 /*********************************************/
@@ -106,26 +106,35 @@ quat_concat(q, v, a);
 /*********************************************/
 void quat_matrix(gdouble *mat, gdouble *quat)
 {
-gdouble q0, q1, q2, q3;
-gdouble a01, a02, a03, a12, a13, a23;
+  gdouble q0, q1, q2, q3;
+  gdouble a01, a02, a03, a12, a13, a23;
 
-q0 = quat[0];  q1 = quat[1]; q2 = quat[2];  q3 = quat[3];
+  q0 = quat[0];
+  q1 = quat[1];
+  q2 = quat[2];
+  q3 = quat[3];
 
-a01 = 2.0*q0*q1;  a02 = 2.0*q0*q2;  a03 = 2.0*q0*q3;
-                  a12 = 2.0*q1*q2;  a13 = 2.0*q1*q3;
-                                    a23 = 2.0*q2*q3;
-mat[1] = a12 - a03;
-mat[2] = a13 + a02;
-mat[3] = a12 + a03;
-mat[5] = a23 - a01;
-mat[6] = a13 - a02;
-mat[7] = a23 + a01;
+  a01 = 2.0 * q0 * q1;
+  a02 = 2.0 * q0 * q2;
+  a03 = 2.0 * q0 * q3;
+  a12 = 2.0 * q1 * q2;
+  a13 = 2.0 * q1 * q3;
+  a23 = 2.0 * q2 * q3;
+  mat[1] = a12 - a03;
+  mat[2] = a13 + a02;
+  mat[3] = a12 + a03;
+  mat[5] = a23 - a01;
+  mat[6] = a13 - a02;
+  mat[7] = a23 + a01;
 
-q0 = q0*q0;  q1 = q1*q1;  q2 = q2*q2;  q3 = q3*q3;
+  q0 = q0 * q0;
+  q1 = q1 * q1;
+  q2 = q2 * q2;
+  q3 = q3 * q3;
 
-mat[0] = q0 + q1 - q2 - q3;
-mat[4] = q0 - q1 + q2 - q3;
-mat[8] = q0 - q1 - q2 + q3;
+  mat[0] = q0 + q1 - q2 - q3;
+  mat[4] = q0 - q1 + q2 - q3;
+  mat[8] = q0 - q1 - q2 + q3;
 }
 
 /*****************************************************************/
@@ -133,9 +142,8 @@ mat[8] = q0 - q1 - q2 + q3;
 /*****************************************************************/
 void quat_rotate(gdouble *vec, gdouble *quat)
 {
-gdouble rot[9];
- 
-quat_matrix(rot, quat);
-vecmat(rot, vec);
-}
+  gdouble rot[9];
 
+  quat_matrix(rot, quat);
+  vecmat(rot, vec);
+}

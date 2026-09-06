@@ -38,10 +38,7 @@ extern struct elem_pak elements[];
 /****************/
 /* file writing */
 /****************/
-gint write_dlp(gchar *filename, struct model_pak *model)
-{
-return(0);
-}
+gint write_dlp(gchar *filename, struct model_pak *model) { return (0); }
 
 /****************/
 /* file reading */
@@ -49,98 +46,99 @@ return(0);
 #define DEBUG_READ_XYZ 0
 gint read_dlp(gchar *filename, struct model_pak *model)
 {
-gint i, tokens;
-gchar *line, **buff;
-gpointer scan;
-struct core_pak *core;
+  gint i, tokens;
+  gchar *line, **buff;
+  gpointer scan;
+  struct core_pak *core;
 
-/* checks */
-g_return_val_if_fail(model != NULL, 1);
-g_return_val_if_fail(filename != NULL, 2);
+  /* checks */
+  g_return_val_if_fail(model != NULL, 1);
+  g_return_val_if_fail(filename != NULL, 2);
 
-scan = scan_new(filename);
-if (!scan)
-  return(3);
+  scan = scan_new(filename);
+  if (!scan)
+    return (3);
 
-/* title line */
-if(scan_get_line(scan)==NULL) return(3);/*FIX 0c304f*/
+  /* title line */
+  if (scan_get_line(scan) == NULL)
+    return (3); /*FIX 0c304f*/
 
-/* config stuff */
-if(scan_get_line(scan)==NULL) return(3);/*FIX 881ce0*/
+  /* config stuff */
+  if (scan_get_line(scan) == NULL)
+    return (3); /*FIX 881ce0*/
 
-/* cell vectors */
-model->construct_pbc = TRUE;
-model->periodic = 3;
-for (i=0 ; i<3 ; i++)
+  /* cell vectors */
+  model->construct_pbc = TRUE;
+  model->periodic = 3;
+  for (i = 0; i < 3; i++)
   {
-  line = scan_get_line(scan);
-  if (line)
+    line = scan_get_line(scan);
+    if (line)
     {
-    buff = tokenize(line, &tokens);
-    if (tokens > 2)
+      buff = tokenize(line, &tokens);
+      if (tokens > 2)
       {
-      model->latmat[3*i] = str_to_float(*(buff));
-      model->latmat[3*i+1] = str_to_float(*(buff+1));
-      model->latmat[3*i+2] = str_to_float(*(buff+2));
+        model->latmat[3 * i] = str_to_float(*(buff));
+        model->latmat[3 * i + 1] = str_to_float(*(buff + 1));
+        model->latmat[3 * i + 2] = str_to_float(*(buff + 2));
       }
-    g_strfreev(buff);
+      g_strfreev(buff);
     }
   }
 
-/* atoms & associated data */
-model->fractional = FALSE;
-while (!scan_complete(scan))
+  /* atoms & associated data */
+  model->fractional = FALSE;
+  while (!scan_complete(scan))
   {
-  line = scan_get_line(scan);
-  core = NULL;
+    line = scan_get_line(scan);
+    core = NULL;
 
-/* element and id */
-  buff = tokenize(line, &tokens);
-  if (buff)
-    core = core_new(*buff, NULL, model);
-  g_strfreev(buff);
+    /* element and id */
+    buff = tokenize(line, &tokens);
+    if (buff)
+      core = core_new(*buff, NULL, model);
+    g_strfreev(buff);
 
-/* coordinates */
-  line = scan_get_line(scan);
-  buff = tokenize(line, &tokens);
-  if (core && tokens > 2)
+    /* coordinates */
+    line = scan_get_line(scan);
+    buff = tokenize(line, &tokens);
+    if (core && tokens > 2)
     {
-    core->x[0] = str_to_float(*buff);
-    core->x[1] = str_to_float(*(buff+1));
-    core->x[2] = str_to_float(*(buff+2));
+      core->x[0] = str_to_float(*buff);
+      core->x[1] = str_to_float(*(buff + 1));
+      core->x[2] = str_to_float(*(buff + 2));
     }
-  g_strfreev(buff);
+    g_strfreev(buff);
 
-/* velocity */
-  line = scan_get_line(scan);
-  buff = tokenize(line, &tokens);
-  if (core && tokens > 2)
+    /* velocity */
+    line = scan_get_line(scan);
+    buff = tokenize(line, &tokens);
+    if (core && tokens > 2)
     {
-    core->v[0] = str_to_float(*buff);
-    core->v[1] = str_to_float(*(buff+1));
-    core->v[2] = str_to_float(*(buff+2));
+      core->v[0] = str_to_float(*buff);
+      core->v[1] = str_to_float(*(buff + 1));
+      core->v[2] = str_to_float(*(buff + 2));
     }
-  g_strfreev(buff);
+    g_strfreev(buff);
 
-/* TODO - acceleration??? */
-  if(scan_get_line(scan)==NULL) break;/*FIX 7ef959*/
+    /* TODO - acceleration??? */
+    if (scan_get_line(scan) == NULL)
+      break; /*FIX 7ef959*/
 
-/* finished reading atom data */
-  if (core)
-    model->cores = g_slist_prepend(model->cores, core);
+    /* finished reading atom data */
+    if (core)
+      model->cores = g_slist_prepend(model->cores, core);
   }
 
+  /*
+  strcpy(data->filename, filename);
+  g_free(data->basename);
+  data->basename = parse_strip(filename);
+  */
 
-/*
-strcpy(data->filename, filename);
-g_free(data->basename);
-data->basename = parse_strip(filename);
-*/
+  model_prep(model);
 
-model_prep(model);
+  scan_free(scan);
 
-scan_free(scan);
-
-return(0);
+  return (0);
 }
-

@@ -34,28 +34,28 @@ The GNU GPL can also be found at http://www.gnu.org
 #define DEBUG_COUNT_NEW 0
 gpointer count_new(gdouble start, gdouble stop, gdouble step)
 {
-struct count_pak *count;
+  struct count_pak *count;
 
-g_assert(stop > step);
-g_assert(stop-step >= step);
-g_assert(step >= 0.0);
+  g_assert(stop > step);
+  g_assert(stop - step >= step);
+  g_assert(step >= 0.0);
 
-count = g_malloc(sizeof(struct count_pak));
+  count = g_malloc(sizeof(struct count_pak));
 
-/* copy extents */
-count->start = start;
-count->stop = stop;
-count->step = step;
+  /* copy extents */
+  count->start = start;
+  count->stop = stop;
+  count->step = step;
 
-/* compute and allocate bin array */
-count->size = nearest_int (0.5 + ((stop-start) / step) );
-count->bins = g_malloc0(count->size * sizeof(gint));
+  /* compute and allocate bin array */
+  count->size = nearest_int(0.5 + ((stop - start) / step));
+  count->bins = g_malloc0(count->size * sizeof(gint));
 
 #if DEBUG_COUNT_NEW
-printf("new count from: %f - %f, step: %f, size: %d\n", start, stop, step, count->size); 
+  printf("new count from: %f - %f, step: %f, size: %d\n", start, stop, step, count->size);
 #endif
 
-return(count);
+  return (count);
 }
 
 /*************************/
@@ -63,12 +63,12 @@ return(count);
 /*************************/
 void count_free(gpointer data)
 {
-struct count_pak *count = data;
+  struct count_pak *count = data;
 
-g_assert(count != NULL);
+  g_assert(count != NULL);
 
-g_free(count->bins);
-g_free(count);
+  g_free(count->bins);
+  g_free(count);
 }
 
 /***************************/
@@ -76,26 +76,26 @@ g_free(count);
 /***************************/
 void count_stats(gpointer data)
 {
-gint i, value, sum;
+  gint i, value, sum;
 #ifdef UNUSED_BUT_SET
-gint nonzero;
+  gint nonzero;
 #endif
-struct count_pak *count = data;
+  struct count_pak *count = data;
 
-g_assert(count != NULL);
+  g_assert(count != NULL);
 
-#ifdef   UNUSED_BUT_SET
-sum = nonzero = 0;
-#else  //UNUSED_BUT_SET
-sum = 0;
-#endif //UNUSED_BUT_SET
-for (i=count->size ; i-- ; )
+#ifdef UNUSED_BUT_SET
+  sum = nonzero = 0;
+#else  // UNUSED_BUT_SET
+  sum = 0;
+#endif // UNUSED_BUT_SET
+  for (i = count->size; i--;)
   {
-  value = *(count->bins+i);
-  sum += value;
+    value = *(count->bins + i);
+    sum += value;
   }
 
-printf("Count %p: size=%d : sum=%d\n", count, count->size, sum);
+  printf("Count %p: size=%d : sum=%d\n", count, count->size, sum);
 }
 
 /*************************/
@@ -103,23 +103,23 @@ printf("Count %p: size=%d : sum=%d\n", count, count->size, sum);
 /*************************/
 gint *count_bins(gpointer data)
 {
-struct count_pak *count = data;
+  struct count_pak *count = data;
 
-return(count->bins);
+  return (count->bins);
 }
 
 gint count_size(gpointer data)
 {
-struct count_pak *count = data;
+  struct count_pak *count = data;
 
-return(count->size);
+  return (count->size);
 }
 
 gdouble count_stop(gpointer data)
 {
-struct count_pak *count = data;
+  struct count_pak *count = data;
 
-return(count->stop);
+  return (count->stop);
 }
 
 /**************************/
@@ -128,34 +128,34 @@ return(count->stop);
 /* NB: returns -1, 0, 1 if value is less, within, or outside the count range */
 gint count_insert(gdouble value, gpointer data)
 {
-gint n;
-gdouble offset;
-struct count_pak *count = data;
+  gint n;
+  gdouble offset;
+  struct count_pak *count = data;
 
-g_assert(count != NULL);
+  g_assert(count != NULL);
 
-if (value < count->start)
-  return(-1);
-if (value > count->stop)
-  return(1);
+  if (value < count->start)
+    return (-1);
+  if (value > count->stop)
+    return (1);
 
-offset = value - count->start;
-offset /= count->step;
+  offset = value - count->start;
+  offset /= count->step;
 
-n = nearest_int(offset);
+  n = nearest_int(offset);
 
-g_assert(n >= 0);
+  g_assert(n >= 0);
 
-if (n >= count->size)
+  if (n >= count->size)
   {
-printf("BAD VALUE = %f : size = %d\n", value, n);
+    printf("BAD VALUE = %f : size = %d\n", value, n);
   }
 
-g_assert(n < count->size);
+  g_assert(n < count->size);
 
-*(count->bins+n) += 1; 
+  *(count->bins + n) += 1;
 
-return(0);
+  return (0);
 }
 
 /*********************************************************/
@@ -163,16 +163,15 @@ return(0);
 /*********************************************************/
 void count_add(gpointer a, gpointer b)
 {
-gint i;
-struct count_pak *c1=a, *c2=b;
+  gint i;
+  struct count_pak *c1 = a, *c2 = b;
 
-g_assert(c1 != NULL);
-g_assert(c2 != NULL);
+  g_assert(c1 != NULL);
+  g_assert(c2 != NULL);
 
-/* TODO - can get more fancy with the merge st mismatch range / size etc are handled */
-g_assert(c1->size == c2->size);
+  /* TODO - can get more fancy with the merge st mismatch range / size etc are handled */
+  g_assert(c1->size == c2->size);
 
-for (i=c1->size ; i-- ; )
-  *(c1->bins+i) += *(c2->bins+i);
+  for (i = c1->size; i--;)
+    *(c1->bins + i) += *(c2->bins + i);
 }
-

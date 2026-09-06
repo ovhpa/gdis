@@ -56,9 +56,7 @@ void zmat_process(gpointer, struct model_pak *);
 void gui_zmat_dialog(void);
 
 /* a SIESTA special... */
-struct species_pak
-{
-gint number;   /* can be -ve -> ghost */
-gchar *label;  /* same as core->label */
+struct species_pak {
+  gint number;  /* can be -ve -> ghost */
+  gchar *label; /* same as core->label */
 };
-

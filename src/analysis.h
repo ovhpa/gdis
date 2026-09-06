@@ -24,40 +24,37 @@ The GNU GPL can also be found at http://www.gnu.org
 #include "task.h"
 
 /* position storage */
-struct gd3_pak
-{
-gdouble x[3];
+struct gd3_pak {
+  gdouble x[3];
 };
 
 /* matrix storage */
-struct gd9_pak
-{
-gdouble m[9];
+struct gd9_pak {
+  gdouble m[9];
 };
 
-struct analysis_pak
-{
-/* analysis setup */
-gint num_bins;
-gdouble start;
-gdouble stop;
-gdouble step;
-gchar *atom1;
-gchar *atom2;
-gint rdf_normalize;
-/* model setup */
-gint num_atoms;
-gint num_frames;
-gdouble time_start;
-gdouble time_stop;
-/* packed frame data */
-struct gd9_pak *latmat;
-struct gd3_pak *position;
-struct gd3_pak *velocity;
-gdouble *time;
-gdouble *ke;
-gdouble *pe;
-gdouble *temp;
+struct analysis_pak {
+  /* analysis setup */
+  gint num_bins;
+  gdouble start;
+  gdouble stop;
+  gdouble step;
+  gchar *atom1;
+  gchar *atom2;
+  gint rdf_normalize;
+  /* model setup */
+  gint num_atoms;
+  gint num_frames;
+  gdouble time_start;
+  gdouble time_stop;
+  /* packed frame data */
+  struct gd9_pak *latmat;
+  struct gd3_pak *position;
+  struct gd3_pak *velocity;
+  gdouble *time;
+  gdouble *ke;
+  gdouble *pe;
+  gdouble *temp;
 };
 
 /* prototypes */
@@ -73,4 +70,3 @@ void analysis_plot_vacf(struct analysis_pak *, struct task_pak *);
 void analysis_plot_temp(struct analysis_pak *, struct task_pak *);
 void analysis_plot_ke(struct analysis_pak *, struct task_pak *);
 void analysis_plot_pe(struct analysis_pak *, struct task_pak *);
-

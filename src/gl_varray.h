@@ -24,4 +24,3 @@ gpointer va_init(void);
 void va_free(gpointer);
 void va_make_sphere(gpointer);
 void va_draw_sphere(gpointer, gdouble *, gdouble);
-

@@ -1,3 +1,6 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
 /*
 Copyright (C) 2003 by Sean David Fleming
 
@@ -32,15 +35,12 @@ void dialog_refresh_type(gint);
 void dialog_refresh_model(struct model_pak *);
 void dialog_close_model(struct model_pak *);
 void dialog_close(gint, struct model_pak *);
-void dialog_destroy(GtkWidget *, gpointer);
 void dialog_destroy_type(gint);
 void dialog_destroy_model(struct model_pak *);
 void dialog_destroy_single(gint, struct model_pak *);
 
 gpointer dialog_child_get(gpointer, const gchar *);
 void dialog_child_set(gpointer, const gchar *, gpointer);
-
-void dialog_colour_new(GtkWidget *, gdouble *);
 
 /* deprec */
 /* cleanup control */
@@ -57,6 +57,8 @@ void gulp_dialog(void);
 void gamess_dialog(void);
 void moldy_dialog(void);
 void monty_dialog(void);
-gint calculate_crystal_graph(struct model_pak * model);
+gint calculate_crystal_graph(struct model_pak *model);
 
-
+#ifdef __cplusplus
+}
+#endif

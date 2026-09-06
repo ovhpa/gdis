@@ -20,6 +20,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 The GNU GPL can also be found at http://www.gnu.org
 */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void space_init(gpointer);
 void space_free(gpointer);
 gint space_lookup(struct model_pak *);
@@ -30,7 +34,9 @@ void space_make_supercell(struct model_pak *);
 
 gint space_primitive_cell(struct model_pak *);
 
-void space_image_widget_setup(GtkWidget *);
 void space_image_widget_redraw(void);
 void space_image_widget_reset(void);
 
+#ifdef __cplusplus
+}
+#endif

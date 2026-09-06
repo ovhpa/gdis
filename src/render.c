@@ -34,17 +34,15 @@ The GNU GPL can also be found at http://www.gnu.org
 
 /* externals */
 extern struct sysenv_pak sysenv;
-extern GtkWidget *window;
-extern GdkPixmap *pixmap;
 
 /************************************************************/
 /* process data structures to get current model state label */
 /************************************************************/
 gchar *get_mode_label(struct model_pak *data)
 {
-gchar *label;
+  gchar *label;
 
-switch(data->mode)
+  switch (data->mode)
   {
   case FREE:
     label = g_strdup("normal");
@@ -100,7 +98,7 @@ switch(data->mode)
     break;
   }
 
-return(label);
+  return (label);
 }
 
 /*********************************************/
@@ -109,86 +107,86 @@ return(label);
 #define PIPE_DEPTH 4
 void render_make_pipes(GSList **pipes, struct model_pak *model)
 {
-gint i;
-gdouble radius, mp1[4], mp2[4], x[3];
-gdouble colour1[4], colour2[4];
-GSList *list;
-struct pipe_pak *pipe;
-struct bond_pak *bond;
-struct core_pak *core1, *core2;
+  gint i;
+  gdouble radius, mp1[4], mp2[4], x[3];
+  gdouble colour1[4], colour2[4];
+  GSList *list;
+  struct pipe_pak *pipe;
+  struct bond_pak *bond;
+  struct core_pak *core1, *core2;
 
-/* checks */
-g_assert(model != NULL);
+  /* checks */
+  g_assert(model != NULL);
 
-/*
-printf("-------------------------------------------------------------\n");
-dump_bonds(model);
-printf("-------------------------------------------------------------\n");
-*/
+  /*
+  printf("-------------------------------------------------------------\n");
+  dump_bonds(model);
+  printf("-------------------------------------------------------------\n");
+  */
 
-/* init the return list(s) */
-for (i=PIPE_DEPTH ; i-- ; )
-  pipes[i] = NULL;
+  /* init the return list(s) */
+  for (i = PIPE_DEPTH; i--;)
+    pipes[i] = NULL;
 
-/* bond display turned off? */
-if (!model->show_bonds)
-  return;
+  /* bond display turned off? */
+  if (!model->show_bonds)
+    return;
 
-/* common pipe width */
-radius = sysenv.render.stick_radius;
+  /* common pipe width */
+  radius = sysenv.render.stick_radius;
 
-/* enumerate bonds to construct the pipe list */
-for (list=model->bonds; list ; list=g_slist_next(list))
+  /* enumerate bonds to construct the pipe list */
+  for (list = model->bonds; list; list = g_slist_next(list))
   {
-  bond = list->data;
+    bond = list->data;
 
-  if (bond->status == DELETED)
-    continue;
-  if (bond->status == HIDDEN)
-    continue;
-
-/* the two atoms */
-  core1 = bond->atom1;
-  core2 = bond->atom2;
-
-/* NEW - bailout modes */
-  if (core1->render_mode == ZONE)
-    continue;
-  if (core2->render_mode == ZONE)
-    continue;
-
-  if (core1->status & OFF_SCREEN)
-    if (core2->status & OFF_SCREEN)
+    if (bond->status == DELETED)
+      continue;
+    if (bond->status == HIDDEN)
       continue;
 
-/* NEW - cope with phonon animation moving the cores */
-  ARR3SET(x, core1->offset);
-  ARR3ADD(x, core2->offset);
-  VEC3MUL(x, 0.5);
+    /* the two atoms */
+    core1 = bond->atom1;
+    core2 = bond->atom2;
 
-/* compute midpoint 1 coords */
-  ARR3SET(mp1, core1->x);
-  ARR3ADD(mp1, bond->offset);
-  mp1[3] = 1.0;
-  ARR3ADD(mp1, x);
-  vec4mat(model->display_lattice, mp1);
+    /* NEW - bailout modes */
+    if (core1->render_mode == ZONE)
+      continue;
+    if (core2->render_mode == ZONE)
+      continue;
 
-/* compute midpoint 2 coords */
-/* midpoints may be different (split by pbc) */
-  ARR3SET(mp2, core2->x);
-  ARR3SUB(mp2, bond->offset);
-  mp2[3] = 1.0;
-  ARR3ADD(mp2, x);
-  vec4mat(model->display_lattice, mp2);
+    if (core1->status & OFF_SCREEN)
+      if (core2->status & OFF_SCREEN)
+        continue;
 
-/* deleted/ zeol hidden */
-  if (core1->status & (DELETED | ZEOL_HIDDEN))
-    continue;
-  if (core2->status & (DELETED | ZEOL_HIDDEN))
-    continue;
+    /* NEW - cope with phonon animation moving the cores */
+    ARR3SET(x, core1->offset);
+    ARR3ADD(x, core2->offset);
+    VEC3MUL(x, 0.5);
 
-/* colour setup */
-  switch (bond->type)
+    /* compute midpoint 1 coords */
+    ARR3SET(mp1, core1->x);
+    ARR3ADD(mp1, bond->offset);
+    mp1[3] = 1.0;
+    ARR3ADD(mp1, x);
+    vec4mat(model->display_lattice, mp1);
+
+    /* compute midpoint 2 coords */
+    /* midpoints may be different (split by pbc) */
+    ARR3SET(mp2, core2->x);
+    ARR3SUB(mp2, bond->offset);
+    mp2[3] = 1.0;
+    ARR3ADD(mp2, x);
+    vec4mat(model->display_lattice, mp2);
+
+    /* deleted/ zeol hidden */
+    if (core1->status & (DELETED | ZEOL_HIDDEN))
+      continue;
+    if (core2->status & (DELETED | ZEOL_HIDDEN))
+      continue;
+
+    /* colour setup */
+    switch (bond->type)
     {
     case BOND_HBOND:
       VEC4SET(colour1, 1.0, 1.0, 0.6, 0.0);
@@ -202,56 +200,56 @@ for (list=model->bonds; list ; list=g_slist_next(list))
       VEC3MUL(colour2, INV_COLOUR_SCALE);
     }
 
-/* setup half-bond (pipe) for core1 */
-  if (!(core1->status & HIDDEN) && core1->render_mode != CPK)
+    /* setup half-bond (pipe) for core1 */
+    if (!(core1->status & HIDDEN) && core1->render_mode != CPK)
     {
-/* init pipe */
-    pipe = g_malloc(sizeof(struct pipe_pak));
-    ARR3SET(pipe->v1, core1->rx);
-    ARR3SET(pipe->v2, mp1);
-    pipe->radius = radius;
-    ARR4SET(pipe->colour, colour1);
+      /* init pipe */
+      pipe = g_malloc(sizeof(struct pipe_pak));
+      ARR3SET(pipe->v1, core1->rx);
+      ARR3SET(pipe->v2, mp1);
+      pipe->radius = radius;
+      ARR4SET(pipe->colour, colour1);
 
-/* assign to appropriate pipe list */
-    if (core1->render_mode == STICK)
-      pipes[3] = g_slist_prepend(pipes[3], pipe);
-    else
-      {
-      if (core1->ghost)
-        pipes[1] = g_slist_prepend(pipes[1], pipe);
+      /* assign to appropriate pipe list */
+      if (core1->render_mode == STICK)
+        pipes[3] = g_slist_prepend(pipes[3], pipe);
       else
-        {
-        if (core1->render_wire)
-          pipes[2] = g_slist_prepend(pipes[2], pipe);
+      {
+        if (core1->ghost)
+          pipes[1] = g_slist_prepend(pipes[1], pipe);
         else
-          pipes[0] = g_slist_prepend(pipes[0], pipe);
+        {
+          if (core1->render_wire)
+            pipes[2] = g_slist_prepend(pipes[2], pipe);
+          else
+            pipes[0] = g_slist_prepend(pipes[0], pipe);
         }
       }
     }
 
-/* setup half-bond (pipe) for core1 */
-  if (!(core2->status & HIDDEN) && core2->render_mode != CPK)
+    /* setup half-bond (pipe) for core1 */
+    if (!(core2->status & HIDDEN) && core2->render_mode != CPK)
     {
-/* init pipe */
-    pipe = g_malloc(sizeof(struct pipe_pak));
-    ARR3SET(pipe->v1, core2->rx);
-    ARR3SET(pipe->v2, mp2);
-    pipe->radius = radius;
-    ARR4SET(pipe->colour, colour2);
+      /* init pipe */
+      pipe = g_malloc(sizeof(struct pipe_pak));
+      ARR3SET(pipe->v1, core2->rx);
+      ARR3SET(pipe->v2, mp2);
+      pipe->radius = radius;
+      ARR4SET(pipe->colour, colour2);
 
-/* assign to appropriate pipe list */
-    if (core2->render_mode == STICK)
-      pipes[3] = g_slist_prepend(pipes[3], pipe);
-    else
-      {
-      if (core2->ghost)
-        pipes[1] = g_slist_prepend(pipes[1], pipe);
+      /* assign to appropriate pipe list */
+      if (core2->render_mode == STICK)
+        pipes[3] = g_slist_prepend(pipes[3], pipe);
       else
-        {
-        if (core2->render_wire)
-          pipes[2] = g_slist_prepend(pipes[2], pipe);
+      {
+        if (core2->ghost)
+          pipes[1] = g_slist_prepend(pipes[1], pipe);
         else
-          pipes[0] = g_slist_prepend(pipes[0], pipe);
+        {
+          if (core2->render_wire)
+            pipes[2] = g_slist_prepend(pipes[2], pipe);
+          else
+            pipes[0] = g_slist_prepend(pipes[0], pipe);
         }
       }
     }
@@ -259,22 +257,19 @@ for (list=model->bonds; list ; list=g_slist_next(list))
 }
 
 /*****************************/
-/* pipe z-ordering primitive */ 
+/* pipe z-ordering primitive */
 /*****************************/
 gint render_pipe_depth_sort(struct pipe_pak *p1, struct pipe_pak *p2)
 {
-gdouble z1, z2;
+  gdouble z1, z2;
 
-/* use pipe z-midpoints for comparison */
-z1 = 0.5 * (p1->v1[2] + p1->v2[2]);
-z2 = 0.5 * (p2->v1[2] + p2->v2[2]);
+  /* use pipe z-midpoints for comparison */
+  z1 = 0.5 * (p1->v1[2] + p1->v2[2]);
+  z2 = 0.5 * (p2->v1[2] + p2->v2[2]);
 
-if (z1 > z2)
-  return(-1);
-return(1);
+  if (z1 > z2)
+    return (-1);
+  return (1);
 }
 
-GSList *render_sort_pipes(GSList *pipes)
-{
-return(g_slist_sort(pipes, (gpointer) render_pipe_depth_sort));
-}
+GSList *render_sort_pipes(GSList *pipes) { return (g_slist_sort(pipes, (gpointer) render_pipe_depth_sort)); }

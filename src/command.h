@@ -22,4 +22,3 @@ The GNU GPL can also be found at http://www.gnu.org
 
 void command_main_loop(int, char **);
 void gdis_exit(void);
-

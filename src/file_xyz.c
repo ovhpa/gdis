@@ -44,38 +44,37 @@ extern struct elem_pak elements[];
 /****************/
 gint write_xyz(gchar *filename, struct model_pak *data)
 {
-gdouble x[3];
-GSList *list;
-struct core_pak *core;
-FILE *fp;
+  gdouble x[3];
+  GSList *list;
+  struct core_pak *core;
+  FILE *fp;
 
-/* checks */
-g_return_val_if_fail(data != NULL, 1);
-g_return_val_if_fail(filename != NULL, 2);
+  /* checks */
+  g_return_val_if_fail(data != NULL, 1);
+  g_return_val_if_fail(filename != NULL, 2);
 
-/* open the file */
-fp = fopen(filename,"wt");
-if (!fp)
-  return(3);
+  /* open the file */
+  fp = fopen(filename, "wt");
+  if (!fp)
+    return (3);
 
-/* print header */
-fprintf(fp,"%d\nXYZ\n", g_slist_length(data->cores));
+  /* print header */
+  fprintf(fp, "%d\nXYZ\n", g_slist_length(data->cores));
 
-for (list=data->cores ; list ; list=g_slist_next(list))
+  for (list = data->cores; list; list = g_slist_next(list))
   {
-  core = list->data;
-  if (core->status & DELETED)
-    continue;
+    core = list->data;
+    if (core->status & DELETED)
+      continue;
 
-/* everything is cartesian after latmat mult */
-  ARR3SET(x, core->x);
-  vecmat(data->latmat, x);
-  fprintf(fp,"%-7s    %14.9f  %14.9f  %14.9f\n",
-              elements[core->atom_code].symbol, x[0], x[1], x[2]);
+    /* everything is cartesian after latmat mult */
+    ARR3SET(x, core->x);
+    vecmat(data->latmat, x);
+    fprintf(fp, "%-7s    %14.9f  %14.9f  %14.9f\n", elements[core->atom_code].symbol, x[0], x[1], x[2]);
   }
 
-fclose(fp);
-return(0);
+  fclose(fp);
+  return (0);
 }
 
 /*************************************************/
@@ -84,139 +83,135 @@ return(0);
 #define READ_XYZ_BLOCK 0
 gint read_xyz_block(FILE *fp, struct model_pak *data)
 {
-gint expect=0, num_tokens, n, orig=0, i=0, status=0;
-gchar **buff, *line;
-struct core_pak *core;
-GSList *clist=NULL;
+  gint expect = 0, num_tokens, n, orig = 0, i = 0, status = 0;
+  gchar **buff, *line;
+  struct core_pak *core;
+  GSList *clist = NULL;
 
-g_assert(fp != NULL);
+  g_assert(fp != NULL);
 
-/* init */
-if (data)
+  /* init */
+  if (data)
   {
-  clist = data->cores;
-  orig = g_slist_length(clist);
+    clist = data->cores;
+    orig = g_slist_length(clist);
   }
 
-/* process the 2 line XYZ header */
-line = file_read_line(fp);
-buff = tokenize(line, &num_tokens);
-g_free(line);
-if (num_tokens)
+  /* process the 2 line XYZ header */
+  line = file_read_line(fp);
+  buff = tokenize(line, &num_tokens);
+  g_free(line);
+  if (num_tokens)
   {
-  if (str_is_float(*buff))
-    expect = str_to_float(*buff);
+    if (str_is_float(*buff))
+      expect = str_to_float(*buff);
   }
-g_strfreev(buff);
+  g_strfreev(buff);
 
-line = file_read_line(fp);
-buff = tokenize(line, &num_tokens);
-g_free(line);
-if (!expect && num_tokens)
+  line = file_read_line(fp);
+  buff = tokenize(line, &num_tokens);
+  g_free(line);
+  if (!expect && num_tokens)
   {
-  if (str_is_float(*buff))
-    expect = str_to_float(*buff);
+    if (str_is_float(*buff))
+      expect = str_to_float(*buff);
   }
-g_strfreev(buff);
+  g_strfreev(buff);
 
 #if DEBUG_READ_XYZ_BLOCK
-printf("Expect = %d\n", expect);
+  printf("Expect = %d\n", expect);
 #endif
 
-/* loop while there's data */
-for (;;)
+  /* loop while there's data */
+  for (;;)
   {
-  buff = get_tokenized_line(fp, &num_tokens);
+    buff = get_tokenized_line(fp, &num_tokens);
 
-  if (!buff)
+    if (!buff)
     {
-    status = 1;
-    g_strfreev(buff);
-    break;
+      status = 1;
+      g_strfreev(buff);
+      break;
     }
 
-/* add new atom if we have sufficient tokens */
-/* TODO - check the last 3 tokesn are valild floats? */
-  if (num_tokens > 3)
+    /* add new atom if we have sufficient tokens */
+    /* TODO - check the last 3 tokesn are valild floats? */
+    if (num_tokens > 3)
     {
-    n = elem_test(*buff);
+      n = elem_test(*buff);
 
-/* FIXME - type 'X' returns 0 ... dummy atom type */
-/*
-    if (n)
-*/
+      /* FIXME - type 'X' returns 0 ... dummy atom type */
+      /*
+          if (n)
+      */
       {
-      core = NULL;
-      if (clist)
+        core = NULL;
+        if (clist)
         {
-        core = clist->data;
-        clist = g_slist_next(clist);
+          core = clist->data;
+          clist = g_slist_next(clist);
 
-        g_free(core->atom_label);
-        core->atom_label = g_strdup(*buff);
+          g_free(core->atom_label);
+          core->atom_label = g_strdup(*buff);
 
-        g_free(core->atom_type);
-        core->atom_type = g_strdup(*buff);
-        core->atom_code = n;
+          g_free(core->atom_type);
+          core->atom_type = g_strdup(*buff);
+          core->atom_code = n;
 
-        elem_init(core, data);
-        }
-      else
+          elem_init(core, data);
+        } else
         {
-        if (data)
+          if (data)
           {
-          core = new_core(*buff, data);
-          data->cores = g_slist_append(data->cores, core);
-          core->render_mode = data->default_render_mode;
+            core = new_core(*buff, data);
+            data->cores = g_slist_append(data->cores, core);
+            core->render_mode = data->default_render_mode;
           }
         }
-      if (core)
+        if (core)
         {
-        core->x[0] = str_to_float(*(buff+1));
-        core->x[1] = str_to_float(*(buff+2));
-        core->x[2] = str_to_float(*(buff+3));
+          core->x[0] = str_to_float(*(buff + 1));
+          core->x[1] = str_to_float(*(buff + 2));
+          core->x[2] = str_to_float(*(buff + 3));
         }
-      i++;
+        i++;
 
-/* NEW - end this frame if we've got the number of atoms expected */
-      if (expect && i == expect)
+        /* NEW - end this frame if we've got the number of atoms expected */
+        if (expect && i == expect)
         {
-        g_strfreev(buff);
-        break;
+          g_strfreev(buff);
+          break;
         }
       }
-
-
-
     }
 
-/* quit if we've already read in some atoms */
-/* ie end of xyz frame */
-  g_strfreev(buff);
+    /* quit if we've already read in some atoms */
+    /* ie end of xyz frame */
+    g_strfreev(buff);
   }
 
 #if DEBUG_READ_XYZ_BLOCK
-printf("Found cores: %d\n", i);
+  printf("Found cores: %d\n", i);
 #endif
 
-/* If there are less cores than previous - delete leftover cores */
-if (data)
+  /* If there are less cores than previous - delete leftover cores */
+  if (data)
   {
-  if (i < orig)
+    if (i < orig)
     {
 
 #if DEBUG_READ_XYZ_BLOCK
-printf("Truncating new core list to match new input length: %d\n", i);
+      printf("Truncating new core list to match new input length: %d\n", i);
 #endif
 
-    for (clist=g_slist_nth(data->cores, i) ; clist ; clist=g_slist_next(clist))
+      for (clist = g_slist_nth(data->cores, i); clist; clist = g_slist_next(clist))
       {
-      delete_core(clist->data);
+        delete_core(clist->data);
       }
-    delete_commit(data);
+      delete_commit(data);
     }
   }
-return(status);
+  return (status);
 }
 
 /*********************/
@@ -224,8 +219,8 @@ return(status);
 /*********************/
 gint read_xyz_frame(FILE *fp, struct model_pak *model)
 {
-read_xyz_block(fp, model);
-return(0);
+  read_xyz_block(fp, model);
+  return (0);
 }
 
 /****************/
@@ -235,49 +230,48 @@ return(0);
 gint read_xyz(gchar *filename, struct model_pak *data)
 {
 #ifdef UNUSED_BUT_SET
-gint flag;
+  gint flag;
 #endif
-FILE *fp;
+  FILE *fp;
 
-/* checks */
-g_return_val_if_fail(data != NULL, 1);
-g_return_val_if_fail(filename != NULL, 2);
+  /* checks */
+  g_return_val_if_fail(data != NULL, 1);
+  g_return_val_if_fail(filename != NULL, 2);
 
-fp = fopen(filename,"rt");
-if (!fp)
-  return(3);
+  fp = fopen(filename, "rt");
+  if (!fp)
+    return (3);
 
 /* loop while there's data */
 #ifdef UNUSED_BUT_SET
-flag=0;
+  flag = 0;
 #endif
-data->num_frames = 0;
+  data->num_frames = 0;
 
-read_xyz_block(fp, data);
+  read_xyz_block(fp, data);
 
-for (;;)
+  for (;;)
   {
-  add_frame_offset(fp, data);
+    add_frame_offset(fp, data);
 
-  if (read_xyz_block(fp, NULL))
-    break;
+    if (read_xyz_block(fp, NULL))
+      break;
 
-  data->num_frames++;
+    data->num_frames++;
   }
 
-/* get rid of frame list if only one frame */
-if (data->num_frames == 1)
+  /* get rid of frame list if only one frame */
+  if (data->num_frames == 1)
   {
-  free_list(data->frame_list);
-  data->frame_list = NULL;
+    free_list(data->frame_list);
+    data->frame_list = NULL;
   }
 
-/* model setup */
-strcpy(data->filename, filename);
-g_free(data->basename);
-data->basename = parse_strip(filename);
-model_prep(data);
+  /* model setup */
+  strcpy(data->filename, filename);
+  g_free(data->basename);
+  data->basename = parse_strip(filename);
+  model_prep(data);
 
-return(0);
+  return (0);
 }
-

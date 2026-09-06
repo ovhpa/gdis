@@ -1,0 +1,17 @@
+---
+Language: Cpp
+BasedOnStyle: LLVM
+IndentWidth: 2
+ColumnLimit: 120
+UseTab: Never
+SortIncludes: Never
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass: true
+  AfterControlStatement: Always
+  AfterFunction: true
+  AfterNamespace: true
+SpaceBeforeParens: ControlStatements
+SpaceAfterCStyleCast: true
+AlignAfterOpenBracket: Align
+PointerAlignment: Right

@@ -40,36 +40,33 @@ extern struct sysenv_pak sysenv;
 /* create a new mdi structure */
 gpointer mdi_new(void)
 {
-/* the aim of this is to have references to a number of models, which */
-/* can be combined in some fashion to create some solvation model */
+  /* the aim of this is to have references to a number of models, which */
+  /* can be combined in some fashion to create some solvation model */
 
-return(NULL);
+  return (NULL);
 }
 
-void mdi_free(gpointer data)
-{
-}
+void mdi_free(gpointer data) {}
 
 /****************************************/
 /* create a model from an mdi structure */
 /****************************************/
 gpointer mdi_model_new(gpointer data)
 {
-/*
-struct mdi_pak *mdi = data;
-*/
+  /*
+  struct mdi_pak *mdi = data;
+  */
 
-/* the aim of this is to have references to a number of models, which */
-/* can be combined in some fashion to create some solvation model */
+  /* the aim of this is to have references to a number of models, which */
+  /* can be combined in some fashion to create some solvation model */
 
-/* check models exist */
+  /* check models exist */
 
-/* preload coords */
+  /* preload coords */
 
-/* combine */
+  /* combine */
 
-/* initialize new model */
+  /* initialize new model */
 
-return(NULL);
+  return (NULL);
 }
-

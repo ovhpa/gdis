@@ -39,10 +39,10 @@ The GNU GPL can also be found at http://www.gnu.org
 #include "model.h"
 #include "interface.h"
 #include "file_vasp.h"
-#ifdef   WITH_GUI
+#ifdef WITH_GUI
 #include "graph.h"
-#endif //WITH_GUI
-enum {VASP_DEFAULT, VASP_XML, VASP_TRIKS, VASP_NLOOPS};
+#endif // WITH_GUI
+enum { VASP_DEFAULT, VASP_XML, VASP_TRIKS, VASP_NLOOPS };
 
 /* main structures */
 extern struct sysenv_pak sysenv;
@@ -50,2693 +50,3531 @@ extern struct elem_pak elements[];
 
 #define DEBUG_TRACK_VASP 0
 
-
-int vasp_xml_read_header(FILE *vf){
-/* read the vasp xml header */
-	gchar *line;
-	int isok=0;
-	line = file_read_line(vf);
-	while (line){
-		if (find_in_string("/generator",line) != NULL) break;
-		if (find_in_string("program",line) != NULL) isok+=10*(find_in_string("vasp", line)!=NULL);
-		/* TODO: read version*/
-		g_free(line);
-		line = file_read_line(vf);
-	}
-	isok*=(int)(line!=0);
-	g_free(line);
-	return (isok);
-/* return value:
- * 0 => wrong file / file type
- * 1 => not vasp ?
- * 10 => ok
-*/
+int vasp_xml_read_header(FILE *vf)
+{
+  /* read the vasp xml header */
+  gchar *line;
+  int isok = 0;
+  line = file_read_line(vf);
+  while (line)
+  {
+    if (find_in_string("/generator", line) != NULL)
+      break;
+    if (find_in_string("program", line) != NULL)
+      isok += 10 * (find_in_string("vasp", line) != NULL);
+    /* TODO: read version*/
+    g_free(line);
+    line = file_read_line(vf);
+  }
+  isok *= (int) (line != 0);
+  g_free(line);
+  return (isok);
+  /* return value:
+   * 0 => wrong file / file type
+   * 1 => not vasp ?
+   * 10 => ok
+   */
 }
 
-int vasp_xml_read_org_incar(FILE *vf){
-/* TODO: include original INCAR */
-	gchar *line;
-	int isok;
-	line = file_read_line(vf);
-	while (line) {/*just skip for now*/
-		if (find_in_string("/incar",line) != NULL) break;
-		g_free(line);
-		line = file_read_line(vf);
-	}
-	isok=(int)(line != 0);
-	g_free(line);
-	return (isok);
+int vasp_xml_read_org_incar(FILE *vf)
+{
+  /* TODO: include original INCAR */
+  gchar *line;
+  int isok;
+  line = file_read_line(vf);
+  while (line)
+  { /*just skip for now*/
+    if (find_in_string("/incar", line) != NULL)
+      break;
+    g_free(line);
+    line = file_read_line(vf);
+  }
+  isok = (int) (line != 0);
+  g_free(line);
+  return (isok);
 }
 
-int vasp_xml_read_kpoints(FILE *vf,struct model_pak *model){
-/* get number of kpoints and their distance to gamma */
-	gchar *line;
-	gint nkpts;
-	gdouble xo,yo,zo;
-	gdouble xi,yi,zi;
-	gdouble dist=0.;
-	long int vfpos=ftell(vf);/*flag begining of kpoints*/
-	/*FIX: d4a984*/
-/*unfortunately, there is no NKPTS entry in vasprun.xml!*/
-	if(fetch_in_file(vf,"kpointlist")==0) {
-		fseek(vf,vfpos,SEEK_SET);/* rewind to flag */
-		return -1;/*broken kpoints entry*/
-	}
-	vfpos=ftell(vf);/*flag begining of kpointlist*/
-	nkpts=0;
-	line = file_read_line(vf);
-	while (line) {/*first get the number of kpoints*/
-	        if (find_in_string("/varray",line) != NULL) break;
-		nkpts++;
-		g_free(line);
-		line = file_read_line(vf);
-	}
-	if (line == NULL) {
-		fseek(vf,vfpos,SEEK_SET);/* rewind to flag */
-		return -1;/* Incomplete kpoint list? */
-	}
-	model->nkpoints=nkpts;
-	if(model->kpts_d!=NULL) g_free(model->kpts_d);
-	model->kpts_d=g_malloc((model->nkpoints)*sizeof(gdouble));
-	fseek(vf,vfpos,SEEK_SET);/* rewind to flag */
-	/*now get kpoints distances*/
-	nkpts=0;
-	xo=0.;
-	yo=0.;
-	zo=0.;
-	line = file_read_line(vf);
-	while (line) {/*now get kpoints distances*/
-		if (find_in_string("/varray",line) != NULL) break;
-		sscanf(line," <v> %lf %lf %lf </v> ",&xi,&yi,&zi);
-		dist+=sqrt((xi-xo)*(xi-xo)+(yi-yo)*(yi-yo)+(zi-zo)*(zi-zo));
-		model->kpts_d[nkpts]=dist;
-//fprintf(stdout,"#DBG: kpt[%i]={%lf,%lf,%lf} d=%lf\n",nkpts,xi,yi,zi,model->kpts_d[nkpts]);
-		xo=xi;yo=yi;zo=zi;
-		nkpts++;
-		g_free(line);
-		line = file_read_line(vf);
-	}
-	vfpos=ftell(vf);/*flag end of kpointlist*/
-	/*all done for now! TODO: get kpoints coordinates and weights*/
-	if(fetch_in_file(vf,"</kpoints>")==0) {
-		fseek(vf,vfpos,SEEK_SET);/* rewind to flag */
-		return -1;/*broken kpoints entry*/
-	}
-	return 0;
+int vasp_xml_read_kpoints(FILE *vf, struct model_pak *model)
+{
+  /* get number of kpoints and their distance to gamma */
+  gchar *line;
+  gint nkpts;
+  gdouble xo, yo, zo;
+  gdouble xi, yi, zi;
+  gdouble dist = 0.;
+  long int vfpos = ftell(vf); /*flag begining of kpoints*/
+  /*FIX: d4a984*/
+  /*unfortunately, there is no NKPTS entry in vasprun.xml!*/
+  if (fetch_in_file(vf, "kpointlist") == 0)
+  {
+    fseek(vf, vfpos, SEEK_SET); /* rewind to flag */
+    return -1;                  /*broken kpoints entry*/
+  }
+  vfpos = ftell(vf); /*flag begining of kpointlist*/
+  nkpts = 0;
+  line = file_read_line(vf);
+  while (line)
+  { /*first get the number of kpoints*/
+    if (find_in_string("/varray", line) != NULL)
+      break;
+    nkpts++;
+    g_free(line);
+    line = file_read_line(vf);
+  }
+  if (line == NULL)
+  {
+    fseek(vf, vfpos, SEEK_SET); /* rewind to flag */
+    return -1;                  /* Incomplete kpoint list? */
+  }
+  model->nkpoints = nkpts;
+  if (model->kpts_d != NULL)
+    g_free(model->kpts_d);
+  model->kpts_d = g_malloc((model->nkpoints) * sizeof(gdouble));
+  fseek(vf, vfpos, SEEK_SET); /* rewind to flag */
+  /*now get kpoints distances*/
+  nkpts = 0;
+  xo = 0.;
+  yo = 0.;
+  zo = 0.;
+  line = file_read_line(vf);
+  while (line)
+  { /*now get kpoints distances*/
+    if (find_in_string("/varray", line) != NULL)
+      break;
+    sscanf(line, " <v> %lf %lf %lf </v> ", &xi, &yi, &zi);
+    dist += sqrt((xi - xo) * (xi - xo) + (yi - yo) * (yi - yo) + (zi - zo) * (zi - zo));
+    model->kpts_d[nkpts] = dist;
+    // fprintf(stdout,"#DBG: kpt[%i]={%lf,%lf,%lf} d=%lf\n",nkpts,xi,yi,zi,model->kpts_d[nkpts]);
+    xo = xi;
+    yo = yi;
+    zo = zi;
+    nkpts++;
+    g_free(line);
+    line = file_read_line(vf);
+  }
+  vfpos = ftell(vf); /*flag end of kpointlist*/
+  /*all done for now! TODO: get kpoints coordinates and weights*/
+  if (fetch_in_file(vf, "</kpoints>") == 0)
+  {
+    fseek(vf, vfpos, SEEK_SET); /* rewind to flag */
+    return -1;                  /*broken kpoints entry*/
+  }
+  return 0;
 }
 
-int vasp_xml_read_incar(FILE *vf,struct model_pak *model){
-/* This is the 'full length' INCAR (mostly ignored). */
-	gchar *line;
-	gchar *ptr;
-	int isok=0;
-	int ispin=0;
-	line = file_read_line(vf);
-	while (line) {
-	        if (find_in_string("/parameters",line) != NULL) break;
-		if (find_in_string("SYSTEM",line) != NULL) {
-			g_free(model->basename);
-/*FIX a BUG in line/basename memory access*/
-			ptr=&(line[0]);
-			while((*ptr!='>')&&(*ptr!='\0')) ptr++;
-			if(*ptr=='\0'){
-				model->basename=g_strdup_printf("unknown");/*which should not happen*/
-			}else{
-				ptr++;
-				__SKIP_BLANK(ptr);
-				model->basename=g_strdup_printf("%s",ptr);
-				ptr=&(model->basename[0]);
-				while((*ptr!='<')&&(*ptr!='\0')) ptr++;
-				*ptr='\0';
-			}
-		}
-		/*fill needed properties*/
-		if (find_in_string("NBANDS",line) != NULL)
-			sscanf(line," <i type=\"int\" name=\"NBANDS\"> %i</i> ",&(model->nbands));
-		if (find_in_string("ISPIN",line) != NULL){
-			sscanf(line," <i type=\"int\" name=\"ISPIN\"> %i</i> ",&ispin);
-			if(ispin>1) model->spin_polarized=TRUE;
-		}
-		if (find_in_string("NEDOS",line) != NULL)
-			sscanf(line," <i type=\"int\" name=\"NEDOS\"> %i</i> ",&(model->ndos));
-		g_free(line);
-		line = file_read_line(vf);
-	}
-	isok=(int)(line != 0);
-	g_free(line);
-	return (isok);
+int vasp_xml_read_incar(FILE *vf, struct model_pak *model)
+{
+  /* This is the 'full length' INCAR (mostly ignored). */
+  gchar *line;
+  gchar *ptr;
+  int isok = 0;
+  int ispin = 0;
+  line = file_read_line(vf);
+  while (line)
+  {
+    if (find_in_string("/parameters", line) != NULL)
+      break;
+    if (find_in_string("SYSTEM", line) != NULL)
+    {
+      g_free(model->basename);
+      /*FIX a BUG in line/basename memory access*/
+      ptr = &(line[0]);
+      while ((*ptr != '>') && (*ptr != '\0'))
+        ptr++;
+      if (*ptr == '\0')
+      {
+        model->basename = g_strdup_printf("unknown"); /*which should not happen*/
+      } else
+      {
+        ptr++;
+        __SKIP_BLANK(ptr);
+        model->basename = g_strdup_printf("%s", ptr);
+        ptr = &(model->basename[0]);
+        while ((*ptr != '<') && (*ptr != '\0'))
+          ptr++;
+        *ptr = '\0';
+      }
+    }
+    /*fill needed properties*/
+    if (find_in_string("NBANDS", line) != NULL)
+      sscanf(line, " <i type=\"int\" name=\"NBANDS\"> %i</i> ", &(model->nbands));
+    if (find_in_string("ISPIN", line) != NULL)
+    {
+      sscanf(line, " <i type=\"int\" name=\"ISPIN\"> %i</i> ", &ispin);
+      if (ispin > 1)
+        model->spin_polarized = TRUE;
+    }
+    if (find_in_string("NEDOS", line) != NULL)
+      sscanf(line, " <i type=\"int\" name=\"NEDOS\"> %i</i> ", &(model->ndos));
+    g_free(line);
+    line = file_read_line(vf);
+  }
+  isok = (int) (line != 0);
+  g_free(line);
+  return (isok);
 }
 /**********************************************************/
 /* populate vasp_calc_struct with values from vasprun.xml */
 /**********************************************************/
-int vasp_xml_load_calc(FILE *vf,vasp_calc_struct *calc){
+int vasp_xml_load_calc(FILE *vf, vasp_calc_struct *calc)
+{
 #define CALC (*calc)
 #define DEBUG_XML2CALC 0
-#define XC_REG_DOUBLE(field,value) do{\
-        if (find_in_string(field,line) != NULL) {\
-                sscanf(line," <i name=\"%*[^\"]\"> %[^<]</i>",tamp);\
-                value=g_ascii_strtod(tamp,NULL);\
-        }\
-}while(0)
-#define XC_REG_INT(field,value) do{\
-	if (find_in_string(field,line) != NULL) {\
-		sscanf(line," <i type=\"int\" name=\"%*[^\"]\"> %[^<]</i>",tamp);\
-		value=(gint)g_ascii_strtoll(tamp,NULL,10);\
-	}\
-}while(0)
-#define XC_REG_BOOL(field,value) do{\
-	if (find_in_string(field,line) != NULL) {\
-		sscanf(line," <i type=\"logical\" name=\"%*[^\"]\"> %s",tamp);\
-		value=(tamp[0]=='T');\
-	}\
-}while(0)
-#define XC_REG_TEXT(field,value) do{\
-	if (find_in_string(field,line) != NULL) {\
-		if(value!=NULL) g_free(value);\
-		sscanf(line," <v name=\"%*[^\"]\"> %[^<]</v>",tamp);\
-		value=g_strdup_printf("%s",tamp);\
-	}\
-}while(0)
+#define XC_REG_DOUBLE(field, value)                                                                                    \
+  do                                                                                                                   \
+  {                                                                                                                    \
+    if (find_in_string(field, line) != NULL)                                                                           \
+    {                                                                                                                  \
+      sscanf(line, " <i name=\"%*[^\"]\"> %[^<]</i>", tamp);                                                           \
+      value = g_ascii_strtod(tamp, NULL);                                                                              \
+    }                                                                                                                  \
+  } while (0)
+#define XC_REG_INT(field, value)                                                                                       \
+  do                                                                                                                   \
+  {                                                                                                                    \
+    gchar _s[256];                                                                                                     \
+    g_snprintf(_s, sizeof(_s), "name=\"%s\"", field);                                                                  \
+    if (find_in_string(_s, line) != NULL)                                                                              \
+    {                                                                                                                  \
+      sscanf(line, " <i type=\"int\" name=\"%*[^\"]\"> %[^<]</i>", tamp);                                              \
+      gint _old = value;                                                                                               \
+      value = (gint) g_ascii_strtoll(tamp, NULL, 10);                                                                  \
+    }                                                                                                                  \
+  } while (0)
+#define XC_REG_BOOL(field, value)                                                                                      \
+  do                                                                                                                   \
+  {                                                                                                                    \
+    gchar _s[256];                                                                                                     \
+    g_snprintf(_s, sizeof(_s), "name=\"%s\"", field);                                                                  \
+    if (find_in_string(_s, line) != NULL)                                                                              \
+    {                                                                                                                  \
+      sscanf(line, " <i type=\"logical\" name=\"%*[^\"]\"> %s", tamp);                                                 \
+      value = (tamp[0] == 'T');                                                                                        \
+    }                                                                                                                  \
+  } while (0)
+#define XC_REG_TEXT(field, value)                                                                                      \
+  do                                                                                                                   \
+  {                                                                                                                    \
+    gchar _s[256];                                                                                                     \
+    g_snprintf(_s, sizeof(_s), "name=\"%s\"", field);                                                                  \
+    if (find_in_string(_s, line) != NULL)                                                                              \
+    {                                                                                                                  \
+      if (value != NULL)                                                                                               \
+        g_free(value);                                                                                                 \
+      sscanf(line, " <v name=\"%*[^\"]\"> %[^<]</v>", tamp);                                                           \
+      value = g_strdup_printf("%s", tamp);                                                                             \
+    }                                                                                                                  \
+  } while (0)
 
-	gchar *line;
-	gchar tamp[512];/*seems large but some double arrays can become quite huge (magmom)*/
-	if(vf==NULL) return -1;
-	if(calc==NULL) return -1;
-	/* first rewind*/
-	rewind(vf);
-	if(fetch_in_file(vf,"parameters")==0) return -1;
-	/* we are now in parameters: general*/
-	line = file_read_line(vf);
-	while(line){
-		if (find_in_string("</separator>",line) != NULL) break;/*end of general*/
-		if (find_in_string("SYSTEM",line) != NULL){
-			/*register SYSTEM*/
-			if(CALC.name!=NULL) g_free(CALC.name);
-			sscanf(line," <i type=\"string\" name=\"SYSTEM\"> %[^<]</i>",tamp);
-			CALC.name=g_strdup_printf("%s",tamp);
+  gchar *line;
+  gchar tamp[512]; /*seems large but some double arrays can become quite huge (magmom)*/
+  long int vfpos;
+  gint idx = 0;
+  if (vf == NULL)
+    return -1;
+  if (calc == NULL)
+    return -1;
+  /* first rewind*/
+  rewind(vf);
+  if (fetch_in_file(vf, "parameters") == 0)
+    return -1;
+  /* we are now in parameters: general*/
+  line = file_read_line(vf);
+  while (line)
+  {
+    if (find_in_string("</separator>", line) != NULL)
+      break; /*end of general*/
+    if (find_in_string("SYSTEM", line) != NULL)
+    {
+      /*register SYSTEM*/
+      if (CALC.name != NULL)
+        g_free(CALC.name);
+      sscanf(line, " <i type=\"string\" name=\"SYSTEM\"> %[^<]</i>", tamp);
+      CALC.name = g_strdup_printf("%s", tamp);
 #if DEBUG_XML2CALC
-	fprintf(stdout,"#DBG XML2CALC: SYSTEM=%s\n",CALC.name);
+      fprintf(stdout, "#DBG XML2CALC: SYSTEM=%s\n", CALC.name);
 #endif
-		}
-		//Skipped: LCOMPAT
-		g_free(line);
-		line = file_read_line(vf);
-	}
-	if(line==NULL) return -1;
-	line = file_read_line(vf);/*electronic*/
-	while(line){
-		if (find_in_string("</separator>",line) != NULL) break;/*end of electronic*/
-		if (find_in_string("PREC",line) != NULL) {
-			/*register PREC*/
-			sscanf(line," <i type=\"string\" name=\"PREC\">%s",tamp);
-			tamp[0]=g_ascii_tolower(tamp[0]);
-			switch (tamp[0]){
-			case 's':
-				CALC.prec=VP_SINGLE;break;
-			case 'a':
-				CALC.prec=VP_ACCURATE;break;
-			case 'h':
-				CALC.prec=VP_HIGH;break;
-			case 'm':
-				CALC.prec=VP_MED;break;
-			case 'l':
-				CALC.prec=VP_LOW;break;
-			case 'n':
-			default:
-				CALC.prec=VP_NORM;
-			}
+    }
+    // Skipped: LCOMPAT
+    g_free(line);
+    line = file_read_line(vf);
+  }
+  if (line == NULL)
+    return -1;
+  line = file_read_line(vf); /*electronic*/
+  while (line)
+  {
+    if (find_in_string("</separator>", line) != NULL)
+      break; /*end of electronic*/
+    if (find_in_string("name=\"PREC\"", line) != NULL)
+    {
+      /*register PREC*/
+      sscanf(line, " <i type=\"string\" name=\"PREC\">%s", tamp);
+      tamp[0] = g_ascii_tolower(tamp[0]);
+      switch (tamp[0])
+      {
+      case 's':
+        CALC.prec = VP_SINGLE;
+        break;
+      case 'a':
+        CALC.prec = VP_ACCURATE;
+        break;
+      case 'h':
+        CALC.prec = VP_HIGH;
+        break;
+      case 'm':
+        CALC.prec = VP_MED;
+        break;
+      case 'l':
+        CALC.prec = VP_LOW;
+        break;
+      case 'n':
+      default:
+        CALC.prec = VP_NORM;
+      }
 #if DEBUG_XML2CALC
-        fprintf(stdout,"#DBG XML2CALC: PREC=%c\n",tamp[0]);
+      fprintf(stdout, "#DBG XML2CALC: PREC=%c\n", tamp[0]);
 #endif
-		}
-		XC_REG_DOUBLE("ENMAX",CALC.encut);
-		XC_REG_DOUBLE("ENAUG",CALC.enaug);
-		XC_REG_DOUBLE("EDIFF",CALC.ediff);
-		XC_REG_DOUBLE("NELECT",CALC.nelect);
-		//Skipped: EREF (unknown)
-		XC_REG_DOUBLE("SIGMA",CALC.sigma);
-		XC_REG_DOUBLE("KSPACING",CALC.kspacing);
-		XC_REG_INT("IALGO",CALC.ialgo);
-		XC_REG_INT("IWAVPR",CALC.iwavpr);
-		XC_REG_INT("NBANDS",CALC.nbands);
-		//Skipped: TURBO (unknown)
-		//Skipped: IRESTART (unknown)
-		//Skipped: NREBOOT (unknown)
-		//Skipped: NMIN (unknown)
-		XC_REG_INT("ISMEAR",CALC.ismear);
-		XC_REG_BOOL("KGAMMA",CALC.kgamma);
-		/*read next line*/
-		g_free(line);
-		line = file_read_line(vf);
-	}
+    }
+    XC_REG_DOUBLE("ENMAX", CALC.encut);
+    XC_REG_DOUBLE("ENAUG", CALC.enaug);
+    XC_REG_DOUBLE("EDIFF", CALC.ediff);
+    XC_REG_DOUBLE("NELECT", CALC.nelect);
+    // Skipped: EREF (unknown)
+    XC_REG_DOUBLE("SIGMA", CALC.sigma);
+    XC_REG_DOUBLE("KSPACING", CALC.kspacing);
+    XC_REG_INT("IALGO", CALC.ialgo);
+    XC_REG_INT("NELM", CALC.nelm);
+    XC_REG_INT("IWAVPR", CALC.iwavpr);
+    XC_REG_INT("NBANDS", CALC.nbands);
+    // Skipped: TURBO (unknown)
+    // Skipped: IRESTART (unknown)
+    // Skipped: NREBOOT (unknown)
+    // Skipped: NMIN (unknown)
+    XC_REG_INT("ISMEAR", CALC.ismear);
+    XC_REG_BOOL("KGAMMA", CALC.kgamma);
+    /*read next line*/
+    g_free(line);
+    line = file_read_line(vf);
+  }
 #if DEBUG_XML2CALC
-	fprintf(stdout,"#DBG XML2CALC: ENCUT=%lf\n",CALC.encut);
-	fprintf(stdout,"#DBG XML2CALC: ENAUG=%lf\n",CALC.enaug);
-	fprintf(stdout,"#DBG XML2CALC: EDIFF=%lE\n",CALC.ediff);
-	fprintf(stdout,"#DBG XML2CALC: IALGO=%i\n",CALC.ialgo);
-	fprintf(stdout,"#DBG XML2CALC: IWAVPR=%i\n",CALC.iwavpr);
-	fprintf(stdout,"#DBG XML2CALC: NBANDS=%i\n",CALC.nbands);
-	fprintf(stdout,"#DBG XML2CALC: NELECT=%lf\n",CALC.nelect);
-	fprintf(stdout,"#DBG XML2CALC: ISMEAR=%i\n",CALC.ismear);
-	fprintf(stdout,"#DBG XML2CALC: SIGMA=%lf\n",CALC.sigma);
-	fprintf(stdout,"#DBG XML2CALC: KSPACING=%lf\n",CALC.kspacing);
-if(CALC.kgamma) fprintf(stdout,"#DBG XML2CALC: KGAMMA=.TRUE.\n");
-else 		fprintf(stdout,"#DBG XML2CALC: SIGMA=.FALSE.\n");
+  fprintf(stdout, "#DBG XML2CALC: ENCUT=%lf\n", CALC.encut);
+  fprintf(stdout, "#DBG XML2CALC: ENAUG=%lf\n", CALC.enaug);
+  fprintf(stdout, "#DBG XML2CALC: EDIFF=%lE\n", CALC.ediff);
+  fprintf(stdout, "#DBG XML2CALC: IALGO=%i\n", CALC.ialgo);
+  fprintf(stdout, "#DBG XML2CALC: IWAVPR=%i\n", CALC.iwavpr);
+  fprintf(stdout, "#DBG XML2CALC: NBANDS=%i\n", CALC.nbands);
+  fprintf(stdout, "#DBG XML2CALC: NELECT=%lf\n", CALC.nelect);
+  fprintf(stdout, "#DBG XML2CALC: ISMEAR=%i\n", CALC.ismear);
+  fprintf(stdout, "#DBG XML2CALC: SIGMA=%lf\n", CALC.sigma);
+  fprintf(stdout, "#DBG XML2CALC: KSPACING=%lf\n", CALC.kspacing);
+  if (CALC.kgamma)
+    fprintf(stdout, "#DBG XML2CALC: KGAMMA=.TRUE.\n");
+  else
+    fprintf(stdout, "#DBG XML2CALC: SIGMA=.FALSE.\n");
 #endif
-	line = file_read_line(vf);/*electronic projector*/
-	while(line){
-		if (find_in_string("</separator>",line) != NULL) break;/*end of electronic projector*/
-		//LREAL: specia
-		if (find_in_string("LREAL",line) != NULL) {/*LREAL is still a boolean in vasprun.xml*/
-			sscanf(line," <i type=\"logical\" name=\"LREAL\"> %s",tamp);
-			if(tamp[0]=='T') CALC.lreal=VLR_TRUE;
-			else CALC.lreal=VLR_FALSE;
-		}
-		XC_REG_TEXT("ROPT",CALC.ropt);
-		XC_REG_INT("LMAXPAW",CALC.lmaxpaw);
-		XC_REG_INT("LMAXMIX",CALC.lmaxmix);
-		//Skipped: NLSPLINE (unknown)
-		/*read next line*/
-		g_free(line);
-		line = file_read_line(vf);
-	}
+  line = file_read_line(vf); /*electronic projector*/
+  while (line)
+  {
+    if (find_in_string("</separator>", line) != NULL)
+      break; /*end of electronic projector*/
+    // LREAL: specia
+    if (find_in_string("LREAL", line) != NULL)
+    { /*LREAL is still a boolean in vasprun.xml*/
+      sscanf(line, " <i type=\"logical\" name=\"LREAL\"> %s", tamp);
+      if (tamp[0] == 'T')
+        CALC.lreal = VLR_TRUE;
+      else
+        CALC.lreal = VLR_FALSE;
+    }
+    XC_REG_TEXT("ROPT", CALC.ropt);
+    XC_REG_INT("LMAXPAW", CALC.lmaxpaw);
+    XC_REG_INT("LMAXMIX", CALC.lmaxmix);
+    // Skipped: NLSPLINE (unknown)
+    /*read next line*/
+    g_free(line);
+    line = file_read_line(vf);
+  }
 #if DEBUG_XML2CALC
-if(CALC.lreal==VLR_TRUE)	fprintf(stdout,"#DBG XML2CALC: LREAL=.TRUE.\n");
-else				fprintf(stdout,"#DBG XML2CALC: LREAL=.FALSE.\n");
-	fprintf(stdout,"#DBG XML2CALC: ROPT=%s\n",CALC.ropt);
-	fprintf(stdout,"#DBG XML2CALC: LMAXPAW=%i\n",CALC.lmaxpaw);
-	fprintf(stdout,"#DBG XML2CALC: LMAXMIX=%i\n",CALC.lmaxmix);
+  if (CALC.lreal == VLR_TRUE)
+    fprintf(stdout, "#DBG XML2CALC: LREAL=.TRUE.\n");
+  else
+    fprintf(stdout, "#DBG XML2CALC: LREAL=.FALSE.\n");
+  fprintf(stdout, "#DBG XML2CALC: ROPT=%s\n", CALC.ropt);
+  fprintf(stdout, "#DBG XML2CALC: LMAXPAW=%i\n", CALC.lmaxpaw);
+  fprintf(stdout, "#DBG XML2CALC: LMAXMIX=%i\n", CALC.lmaxmix);
 #endif
-	line = file_read_line(vf);/*electronic startup*/
-	while(line){
-		if (find_in_string("</separator>",line) != NULL) break;/*end of electronic startup*/
-		XC_REG_INT("ISTART",CALC.istart);
-		XC_REG_INT("ICHARG",CALC.icharg);
-		//INIWAV:special
-		if (find_in_string("INIWAV",line) != NULL) {
-			sscanf(line," <i type=\"int\" name=\"INIWAV\"> %[^<]</i>",tamp);
-			CALC.iniwav=(g_ascii_digit_value(tamp[0])==1);
-		}
-		/*read next line*/
-		g_free(line);
-		line = file_read_line(vf);
-	}
+  line = file_read_line(vf); /*electronic startup*/
+  while (line)
+  {
+    if (find_in_string("</separator>", line) != NULL)
+      break; /*end of electronic startup*/
+    XC_REG_INT("ISTART", CALC.istart);
+    XC_REG_INT("ICHARG", CALC.icharg);
+    // INIWAV:special
+    if (find_in_string("INIWAV", line) != NULL)
+    {
+      sscanf(line, " <i type=\"int\" name=\"INIWAV\"> %[^<]</i>", tamp);
+      CALC.iniwav = (g_ascii_digit_value(tamp[0]) == 1);
+    }
+    /*read next line*/
+    g_free(line);
+    line = file_read_line(vf);
+  }
 #if DEBUG_XML2CALC
-	fprintf(stdout,"#DBG XML2CALC: ISTART=%i\n",CALC.istart);
-	fprintf(stdout,"#DBG XML2CALC: ICHARG=%i\n",CALC.icharg);
-if(CALC.iniwav) fprintf(stdout,"#DBG XML2CALC: INIWAV=1\n");
-else 		fprintf(stdout,"#DBG XML2CALC: INIWAV=0\n");
+  fprintf(stdout, "#DBG XML2CALC: ISTART=%i\n", CALC.istart);
+  fprintf(stdout, "#DBG XML2CALC: ICHARG=%i\n", CALC.icharg);
+  if (CALC.iniwav)
+    fprintf(stdout, "#DBG XML2CALC: INIWAV=1\n");
+  else
+    fprintf(stdout, "#DBG XML2CALC: INIWAV=0\n");
 #endif
-	line = file_read_line(vf);/*electronic spin*/
-	while(line){
-		if (find_in_string("</separator>",line) != NULL) break;/*end of electronic spin*/
-		//ISPIN: special 
-		if (find_in_string("ISPIN",line) != NULL) {
-			sscanf(line," <i type=\"int\" name=\"ISPIN\"> %[^<]</i>",tamp);
-			CALC.ispin=(g_ascii_digit_value(tamp[0])==2);
-		}
-		XC_REG_BOOL("LNONCOLLINEAR",CALC.non_collinear);
-		XC_REG_TEXT("MAGMOM",CALC.magmom);
-		XC_REG_DOUBLE("NUPDOWN",CALC.nupdown);
-		XC_REG_BOOL("LSORBIT",CALC.lsorbit);
-		XC_REG_TEXT("SAXIS",CALC.saxis);
-		//Skipped: LSPIRAL (unknown)
-		//Skipped: QSPIRAL (unknown)
-		//Skipped: LZEROZ (unknown)
-		/*read next line*/
-		g_free(line);
-		line = file_read_line(vf);
-	}
+  line = file_read_line(vf); /*electronic spin*/
+  while (line)
+  {
+    if (find_in_string("</separator>", line) != NULL)
+      break; /*end of electronic spin*/
+    // ISPIN: special
+    if (find_in_string("ISPIN", line) != NULL)
+    {
+      sscanf(line, " <i type=\"int\" name=\"ISPIN\"> %[^<]</i>", tamp);
+      CALC.ispin = (g_ascii_digit_value(tamp[0]) == 2);
+    }
+    XC_REG_BOOL("LNONCOLLINEAR", CALC.non_collinear);
+    XC_REG_TEXT("MAGMOM", CALC.magmom);
+    XC_REG_DOUBLE("NUPDOWN", CALC.nupdown);
+    XC_REG_BOOL("LSORBIT", CALC.lsorbit);
+    XC_REG_TEXT("SAXIS", CALC.saxis);
+    // Skipped: LSPIRAL (unknown)
+    // Skipped: QSPIRAL (unknown)
+    // Skipped: LZEROZ (unknown)
+    /*read next line*/
+    g_free(line);
+    line = file_read_line(vf);
+  }
 #if DEBUG_XML2CALC
-if(CALC.ispin)		fprintf(stdout,"#DBG XML2CALC: ISPIN=2\n");
-else 			fprintf(stdout,"#DBG XML2CALC: ISPIN=1\n");
-if(CALC.non_collinear) 	fprintf(stdout,"#DBG XML2CALC: LNONCOLLINEAR=.TRUE.\n");
-else 			fprintf(stdout,"#DBG XML2CALC: LNONCOLLINEAR=.FALSE.\n");
-	fprintf(stdout,"#DBG XML2CALC: MAGMOM=%s\n",CALC.magmom);
-	fprintf(stdout,"#DBG XML2CALC: NUPDOWN=%i\n",CALC.nupdown);
-if(CALC.lsorbit)	fprintf(stdout,"#DBG XML2CALC: LSORBIT=.TRUE.\n");
-else			fprintf(stdout,"#DBG XML2CALC: LSORBIT=.FALSE.\n");
-	fprintf(stdout,"#DBG XML2CALC: SAXIS=%s\n",CALC.saxis);
+  if (CALC.ispin)
+    fprintf(stdout, "#DBG XML2CALC: ISPIN=2\n");
+  else
+    fprintf(stdout, "#DBG XML2CALC: ISPIN=1\n");
+  if (CALC.non_collinear)
+    fprintf(stdout, "#DBG XML2CALC: LNONCOLLINEAR=.TRUE.\n");
+  else
+    fprintf(stdout, "#DBG XML2CALC: LNONCOLLINEAR=.FALSE.\n");
+  fprintf(stdout, "#DBG XML2CALC: MAGMOM=%s\n", CALC.magmom);
+  fprintf(stdout, "#DBG XML2CALC: NUPDOWN=%i\n", CALC.nupdown);
+  if (CALC.lsorbit)
+    fprintf(stdout, "#DBG XML2CALC: LSORBIT=.TRUE.\n");
+  else
+    fprintf(stdout, "#DBG XML2CALC: LSORBIT=.FALSE.\n");
+  fprintf(stdout, "#DBG XML2CALC: SAXIS=%s\n", CALC.saxis);
 #endif
-	line = file_read_line(vf);/*electronic exchange-correlation*/
-	while(line){
-		if (find_in_string("</separator>",line) != NULL) break;/*end of electronic exchange-correlation*/
-		XC_REG_BOOL("LASPH",CALC.lasph);
-		XC_REG_BOOL("LMETAGGA",CALC.lmetagga);/*FIXME: when LMETAGGA=TRUE METAGGA and tags are give in INCAR ONLY*/
-		/*read next line*/
-		g_free(line);
-		line = file_read_line(vf);
-	}
+  line = file_read_line(vf); /*electronic exchange-correlation*/
+  while (line)
+  {
+    if (find_in_string("</separator>", line) != NULL)
+      break; /*end of electronic exchange-correlation*/
+    XC_REG_BOOL("LASPH", CALC.lasph);
+    XC_REG_BOOL("LMETAGGA", CALC.lmetagga); /*FIXME: when LMETAGGA=TRUE METAGGA and tags are give in INCAR ONLY*/
+    /*read next line*/
+    g_free(line);
+    line = file_read_line(vf);
+  }
 #if DEBUG_XML2CALC
-if(CALC.lasph)		fprintf(stdout,"#DBG XML2CALC: LASPH=.TRUE.\n");
-else			fprintf(stdout,"#DBG XML2CALC: LASPH=.FALSE.\n");
-if(CALC.lmetagga)	fprintf(stdout,"#DBG XML2CALC: LMETAGGA=.TRUE.\n");
-else			fprintf(stdout,"#DBG XML2CALC: LMETAGGA=.FALSE.\n");
+  if (CALC.lasph)
+    fprintf(stdout, "#DBG XML2CALC: LASPH=.TRUE.\n");
+  else
+    fprintf(stdout, "#DBG XML2CALC: LASPH=.FALSE.\n");
+  if (CALC.lmetagga)
+    fprintf(stdout, "#DBG XML2CALC: LMETAGGA=.TRUE.\n");
+  else
+    fprintf(stdout, "#DBG XML2CALC: LMETAGGA=.FALSE.\n");
 #endif
-	line = file_read_line(vf);/*electronic convergence*/
-	while(line){
-		if (find_in_string("</separator>",line) != NULL) break;/*end of electronic convergence*/
-		XC_REG_INT("NELM",CALC.nelm);
-		XC_REG_INT("NELMDL",CALC.nelmdl);
-		XC_REG_INT("NELMIN",CALC.nelmin);
-		//Skipped: ENINI (unknown)
-		XC_REG_BOOL("LDIAG",CALC.ldiag);
-		//Skipped: SUBROT (adv.)
-		//Skipped: WEIMIN (adv.)
-		//Skipped: EBREAK (adv.)
-		//Skipped: DEPER (adv.)
-		//Skipped: NRMM (unknown)
-		//TIME: special (because it is called vtime in vasp_calc_struct)
-		if (find_in_string("TIME",line) != NULL) {
-			sscanf(line," <i name=\"%*[^\"]\"> %[^<]</i>",tamp);
-			CALC.vtime=g_ascii_strtod(tamp,NULL);
-		}
-		/*read next line*/
-		g_free(line);
-		line = file_read_line(vf);
-	}
+  line = file_read_line(vf); /*electronic convergence*/
+  while (line)
+  {
+    if (find_in_string("</separator>", line) != NULL)
+      break; /*end of electronic convergence*/
+    XC_REG_INT("NELM", CALC.nelm);
+    XC_REG_INT("NELMDL", CALC.nelmdl);
+    XC_REG_INT("NELMIN", CALC.nelmin);
+    // Skipped: ENINI (unknown)
+    XC_REG_BOOL("LDIAG", CALC.ldiag);
+    // Skipped: SUBROT (adv.)
+    // Skipped: WEIMIN (adv.)
+    // Skipped: EBREAK (adv.)
+    // Skipped: DEPER (adv.)
+    // Skipped: NRMM (unknown)
+    // TIME: special (because it is called vtime in vasp_calc_struct)
+    if (find_in_string("TIME", line) != NULL)
+    {
+      sscanf(line, " <i name=\"%*[^\"]\"> %[^<]</i>", tamp);
+      CALC.vtime = g_ascii_strtod(tamp, NULL);
+    }
+    /*read next line*/
+    g_free(line);
+    line = file_read_line(vf);
+  }
 #if DEBUG_XML2CALC
-	fprintf(stdout,"#DBG XML2CALC: NELM=%i\n",CALC.nelm);
-	fprintf(stdout,"#DBG XML2CALC: NELMDL=%i\n",CALC.nelmdl);
-	fprintf(stdout,"#DBG XML2CALC: NELMIN=%i\n",CALC.nelmin);
-if(CALC.ldiag) 	fprintf(stdout,"#DBG XML2CALC: LDIAG=.TRUE.\n");
-else		fprintf(stdout,"#DBG XML2CALC: LDIAG=.FALSE.\n");
-	fprintf(stdout,"#DBG XML2CALC: TIME=%lf\n",CALC.vtime);
+  fprintf(stdout, "#DBG XML2CALC: NELM=%i\n", CALC.nelm);
+  fprintf(stdout, "#DBG XML2CALC: NELMDL=%i\n", CALC.nelmdl);
+  fprintf(stdout, "#DBG XML2CALC: NELMIN=%i\n", CALC.nelmin);
+  if (CALC.ldiag)
+    fprintf(stdout, "#DBG XML2CALC: LDIAG=.TRUE.\n");
+  else
+    fprintf(stdout, "#DBG XML2CALC: LDIAG=.FALSE.\n");
+  fprintf(stdout, "#DBG XML2CALC: TIME=%lf\n", CALC.vtime);
 #endif
-	line = file_read_line(vf);/*because there is 2 end </separator>*/
-	g_free(line);
-	line = file_read_line(vf);/*electronic mixer*/
-	while(line){
-		if (find_in_string("</separator>",line) != NULL) break;/*end of electronic mixer*/
-		XC_REG_DOUBLE("AMIX",CALC.amix);
-		XC_REG_DOUBLE("BMIX",CALC.bmix);
-		XC_REG_DOUBLE("AMIN",CALC.amin);
-		XC_REG_DOUBLE("AMIX_MAG",CALC.amix_mag);
-		XC_REG_DOUBLE("BMIX_MAG",CALC.bmix_mag);
-		XC_REG_INT("IMIX",CALC.imix);
-		//Skipped: MIXFIRST (unknown)
-		XC_REG_INT("MAXMIX",CALC.maxmix);
-		XC_REG_DOUBLE("WC",CALC.wc);
-		XC_REG_INT("INIMIX",CALC.inimix);
-		XC_REG_INT("MIXPRE",CALC.mixpre);
-		//Skipped: MREMOVE (unknown)
-		/*read next line*/
-		g_free(line);
-		line = file_read_line(vf);
-	}
+  line = file_read_line(vf); /*because there is 2 end </separator>*/
+  g_free(line);
+  line = file_read_line(vf); /*electronic mixer*/
+  while (line)
+  {
+    if (find_in_string("</separator>", line) != NULL)
+      break; /*end of electronic mixer*/
+    XC_REG_DOUBLE("AMIX", CALC.amix);
+    XC_REG_DOUBLE("BMIX", CALC.bmix);
+    XC_REG_DOUBLE("AMIN", CALC.amin);
+    XC_REG_DOUBLE("AMIX_MAG", CALC.amix_mag);
+    XC_REG_DOUBLE("BMIX_MAG", CALC.bmix_mag);
+    XC_REG_INT("IMIX", CALC.imix);
+    // Skipped: MIXFIRST (unknown)
+    XC_REG_INT("MAXMIX", CALC.maxmix);
+    XC_REG_DOUBLE("WC", CALC.wc);
+    XC_REG_INT("INIMIX", CALC.inimix);
+    XC_REG_INT("MIXPRE", CALC.mixpre);
+    // Skipped: MREMOVE (unknown)
+    /*read next line*/
+    g_free(line);
+    line = file_read_line(vf);
+  }
 #if DEBUG_XML2CALC
-	fprintf(stdout,"#DBG XML2CALC: AMIX=%lf\n",CALC.amix);
-	fprintf(stdout,"#DBG XML2CALC: BMIX=%lf\n",CALC.bmix);
-	fprintf(stdout,"#DBG XML2CALC: AMIN=%lf\n",CALC.amin);
-	fprintf(stdout,"#DBG XML2CALC: AMIX_MAG=%lf\n",CALC.amix_mag);
-	fprintf(stdout,"#DBG XML2CALC: BMIX_MAG=%lf\n",CALC.bmix_mag);
-	fprintf(stdout,"#DBG XML2CALC: IMIX=%i\n",CALC.imix);
-	fprintf(stdout,"#DBG XML2CALC: MAXMIX=%i\n",CALC.maxmix);
-	fprintf(stdout,"#DBG XML2CALC: WC=%lf\n",CALC.wc);
-	fprintf(stdout,"#DBG XML2CALC: INIMIX=%i\n",CALC.inimix);
-	fprintf(stdout,"#DBG XML2CALC: MIXPRE=%i\n",CALC.mixpre);
+  fprintf(stdout, "#DBG XML2CALC: AMIX=%lf\n", CALC.amix);
+  fprintf(stdout, "#DBG XML2CALC: BMIX=%lf\n", CALC.bmix);
+  fprintf(stdout, "#DBG XML2CALC: AMIN=%lf\n", CALC.amin);
+  fprintf(stdout, "#DBG XML2CALC: AMIX_MAG=%lf\n", CALC.amix_mag);
+  fprintf(stdout, "#DBG XML2CALC: BMIX_MAG=%lf\n", CALC.bmix_mag);
+  fprintf(stdout, "#DBG XML2CALC: IMIX=%i\n", CALC.imix);
+  fprintf(stdout, "#DBG XML2CALC: MAXMIX=%i\n", CALC.maxmix);
+  fprintf(stdout, "#DBG XML2CALC: WC=%lf\n", CALC.wc);
+  fprintf(stdout, "#DBG XML2CALC: INIMIX=%i\n", CALC.inimix);
+  fprintf(stdout, "#DBG XML2CALC: MIXPRE=%i\n", CALC.mixpre);
 #endif
-	line = file_read_line(vf);/*because there is 2 end </separator>*/
-	g_free(line);
-	line = file_read_line(vf);/*electronic dipolcorrection*/
-	while(line){
-		if (find_in_string("</separator>",line) != NULL) break;/*end of electronic dipolcorrection*/
-		XC_REG_BOOL("LDIPOL",CALC.ldipol);
-		XC_REG_BOOL("LMONO",CALC.lmono);
-		XC_REG_INT("IDIPOL",CALC.idipol);
-		XC_REG_DOUBLE("EPSILON",CALC.epsilon);
-		XC_REG_TEXT("DIPOL",CALC.dipol);
-		XC_REG_DOUBLE("EFIELD",CALC.efield);
-		/*read next line*/
-		g_free(line);
-		line = file_read_line(vf);
-	}
+  line = file_read_line(vf); /*because there is 2 end </separator>*/
+  g_free(line);
+  line = file_read_line(vf); /*electronic dipolcorrection*/
+  while (line)
+  {
+    if (find_in_string("</separator>", line) != NULL)
+      break; /*end of electronic dipolcorrection*/
+    XC_REG_BOOL("LDIPOL", CALC.ldipol);
+    XC_REG_BOOL("LMONO", CALC.lmono);
+    XC_REG_INT("IDIPOL", CALC.idipol);
+    XC_REG_DOUBLE("EPSILON", CALC.epsilon);
+    XC_REG_TEXT("DIPOL", CALC.dipol);
+    XC_REG_DOUBLE("EFIELD", CALC.efield);
+    /*read next line*/
+    g_free(line);
+    line = file_read_line(vf);
+  }
 #if DEBUG_XML2CALC
-if(CALC.ldipol) fprintf(stdout,"#DBG XML2CALC: LDIPOL=.TRUE.\n");
-else 		fprintf(stdout,"#DBG XML2CALC: LDIPOL=.FALSE.\n");
-if(CALC.lmono) 	fprintf(stdout,"#DBG XML2CALC: LMONO=.TRUE.\n");
-else 		fprintf(stdout,"#DBG XML2CALC: LMONO=.FALSE.\n");
-	fprintf(stdout,"#DBG XML2CALC: IDIPOL=%i\n",CALC.idipol);
-	fprintf(stdout,"#DBG XML2CALC: EPSILON=%lf\n",CALC.epsilon);
-	fprintf(stdout,"#DBG XML2CALC: DIPOL=%s\n",CALC.dipol);
-	fprintf(stdout,"#DBG XML2CALC: EFIELD=%lf\n",CALC.efield);
+  if (CALC.ldipol)
+    fprintf(stdout, "#DBG XML2CALC: LDIPOL=.TRUE.\n");
+  else
+    fprintf(stdout, "#DBG XML2CALC: LDIPOL=.FALSE.\n");
+  if (CALC.lmono)
+    fprintf(stdout, "#DBG XML2CALC: LMONO=.TRUE.\n");
+  else
+    fprintf(stdout, "#DBG XML2CALC: LMONO=.FALSE.\n");
+  fprintf(stdout, "#DBG XML2CALC: IDIPOL=%i\n", CALC.idipol);
+  fprintf(stdout, "#DBG XML2CALC: EPSILON=%lf\n", CALC.epsilon);
+  fprintf(stdout, "#DBG XML2CALC: DIPOL=%s\n", CALC.dipol);
+  fprintf(stdout, "#DBG XML2CALC: EFIELD=%lf\n", CALC.efield);
 #endif
-	line = file_read_line(vf);/*because there is 2 end </separator>*/
-	g_free(line);
-	line = file_read_line(vf);/*grids*/
-	while(line){
-		if (find_in_string("</separator>",line) != NULL) break;/*end of grids*/
-		XC_REG_INT("NGX\"",CALC.ngx);
-		XC_REG_INT("NGY\"",CALC.ngy);
-		XC_REG_INT("NGZ\"",CALC.ngz);
-		XC_REG_INT("NGXF",CALC.ngxf);
-		XC_REG_INT("NGYF",CALC.ngyf);
-		XC_REG_INT("NGZF",CALC.ngzf);
-		XC_REG_BOOL("ADDGRID",CALC.addgrid);
-		/*read next line*/
-		g_free(line);
-		line = file_read_line(vf);
-	}
+  line = file_read_line(vf); /*because there is 2 end </separator>*/
+  g_free(line);
+  line = file_read_line(vf); /*grids*/
+  while (line)
+  {
+    if (find_in_string("</separator>", line) != NULL)
+      break; /*end of grids*/
+    XC_REG_INT("NGX", CALC.ngx);
+    XC_REG_INT("NGY", CALC.ngy);
+    XC_REG_INT("NGZ", CALC.ngz);
+    XC_REG_INT("NGXF", CALC.ngxf);
+    XC_REG_INT("NGYF", CALC.ngyf);
+    XC_REG_INT("NGZF", CALC.ngzf);
+    XC_REG_BOOL("ADDGRID", CALC.addgrid);
+    /*read next line*/
+    g_free(line);
+    line = file_read_line(vf);
+  }
 #if DEBUG_XML2CALC
-	fprintf(stdout,"#DBG XML2CALC: NGX=%i\n",CALC.ngx);
-	fprintf(stdout,"#DBG XML2CALC: NGY=%i\n",CALC.ngy);
-	fprintf(stdout,"#DBG XML2CALC: NGZ=%i\n",CALC.ngz);
-	fprintf(stdout,"#DBG XML2CALC: NGXF=%i\n",CALC.ngxf);
-	fprintf(stdout,"#DBG XML2CALC: NGYF=%i\n",CALC.ngyf);
-	fprintf(stdout,"#DBG XML2CALC: NGZF=%i\n",CALC.ngzf);
-if(CALC.addgrid) 	fprintf(stdout,"#DBG XML2CALC: ADDGRID=.TRUE.\n");
-else 			fprintf(stdout,"#DBG XML2CALC: ADDGRID=.FALSE.\n");
+  fprintf(stdout, "#DBG XML2CALC: NGX=%i\n", CALC.ngx);
+  fprintf(stdout, "#DBG XML2CALC: NGY=%i\n", CALC.ngy);
+  fprintf(stdout, "#DBG XML2CALC: NGZ=%i\n", CALC.ngz);
+  fprintf(stdout, "#DBG XML2CALC: NGXF=%i\n", CALC.ngxf);
+  fprintf(stdout, "#DBG XML2CALC: NGYF=%i\n", CALC.ngyf);
+  fprintf(stdout, "#DBG XML2CALC: NGZF=%i\n", CALC.ngzf);
+  if (CALC.addgrid)
+    fprintf(stdout, "#DBG XML2CALC: ADDGRID=.TRUE.\n");
+  else
+    fprintf(stdout, "#DBG XML2CALC: ADDGRID=.FALSE.\n");
 #endif
-	line = file_read_line(vf);/*ionic*/
-	while(line){
-		if (find_in_string("</separator>",line) != NULL) break;/*end of ionic*/
-		XC_REG_INT("NSW",CALC.nsw);
-		XC_REG_INT("IBRION\"",CALC.ibrion);
-		XC_REG_INT("ISIF",CALC.isif);
-		XC_REG_DOUBLE("PSTRESS",CALC.pstress);
-		XC_REG_DOUBLE("EDIFFG",CALC.ediffg);
-		XC_REG_INT("NFREE",CALC.nfree);
-		XC_REG_DOUBLE("POTIM",CALC.potim);
-		XC_REG_DOUBLE("SMASS",CALC.smass);
-		//Skipped: SCALEE (unknown)
-		/*read next line*/
-		g_free(line);
-		line = file_read_line(vf);
-	}
+  line = file_read_line(vf); /*ionic*/
+  while (line)
+  {
+    if (find_in_string("</separator>", line) != NULL)
+      break; /*end of ionic*/
+    XC_REG_INT("NSW", CALC.nsw);
+    XC_REG_INT("IBRION", CALC.ibrion);
+    XC_REG_INT("ISIF", CALC.isif);
+    XC_REG_INT("NELM", CALC.nelm);
+    XC_REG_DOUBLE("PSTRESS", CALC.pstress);
+    XC_REG_DOUBLE("EDIFFG", CALC.ediffg);
+    XC_REG_INT("NFREE", CALC.nfree);
+    XC_REG_DOUBLE("POTIM", CALC.potim);
+    XC_REG_DOUBLE("SMASS", CALC.smass);
+    // Skipped: SCALEE (unknown)
+    /*read next line*/
+    g_free(line);
+    line = file_read_line(vf);
+  }
 #if DEBUG_XML2CALC
-	fprintf(stdout,"#DBG XML2CALC: NSW=%i\n",CALC.nsw);
-	fprintf(stdout,"#DBG XML2CALC: IBRION=%i\n",CALC.ibrion);
-	fprintf(stdout,"#DBG XML2CALC: ISIF=%i\n",CALC.isif);
-	fprintf(stdout,"#DBG XML2CALC: PSTRESS=%lf\n",CALC.pstress);
-	fprintf(stdout,"#DBG XML2CALC: EDIFFG=%lE\n",CALC.ediffg);
-	fprintf(stdout,"#DBG XML2CALC: NFREE=%i\n",CALC.nfree);
-	fprintf(stdout,"#DBG XML2CALC: POTIM=%lf\n",CALC.potim);
-	fprintf(stdout,"#DBG XML2CALC: SMASS=%lf\n",CALC.smass);
+  fprintf(stdout, "#DBG XML2CALC: NSW=%i\n", CALC.nsw);
+  fprintf(stdout, "#DBG XML2CALC: IBRION=%i\n", CALC.ibrion);
+  fprintf(stdout, "#DBG XML2CALC: ISIF=%i\n", CALC.isif);
+  fprintf(stdout, "#DBG XML2CALC: PSTRESS=%lf\n", CALC.pstress);
+  fprintf(stdout, "#DBG XML2CALC: EDIFFG=%lE\n", CALC.ediffg);
+  fprintf(stdout, "#DBG XML2CALC: NFREE=%i\n", CALC.nfree);
+  fprintf(stdout, "#DBG XML2CALC: POTIM=%lf\n", CALC.potim);
+  fprintf(stdout, "#DBG XML2CALC: SMASS=%lf\n", CALC.smass);
 #endif
-	line = file_read_line(vf);/*ionic md*/
-	while(line){
-		if (find_in_string("</separator>",line) != NULL) break;/*end of ionic md*/
-		XC_REG_DOUBLE("TEBEG",CALC.tebeg);
-		XC_REG_DOUBLE("TEEND",CALC.teend);
-		XC_REG_INT("NBLOCK",CALC.nblock);
-		XC_REG_INT("KBLOCK",CALC.kblock);
-		XC_REG_INT("NPACO",CALC.npaco);
-		XC_REG_DOUBLE("APACO",CALC.apaco);
-		/*read next line*/
-		g_free(line);
-		line = file_read_line(vf);
-	}
+  line = file_read_line(vf); /*ionic md*/
+  while (line)
+  {
+    if (find_in_string("</separator>", line) != NULL)
+      break; /*end of ionic md*/
+    XC_REG_DOUBLE("TEBEG", CALC.tebeg);
+    XC_REG_DOUBLE("TEEND", CALC.teend);
+    XC_REG_INT("NBLOCK", CALC.nblock);
+    XC_REG_INT("KBLOCK", CALC.kblock);
+    XC_REG_INT("NPACO", CALC.npaco);
+    XC_REG_DOUBLE("APACO", CALC.apaco);
+    /*read next line*/
+    g_free(line);
+    line = file_read_line(vf);
+  }
 #if DEBUG_XML2CALC
-	fprintf(stdout,"#DBG XML2CALC: TEBEG=%lf\n",CALC.tebeg);
-	fprintf(stdout,"#DBG XML2CALC: TEEND=%lf\n",CALC.teend);
-	fprintf(stdout,"#DBG XML2CALC: NBLOCK=%i\n",CALC.nblock);
-	fprintf(stdout,"#DBG XML2CALC: KBLOCK=%i\n",CALC.kblock);
-	fprintf(stdout,"#DBG XML2CALC: NPACO=%i\n",CALC.npaco);
-	fprintf(stdout,"#DBG XML2CALC: APACO=%lf\n",CALC.apaco);
+  fprintf(stdout, "#DBG XML2CALC: TEBEG=%lf\n", CALC.tebeg);
+  fprintf(stdout, "#DBG XML2CALC: TEEND=%lf\n", CALC.teend);
+  fprintf(stdout, "#DBG XML2CALC: NBLOCK=%i\n", CALC.nblock);
+  fprintf(stdout, "#DBG XML2CALC: KBLOCK=%i\n", CALC.kblock);
+  fprintf(stdout, "#DBG XML2CALC: NPACO=%i\n", CALC.npaco);
+  fprintf(stdout, "#DBG XML2CALC: APACO=%lf\n", CALC.apaco);
 #endif
-	line = file_read_line(vf);/*symmetry*/
-	while(line){
-		if (find_in_string("</separator>",line) != NULL) break;/*end of symmetry*/
-		XC_REG_INT("ISYM",CALC.isym);
-		XC_REG_DOUBLE("SYMPREC",CALC.sym_prec);
-		/*read next line*/
-		g_free(line);
-		line = file_read_line(vf);
-	}
+  line = file_read_line(vf); /*symmetry*/
+  while (line)
+  {
+    if (find_in_string("</separator>", line) != NULL)
+      break; /*end of symmetry*/
+    XC_REG_INT("ISYM", CALC.isym);
+    XC_REG_DOUBLE("SYMPREC", CALC.sym_prec);
+    /*read next line*/
+    g_free(line);
+    line = file_read_line(vf);
+  }
 #if DEBUG_XML2CALC
-	fprintf(stdout,"#DBG XML2CALC: ISYM=%i\n",CALC.isym);
-	fprintf(stdout,"#DBG XML2CALC: SYMPREC=%lE\n",CALC.sym_prec);
+  fprintf(stdout, "#DBG XML2CALC: ISYM=%i\n", CALC.isym);
+  fprintf(stdout, "#DBG XML2CALC: SYMPREC=%lE\n", CALC.sym_prec);
 #endif
-	line = file_read_line(vf);/*dos*/
-	while(line){
-		if (find_in_string("</separator>",line) != NULL) break;/*end of dos*/
-		XC_REG_BOOL("LORBIT",CALC.lorbit);
-		XC_REG_TEXT("RWIGS",CALC.rwigs);
-		XC_REG_INT("NEDOS",CALC.nedos);
-		XC_REG_DOUBLE("EMIN",CALC.emin);
-		XC_REG_DOUBLE("EMAX",CALC.emax);
-		XC_REG_DOUBLE("EFERMI",CALC.efermi);//actually (unknown)
-		/*read next line*/
-		g_free(line);
-		line = file_read_line(vf);
-	}
+  line = file_read_line(vf); /*dos*/
+  while (line)
+  {
+    if (find_in_string("</separator>", line) != NULL)
+      break; /*end of dos*/
+    XC_REG_BOOL("LORBIT", CALC.lorbit);
+    XC_REG_TEXT("RWIGS", CALC.rwigs);
+    XC_REG_INT("NEDOS", CALC.nedos);
+    XC_REG_DOUBLE("EMIN", CALC.emin);
+    XC_REG_DOUBLE("EMAX", CALC.emax);
+    XC_REG_DOUBLE("EFERMI", CALC.efermi); // actually (unknown)
+    /*read next line*/
+    g_free(line);
+    line = file_read_line(vf);
+  }
 #if DEBUG_XML2CALC
-if(CALC.lorbit) fprintf(stdout,"#DBG XML2CALC: LORBIT=.TRUE.\n");
-else 		fprintf(stdout,"#DBG XML2CALC: LORBIT=.FALSE.\n");
-	fprintf(stdout,"#DBG XML2CALC: RWIGS=%s\n",CALC.rwigs);
-	fprintf(stdout,"#DBG XML2CALC: NEDOS=%lf\n",CALC.nedos);
-	fprintf(stdout,"#DBG XML2CALC: EMIN=%lf\n",CALC.emin);
-	fprintf(stdout,"#DBG XML2CALC: EMAX=%lf\n",CALC.emax);
-	fprintf(stdout,"#DBG XML2CALC: EFERMI=%lf\n",CALC.efermi);
+  if (CALC.lorbit)
+    fprintf(stdout, "#DBG XML2CALC: LORBIT=.TRUE.\n");
+  else
+    fprintf(stdout, "#DBG XML2CALC: LORBIT=.FALSE.\n");
+  fprintf(stdout, "#DBG XML2CALC: RWIGS=%s\n", CALC.rwigs);
+  fprintf(stdout, "#DBG XML2CALC: NEDOS=%lf\n", CALC.nedos);
+  fprintf(stdout, "#DBG XML2CALC: EMIN=%lf\n", CALC.emin);
+  fprintf(stdout, "#DBG XML2CALC: EMAX=%lf\n", CALC.emax);
+  fprintf(stdout, "#DBG XML2CALC: EFERMI=%lf\n", CALC.efermi);
 #endif
-	line = file_read_line(vf);/*writing*/
-	while(line){
-		if (find_in_string("</separator>",line) != NULL) break;/*end of writing*/
-		XC_REG_INT("NWRITE",CALC.nwrite);
-		XC_REG_BOOL("LWAVE",CALC.lwave);
-		XC_REG_BOOL("LCHARG",CALC.lcharg);
-		//Skipped: LPARD (adv.)
-		XC_REG_BOOL("LVTOT",CALC.lvtot);
-		XC_REG_BOOL("LVHAR",CALC.lvhar);
-		XC_REG_BOOL("LELF",CALC.lelf);
-		XC_REG_BOOL("LOPTICS",CALC.loptics);/*why here?*/
-		//Skipped: STM (adv.)
-		/*read next line*/
-		g_free(line);
-		line = file_read_line(vf);
-	}
+  line = file_read_line(vf); /*writing*/
+  while (line)
+  {
+    if (find_in_string("</separator>", line) != NULL)
+      break; /*end of writing*/
+    XC_REG_INT("NWRITE", CALC.nwrite);
+    XC_REG_BOOL("LWAVE", CALC.lwave);
+    XC_REG_BOOL("LCHARG", CALC.lcharg);
+    // Skipped: LPARD (adv.)
+    XC_REG_BOOL("LVTOT", CALC.lvtot);
+    XC_REG_BOOL("LVHAR", CALC.lvhar);
+    XC_REG_BOOL("LELF", CALC.lelf);
+    XC_REG_BOOL("LOPTICS", CALC.loptics);
+    // Skipped: STM (adv.)
+    /*read next line*/
+    g_free(line);
+    line = file_read_line(vf);
+  }
 #if DEBUG_XML2CALC
-	fprintf(stdout,"#DBG XML2CALC: NWRITE=%i\n",CALC.nwrite);
-if(CALC.lwave) 	fprintf(stdout,"#DBG XML2CALC: LWAVE=.TRUE.\n");
-else 		fprintf(stdout,"#DBG XML2CALC: LWAVE=.FALSE.\n");
-if(CALC.lcharg)	fprintf(stdout,"#DBG XML2CALC: LCHARG=.TRUE.\n");
-else		fprintf(stdout,"#DBG XML2CALC: LCHARG=.FALSE.\n");
-if(CALC.lvtot) 	fprintf(stdout,"#DBG XML2CALC: LVTOT=.TRUE.\n");
-else		fprintf(stdout,"#DBG XML2CALC: LVTOT=.FALSE.\n");
-if(CALC.lvhar) 	fprintf(stdout,"#DBG XML2CALC: LVHAR=.TRUE.\n");
-else		fprintf(stdout,"#DBG XML2CALC: LVHAR=.FALSE.\n");
-if(CALC.lelf) 	fprintf(stdout,"#DBG XML2CALC: LELF=.TRUE.\n");
-else		fprintf(stdout,"#DBG XML2CALC: LELF=.FALSE.\n");
-if(CALC.loptics)
-		fprintf(stdout,"#DBG XML2CALC: LOPTICS=.TRUE.\n");
-else		fprintf(stdout,"#DBG XML2CALC: LOPTICS=.FALSE.\n");
+  fprintf(stdout, "#DBG XML2CALC: NWRITE=%i\n", CALC.nwrite);
+  if (CALC.lwave)
+    fprintf(stdout, "#DBG XML2CALC: LWAVE=.TRUE.\n");
+  else
+    fprintf(stdout, "#DBG XML2CALC: LWAVE=.FALSE.\n");
+  if (CALC.lcharg)
+    fprintf(stdout, "#DBG XML2CALC: LCHARG=.TRUE.\n");
+  else
+    fprintf(stdout, "#DBG XML2CALC: LCHARG=.FALSE.\n");
+  if (CALC.lvtot)
+    fprintf(stdout, "#DBG XML2CALC: LVTOT=.TRUE.\n");
+  else
+    fprintf(stdout, "#DBG XML2CALC: LVTOT=.FALSE.\n");
+  if (CALC.lvhar)
+    fprintf(stdout, "#DBG XML2CALC: LVHAR=.TRUE.\n");
+  else
+    fprintf(stdout, "#DBG XML2CALC: LVHAR=.FALSE.\n");
+  if (CALC.lelf)
+    fprintf(stdout, "#DBG XML2CALC: LELF=.TRUE.\n");
+  else
+    fprintf(stdout, "#DBG XML2CALC: LELF=.FALSE.\n");
+  if (CALC.loptics)
+    fprintf(stdout, "#DBG XML2CALC: LOPTICS=.TRUE.\n");
+  else
+    fprintf(stdout, "#DBG XML2CALC: LOPTICS=.FALSE.\n");
 #endif
-	line = file_read_line(vf);/*performance*/
-	while(line){
-		if (find_in_string("</separator>",line) != NULL) break;/*end of performance*/
-		XC_REG_INT("NPAR",CALC.npar);
-		XC_REG_INT("NSIM",CALC.nsim);
-		//Skipped: NBLK (adv.)
-		XC_REG_BOOL("LPLANE",CALC.lplane);
-		XC_REG_BOOL("LSCALAPACK",CALC.lscalapack);
-		//Skipped: LSCAAWARE (unknown)
-		XC_REG_BOOL("LSCALU",CALC.lscalu);
-		//Skipped: LASYNC (unknown)
-		//Skipped: LORBITALREAL (unknown)
-		/*read next line*/
-		g_free(line);
-		line = file_read_line(vf);
-	}
-	
-#if DEBUG_XML2CALC
-	fprintf(stdout,"#DBG XML2CALC: NPAR=%i\n",CALC.npar);
-	fprintf(stdout,"#DBG XML2CALC: NSIM=%i\n",CALC.nsim);
-if(CALC.lplane)	fprintf(stdout,"#DBG XML2CALC: LPLANE=.TRUE.\n");
-else		fprintf(stdout,"#DBG XML2CALC: LPLANE=.FALSE.\n");
-if(CALC.lscalapack)
-		fprintf(stdout,"#DBG XML2CALC: LSCALAPACK=.TRUE.\n");
-else		fprintf(stdout,"#DBG XML2CALC: LSCALAPACK=.FALSE.\n");
-if(CALC.lscalu)	fprintf(stdout,"#DBG XML2CALC: LSCALU=.TRUE.\n");
-else		fprintf(stdout,"#DBG XML2CALC: LSCALU=.FALSE.\n");
-#endif
-	line = file_read_line(vf);/*miscellaneous*/
-	while(line){/*skip the section*/
-		if (find_in_string("</separator>",line) != NULL) break;/*end of miscellaneous*/
-		/*read next line*/
-		g_free(line);
-		line = file_read_line(vf);
-	}
-	line = file_read_line(vf);/*UNNAMED section (ie. we are reading GGA_COMPAT already)*/
-	while(line){
-		if (find_in_string("<separator",line) != NULL) break;
-			/*end of UNNAMED section: the section does not have ending separator*/
-		XC_REG_BOOL("GGA_COMPAT",CALC.gga_compat);
-		//Skipped: LBERRY (adv.)
-		//Skipped: ICORELEVEL (adv.)
-		XC_REG_BOOL("LDAU",CALC.ldau);
-		//Skipped: I_CONSTRAINED_M (unknown)
-		/*read next line*/
-		g_free(line);
-		line = file_read_line(vf);
-	}
-#if DEBUG_XML2CALC
-if(CALC.gga_compat)
-		fprintf(stdout,"#DBG XML2CALC: GGA_COMPAT=.TRUE.\n");
-else		fprintf(stdout,"#DBG XML2CALC: GGA_COMPAT=.FALSE.\n");
-if(CALC.ldau)	fprintf(stdout,"#DBG XML2CALC: LDAU=.TRUE.\n");
-else		fprintf(stdout,"#DBG XML2CALC: LDAU=.FALSE.\n");
-#endif
-	/*jump directly to next section: electronic exchange-correlation*/
-	while(line){
-		if (find_in_string("</separator>",line) != NULL) break;/*end of electronic exchange-correlation*/
-		//GGA: special
-                if (find_in_string("GGA\"",line) != NULL) {
-                        /*register PREC*/
-                        sscanf(line," <i type=\"string\" name=\"GGA\">%s",tamp);
-                        tamp[0]=g_ascii_tolower(tamp[0]);
-			tamp[1]=g_ascii_tolower(tamp[1]);
-                        switch (tamp[0]){
-                        case '9':
-                                CALC.gga=VG_91;break;
-                        case 'R':
-                                CALC.gga=VG_RP;break;
-                        case 'A':
-                                CALC.gga=VG_AM;break;
-                        case 'P':
-                        default:
-				CALC.gga=VG_PE;
-				if(tamp[1]=='s') CALC.gga=VG_PS;
-                        }
-#if DEBUG_XML2CALC
-        fprintf(stdout,"#DBG XML2CALC: GGA=%c%c\n",tamp[0],tamp[1]);
-#endif
-                }
-		XC_REG_BOOL("VOSKOWN",CALC.voskown);
-		//Everything else is skipped and reserved for (adv.)
-		/*read next line*/
-		g_free(line);
-		line = file_read_line(vf);
+  line = file_read_line(vf); /*performance*/
+  while (line)
+  {
+    if (find_in_string("</separator>", line) != NULL)
+      break; /*end of performance*/
+    XC_REG_INT("NPAR", CALC.npar);
+    XC_REG_INT("NSIM", CALC.nsim);
+    // Skipped: NBLK (adv.)
+    XC_REG_BOOL("LPLANE", CALC.lplane);
+    XC_REG_BOOL("LSCALAPACK", CALC.lscalapack);
+    // Skipped: LSCAAWARE (unknown)
+    XC_REG_BOOL("LSCALU", CALC.lscalu);
+    // Skipped: LASYNC (unknown)
+    // Skipped: LORBITALREAL (unknown)
+    /*read next line*/
+    g_free(line);
+    line = file_read_line(vf);
+  }
 
-	}	
 #if DEBUG_XML2CALC
-if(CALC.voskown)
-		fprintf(stdout,"#DBG XML2CALC: VOSKOWN=.TRUE.\n");
-else		fprintf(stdout,"#DBG XML2CALC: VOSKOWN=.FALSE.\n");
+  fprintf(stdout, "#DBG XML2CALC: NPAR=%i\n", CALC.npar);
+  fprintf(stdout, "#DBG XML2CALC: NSIM=%i\n", CALC.nsim);
+  if (CALC.lplane)
+    fprintf(stdout, "#DBG XML2CALC: LPLANE=.TRUE.\n");
+  else
+    fprintf(stdout, "#DBG XML2CALC: LPLANE=.FALSE.\n");
+  if (CALC.lscalapack)
+    fprintf(stdout, "#DBG XML2CALC: LSCALAPACK=.TRUE.\n");
+  else
+    fprintf(stdout, "#DBG XML2CALC: LSCALAPACK=.FALSE.\n");
+  if (CALC.lscalu)
+    fprintf(stdout, "#DBG XML2CALC: LSCALU=.TRUE.\n");
+  else
+    fprintf(stdout, "#DBG XML2CALC: LSCALU=.FALSE.\n");
 #endif
-	line = file_read_line(vf);/*vdW DFT*/
-	while(line){
-		if (find_in_string("</separator>",line) != NULL) break;/*end of vdW DFT*/
-		XC_REG_BOOL("LUSE_VDW",CALC.use_vdw);
-		XC_REG_DOUBLE("Zab_VDW",CALC.zab_vdw);
-		XC_REG_DOUBLE("PARAM1",CALC.param1_vdw);
-		XC_REG_DOUBLE("PARAM2",CALC.param2_vdw);
-		XC_REG_DOUBLE("PARAM3",CALC.param3_vdw);
-		/*read next line*/
-		g_free(line);
-		line = file_read_line(vf);
-	}
+  line = file_read_line(vf); /*miscellaneous*/
+  while (line)
+  { /*skip the section*/
+    if (find_in_string("</separator>", line) != NULL)
+      break; /*end of miscellaneous*/
+    /*read next line*/
+    g_free(line);
+    line = file_read_line(vf);
+  }
+  line = file_read_line(vf); /*UNNAMED section (ie. we are reading GGA_COMPAT already)*/
+  while (line)
+  {
+    if (find_in_string("<separator", line) != NULL)
+      break;
+    /*end of UNNAMED section: the section does not have ending separator*/
+    XC_REG_BOOL("GGA_COMPAT", CALC.gga_compat);
+    // Skipped: LBERRY (adv.)
+    // Skipped: ICORELEVEL (adv.)
+    XC_REG_BOOL("LDAU", CALC.ldau);
+    // Skipped: I_CONSTRAINED_M (unknown)
+    /*read next line*/
+    g_free(line);
+    line = file_read_line(vf);
+  }
 #if DEBUG_XML2CALC
-if(CALC.use_vdw)
-		fprintf(stdout,"#DBG XML2CALC: LUSE_VDW=.TRUE.\n");
-else		fprintf(stdout,"#DBG XML2CALC: LUSE_VDW=.FALSE.\n");
-	fprintf(stdout,"#DBG XML2CALC: Zab_VDW=%lf\n",CALC.zab_vdw);
-	fprintf(stdout,"#DBG XML2CALC: PARAM1=%lf\n",CALC.param1_vdw);
-	fprintf(stdout,"#DBG XML2CALC: PARAM2=%lf\n",CALC.param2_vdw);
-	fprintf(stdout,"#DBG XML2CALC: PARAM3=%lf\n",CALC.param3_vdw);
+  if (CALC.gga_compat)
+    fprintf(stdout, "#DBG XML2CALC: GGA_COMPAT=.TRUE.\n");
+  else
+    fprintf(stdout, "#DBG XML2CALC: GGA_COMPAT=.FALSE.\n");
+  if (CALC.ldau)
+    fprintf(stdout, "#DBG XML2CALC: LDAU=.TRUE.\n");
+  else
+    fprintf(stdout, "#DBG XML2CALC: LDAU=.FALSE.\n");
 #endif
-	line = file_read_line(vf);/*model GW*/
-	while(line){
-		if (find_in_string("</separator>",line) != NULL) break;/*end of model GW*/
-		//Everything is skipped and reserved for (adv.)
-		/*read next line*/
-		g_free(line);
-		line = file_read_line(vf);
-	}
-	line = file_read_line(vf);/*linear response parameters*/
-	while(line){
-		if (find_in_string("</separator>",line) != NULL) break;/*end of linear response parameters*/
-		XC_REG_BOOL("LEPSILON",CALC.lepsilon);
-		XC_REG_BOOL("LRPA",CALC.lrpa);
-		XC_REG_BOOL("LNABLA",CALC.lnabla);
-		//Skipped: LVEL (unknown)
-		//Skipped: KINTER (unknown)
-		XC_REG_DOUBLE("CSHIFT",CALC.cshift);
-		//Skipped: OMEGAMAX (unknown)
-		//Skipped: DEG_THRESHOLD (unknown)
-		/*read next line*/
-		g_free(line);
-		line = file_read_line(vf);
-	}
+  /*jump directly to next section: electronic exchange-correlation*/
+  while (line)
+  {
+    if (find_in_string("</separator>", line) != NULL)
+      break; /*end of electronic exchange-correlation*/
+             // GGA: special
+    if (find_in_string("GGA\"", line) != NULL)
+    {
+      /*register PREC*/
+      sscanf(line, " <i type=\"string\" name=\"GGA\">%s", tamp);
+      tamp[0] = g_ascii_tolower(tamp[0]);
+      tamp[1] = g_ascii_tolower(tamp[1]);
+      switch (tamp[0])
+      {
+      case '9':
+        CALC.gga = VG_91;
+        break;
+      case 'R':
+        CALC.gga = VG_RP;
+        break;
+      case 'A':
+        CALC.gga = VG_AM;
+        break;
+      case 'P':
+      default:
+        CALC.gga = VG_PE;
+        if (tamp[1] == 's')
+          CALC.gga = VG_PS;
+      }
 #if DEBUG_XML2CALC
-if(CALC.lepsilon)
-		fprintf(stdout,"#DBG XML2CALC: LEPSILON=.TRUE.\n");
-else		fprintf(stdout,"#DBG XML2CALC: LEPSILON=.FALSE.\n");
-if(CALC.lrpa)	fprintf(stdout,"#DBG XML2CALC: LRPA=.TRUE.\n");
-else 		fprintf(stdout,"#DBG XML2CALC: LRPA=.FALSE.\n");
-if(CALC.lnabla)	fprintf(stdout,"#DBG XML2CALC: LNABLA=.TRUE.\n");
-else		fprintf(stdout,"#DBG XML2CALC: LNABLA=.FALSE.\n");
-	fprintf(stdout,"#DBG XML2CALC: CSHIFT=%lf\n",CALC.cshift);
+      fprintf(stdout, "#DBG XML2CALC: GGA=%c%c\n", tamp[0], tamp[1]);
+#endif
+    }
+    XC_REG_BOOL("VOSKOWN", CALC.voskown);
+    // Everything else is skipped and reserved for (adv.)
+    /*read next line*/
+    g_free(line);
+    line = file_read_line(vf);
+  }
+#if DEBUG_XML2CALC
+  if (CALC.voskown)
+    fprintf(stdout, "#DBG XML2CALC: VOSKOWN=.TRUE.\n");
+  else
+    fprintf(stdout, "#DBG XML2CALC: VOSKOWN=.FALSE.\n");
+#endif
+  line = file_read_line(vf); /*vdW DFT*/
+  while (line)
+  {
+    if (find_in_string("</separator>", line) != NULL)
+      break; /*end of vdW DFT*/
+    XC_REG_BOOL("LUSE_VDW", CALC.use_vdw);
+    XC_REG_DOUBLE("Zab_VDW", CALC.zab_vdw);
+    XC_REG_DOUBLE("PARAM1", CALC.param1_vdw);
+    XC_REG_DOUBLE("PARAM2", CALC.param2_vdw);
+    XC_REG_DOUBLE("PARAM3", CALC.param3_vdw);
+    /*read next line*/
+    g_free(line);
+    line = file_read_line(vf);
+  }
+#if DEBUG_XML2CALC
+  if (CALC.use_vdw)
+    fprintf(stdout, "#DBG XML2CALC: LUSE_VDW=.TRUE.\n");
+  else
+    fprintf(stdout, "#DBG XML2CALC: LUSE_VDW=.FALSE.\n");
+  fprintf(stdout, "#DBG XML2CALC: Zab_VDW=%lf\n", CALC.zab_vdw);
+  fprintf(stdout, "#DBG XML2CALC: PARAM1=%lf\n", CALC.param1_vdw);
+  fprintf(stdout, "#DBG XML2CALC: PARAM2=%lf\n", CALC.param2_vdw);
+  fprintf(stdout, "#DBG XML2CALC: PARAM3=%lf\n", CALC.param3_vdw);
+#endif
+  line = file_read_line(vf); /*model GW*/
+  while (line)
+  {
+    if (find_in_string("</separator>", line) != NULL)
+      break; /*end of model GW*/
+    // Everything is skipped and reserved for (adv.)
+    /*read next line*/
+    g_free(line);
+    line = file_read_line(vf);
+  }
+  line = file_read_line(vf); /*linear response parameters*/
+  while (line)
+  {
+    if (find_in_string("</separator>", line) != NULL)
+      break; /*end of linear response parameters*/
+    XC_REG_BOOL("LEPSILON", CALC.lepsilon);
+    XC_REG_BOOL("LRPA", CALC.lrpa);
+    XC_REG_BOOL("LNABLA", CALC.lnabla);
+    // Skipped: LVEL (unknown)
+    // Skipped: KINTER (unknown)
+    XC_REG_DOUBLE("CSHIFT", CALC.cshift);
+    // Skipped: OMEGAMAX (unknown)
+    // Skipped: DEG_THRESHOLD (unknown)
+    /*read next line*/
+    g_free(line);
+    line = file_read_line(vf);
+  }
+#if DEBUG_XML2CALC
+  if (CALC.lepsilon)
+    fprintf(stdout, "#DBG XML2CALC: LEPSILON=.TRUE.\n");
+  else
+    fprintf(stdout, "#DBG XML2CALC: LEPSILON=.FALSE.\n");
+  if (CALC.lrpa)
+    fprintf(stdout, "#DBG XML2CALC: LRPA=.TRUE.\n");
+  else
+    fprintf(stdout, "#DBG XML2CALC: LRPA=.FALSE.\n");
+  if (CALC.lnabla)
+    fprintf(stdout, "#DBG XML2CALC: LNABLA=.TRUE.\n");
+  else
+    fprintf(stdout, "#DBG XML2CALC: LNABLA=.FALSE.\n");
+  fprintf(stdout, "#DBG XML2CALC: CSHIFT=%lf\n", CALC.cshift);
 #endif
 
-	//Everything else is skipped and reserved for (adv.)
+  // Everything else is skipped and reserved for (adv.)
+  line = file_read_line(vf); /*orbital magnetization*/
+  while (line)
+  { /*skip the section*/
+    if (find_in_string("</separator>", line) != NULL)
+      break; /*end of section*/
+    /*read next line*/
+    g_free(line);
+    line = file_read_line(vf);
+  }
+  line = file_read_line(vf); /*response function*/
+  while (line)
+  { /*skip the section*/
+    if (find_in_string("</separator>", line) != NULL)
+      break; /*end of section*/
+    /*read next line*/
+    g_free(line);
+    line = file_read_line(vf);
+  }
+  line = file_read_line(vf); /*external order field*/
+  while (line)
+  { /*skip the section*/
+    if (find_in_string("</separator>", line) != NULL)
+      break; /*end of section*/
+    /*read next line*/
+    g_free(line);
+    line = file_read_line(vf);
+  }
 
-	/* TODO (adv.)*/
+  /* TODO (adv.)*/
 
-	return 0;
+  /* Update POSCAR tags (once) - POSCAR */
+  if (fetch_in_file(vf, "selective") == 0)
+  {
+    fprintf(stderr, "WARN: Didn't find Selective!\n");
+    return 0; /* if we don't find it no worries... */
+  }
+  vfpos = ftell(vf); /* PUSH */
+  line = file_read_line(vf);
+  CALC.poscar_sd = TRUE;
+  CALC.poscar_free = VPF_MAN;
+  /* calculate CALC.selective_count */
+  CALC.selective_count = 0;
+  while (line)
+  {
+    if (find_in_string("/varray", line) != NULL)
+    {
+      g_free(line);
+      break;
+    }
+    CALC.selective_count++;
+    g_free(line);
+    line = file_read_line(vf);
+  }
+  /* now do it for real! */
+  if (CALC.selective_count <= 0)
+  {
+    gui_text_show(ERROR, g_strdup_printf("ERROR: reading XML without atom?!\n"));
+    return 0; /* scary, but it is not critical */
+  }
+  CALC.selective_tx = g_new0(gboolean, CALC.selective_count);
+  CALC.selective_ty = g_new0(gboolean, CALC.selective_count);
+  CALC.selective_tz = g_new0(gboolean, CALC.selective_count);
+  fseek(vf, vfpos, SEEK_SET); /* PULL = rewind to PUSH */
+  line = file_read_line(vf);
+  idx = 0;
+  while (line)
+  {
+    if (find_in_string("/varray", line) != NULL)
+    {
+      g_free(line);
+      break;
+    }
+    gint tx = 0, ty = 0, tz = 0;
+    if (strstr(line, "<v") != NULL)
+    {
+      gchar *gt = strstr(line, ">");
+      if (gt)
+      {
+        gchar buf[64] = {0};
+        gint bi = 0;
+        gt++;
+        while (*gt && *gt != '<' && bi < 63)
+          buf[bi++] = *gt++;
+        buf[bi] = 0;
+        gchar *tok = buf;
+        gint vidx = 0;
+        while (tok && vidx < 3)
+        {
+          while (*tok == ' ')
+            tok++;
+          if (*tok == 0)
+            break;
+          gchar v[4] = {0};
+          gint vi = 0;
+          while (*tok && *tok != ' ' && vi < 3)
+            v[vi++] = *tok++;
+          v[vi] = 0;
+          if (strlen(v) > 0 && (v[0] == 'T' || v[0] == 't'))
+          {
+            if (vidx == 0)
+              tx = 1;
+            if (vidx == 1)
+              ty = 1;
+            if (vidx == 2)
+              tz = 1;
+          }
+          vidx++;
+        }
+      }
+    }
+    CALC.selective_tx[idx] = tx;
+    CALC.selective_ty[idx] = ty;
+    CALC.selective_tz[idx] = tz;
+    fprintf(stdout, "REG: TX[%i] = %i\n", idx, tx);
+    idx++;
+    if (idx > CALC.selective_count)
+    {
+      gui_text_show(ERROR, g_strdup_printf("ERROR: was reading XML but extra atoms appear?!\n"));
+      return 0; /* extra atoms, extra not critical */
+    }
+    g_free(line);
+    line = file_read_line(vf);
+  }
+  return 0;
 #undef CALC
 }
 /****************************************************/
 /* setup vasp_calc_struct (using file if available) */
 /****************************************************/
-gint vasprun_update(gchar *filename,vasp_calc_struct *calc){
+gint vasprun_update(gchar *filename, vasp_calc_struct *calc)
+{
 #define CALC (*calc)
-	struct model_pak *data=sysenv.active_model;
-        GSList *list2;
-        struct core_pak *core;
-        /*Common setup for xml or regular models*/
-/*4-POSCAR*/
-        /* unexposed */
-        CALC.species_symbols=NULL;
-        CALC.species_numbers=NULL;
-        /* exposed */
-        CALC.poscar_x=0.;
-        CALC.poscar_y=0.;
-        CALC.poscar_z=0.;
-	/* from model */
-/* This fix a BUG specific to QEOUT, where the last position can have fractional=FALSE, while coordinate is fractional*/
-if(data->id==QE_OUT){
-	FILE *fp=fopen(data->filename, "r");
-        if (!fp){
-                gui_text_show(ERROR,g_strdup_printf("I/O ERROR: can't open .qeout file!\n"));
-                return -1;
-        }
-        read_raw_frame(fp,data->cur_frame,data);
-        fclose(fp);
-}
-	CALC.poscar_a0=1.0;
-	if(data->fractional) CALC.poscar_direct=TRUE;
-	else CALC.poscar_direct=FALSE;
-	if(data->periodic<1) {/*not periodic: create a big cubic box*/
-		gdouble xmax=0,ymax=0,zmax=0;
-		gdouble xmin=0,ymin=0,zmin=0;
-		for (list2=data->cores ; list2 ; list2=g_slist_next(list2)){
-			core=list2->data;
-			if(xmax<(core->x[0])) xmax=core->x[0];
-			if(ymax<(core->x[1])) ymax=core->x[1];
-			if(zmax<(core->x[2])) zmax=core->x[2];
-			if(xmin>(core->x[0])) xmin=core->x[0];
-			if(ymin>(core->x[1])) ymin=core->x[1];
-			if(zmin>(core->x[2])) zmin=core->x[2];
-		}
-		CALC.poscar_ux=10.+(xmax-xmin);
-		CALC.poscar_uy=0.;
-		CALC.poscar_uz=0.;
-		CALC.poscar_vx=0.;
-		CALC.poscar_vy=10.+(ymax-ymin);
-		CALC.poscar_vz=0.;
-		CALC.poscar_wx=0.;
-		CALC.poscar_wy=0.;
-		CALC.poscar_wz=10.+(zmax-zmin);
-		CALC.poscar_direct=FALSE;/*always for 0D*/
-	} else if(data->periodic<2){/* 1D-periodic: add 10. unit interspace */
-		gdouble xmax=0,ymax=0;
-		gdouble xmin=0,ymin=0;
-		for (list2=data->cores ; list2 ; list2=g_slist_next(list2)){
-			core=list2->data;
-			if(xmax<(core->x[0])) xmax=core->x[0];
-			if(ymax<(core->x[1])) ymax=core->x[1];
-			if(xmin>(core->x[0])) xmin=core->x[0];
-			if(ymin>(core->x[1])) ymin=core->x[1];
+  struct model_pak *data = sysenv.active_model;
+  GSList *list2;
+  struct core_pak *core;
+  /*Common setup for xml or regular models*/
+  /*4-POSCAR*/
+  /* unexposed */
+  CALC.species_symbols = NULL;
+  CALC.species_numbers = NULL;
+  /* exposed */
+  CALC.poscar_x = 0.;
+  CALC.poscar_y = 0.;
+  CALC.poscar_z = 0.;
+  /* from model */
+  /* This fix a BUG specific to QEOUT, where the last position can have fractional=FALSE, while coordinate is
+   * fractional*/
+  if (data->id == QE_OUT)
+  {
+    FILE *fp = fopen(data->filename, "r");
+    if (!fp)
+    {
+      gui_text_show(ERROR, g_strdup_printf("I/O ERROR: can't open .qeout file!\n"));
+      return -1;
+    }
+    read_raw_frame(fp, data->cur_frame, data);
+    fclose(fp);
+  }
+  CALC.poscar_a0 = 1.0;
+  if (data->fractional)
+    CALC.poscar_direct = TRUE;
+  else
+    CALC.poscar_direct = FALSE;
+  if (data->periodic < 1)
+  { /*not periodic: create a big cubic box*/
+    gdouble xmax = 0, ymax = 0, zmax = 0;
+    gdouble xmin = 0, ymin = 0, zmin = 0;
+    for (list2 = data->cores; list2; list2 = g_slist_next(list2))
+    {
+      core = list2->data;
+      if (xmax < (core->x[0]))
+        xmax = core->x[0];
+      if (ymax < (core->x[1]))
+        ymax = core->x[1];
+      if (zmax < (core->x[2]))
+        zmax = core->x[2];
+      if (xmin > (core->x[0]))
+        xmin = core->x[0];
+      if (ymin > (core->x[1]))
+        ymin = core->x[1];
+      if (zmin > (core->x[2]))
+        zmin = core->x[2];
+    }
+    CALC.poscar_ux = 10. + (xmax - xmin);
+    CALC.poscar_uy = 0.;
+    CALC.poscar_uz = 0.;
+    CALC.poscar_vx = 0.;
+    CALC.poscar_vy = 10. + (ymax - ymin);
+    CALC.poscar_vz = 0.;
+    CALC.poscar_wx = 0.;
+    CALC.poscar_wy = 0.;
+    CALC.poscar_wz = 10. + (zmax - zmin);
+    CALC.poscar_direct = FALSE; /*always for 0D*/
+  } else if (data->periodic < 2)
+  { /* 1D-periodic: add 10. unit interspace */
+    gdouble xmax = 0, ymax = 0;
+    gdouble xmin = 0, ymin = 0;
+    for (list2 = data->cores; list2; list2 = g_slist_next(list2))
+    {
+      core = list2->data;
+      if (xmax < (core->x[0]))
+        xmax = core->x[0];
+      if (ymax < (core->x[1]))
+        ymax = core->x[1];
+      if (xmin > (core->x[0]))
+        xmin = core->x[0];
+      if (ymin > (core->x[1]))
+        ymin = core->x[1];
+    }
+    for (list2 = data->cores; list2; list2 = g_slist_next(list2))
+    {
+      core = list2->data; /*TODO: confirm 1D behavior (find example)*/
+      core->x[0] = core->x[0] / (10. + (xmax - xmin));
+      core->x[1] = core->x[1] / (10. + (ymax - ymin));
+    }
+    CALC.poscar_ux = 10. + (xmax - xmin);
+    CALC.poscar_uy = 0.;
+    CALC.poscar_uz = 0.;
+    CALC.poscar_vx = 0.;
+    CALC.poscar_vy = 10. + (ymax - ymin);
+    CALC.poscar_vz = 0.;
+    CALC.poscar_wx = 0.;
+    CALC.poscar_wy = 0.;
+    CALC.poscar_wz = data->latmat[0];
+  } else if (data->periodic < 3)
+  { /* 2D-periodic: add a 10. unit vacuum layer */
+    gdouble zmax = 0.;
+    gdouble zmin = 0.;
+    for (list2 = data->cores; list2; list2 = g_slist_next(list2))
+    {
+      core = list2->data;
+      if (zmax < (core->x[2]))
+        zmax = core->x[2];
+      if (zmin > (core->x[2]))
+        zmin = core->x[2];
+    }
+    for (list2 = data->cores; list2; list2 = g_slist_next(list2))
+    {
+      core = list2->data;
+      core->x[2] = core->x[2] / (10. + (zmax - zmin));
+    }
+    CALC.poscar_ux = data->latmat[0];
+    CALC.poscar_uy = data->latmat[3];
+    CALC.poscar_uz = data->latmat[6];
+    CALC.poscar_vx = data->latmat[1];
+    CALC.poscar_vy = data->latmat[4];
+    CALC.poscar_vz = data->latmat[7];
+    CALC.poscar_wx = 0.;
+    CALC.poscar_wy = 0.;
+    CALC.poscar_wz = 10. + (zmax - zmin);
+  } else
+  { /* 3D-periodic: Nothing much to do */
+    CALC.poscar_ux = data->latmat[0];
+    CALC.poscar_uy = data->latmat[3];
+    CALC.poscar_uz = data->latmat[6];
+    CALC.poscar_vx = data->latmat[1];
+    CALC.poscar_vy = data->latmat[4];
+    CALC.poscar_vz = data->latmat[7];
+    CALC.poscar_wx = data->latmat[2];
+    CALC.poscar_wy = data->latmat[5];
+    CALC.poscar_wz = data->latmat[8];
+  }
+  CALC.poscar_sd = TRUE;
+  CALC.selective_count = 0;
+  /*5-KPOINTS*/
+  CALC.kpoints_nkpts = 0;
+  /*...*/
+  CALC.tetra_a = 1;
+  CALC.tetra_b = 1;
+  CALC.tetra_c = 1;
+  CALC.tetra_d = 1;
+  /*6-POTCAR*/
+  CALC.potcar_folder = NULL;
+  CALC.potcar_file = NULL;
+  CALC.potcar_species = NULL;
+  CALC.potcar_species_flavor = NULL;
+  /*7-RUN*/
+  CALC.job_vasp_exe = g_strdup_printf("%s", sysenv.vasp_path);
+  CALC.job_mpirun = g_strdup_printf("%s", sysenv.mpirun_path);
+  CALC.job_path = g_strdup_printf("%s", sysenv.cwd);
+  CALC.job_nproc = 1.;
+  CALC.ncore = 1.;
+  CALC.kpar = 1.;
 
-		}
-		for (list2=data->cores ; list2 ; list2=g_slist_next(list2)){
-			core=list2->data;/*TODO: confirm 1D behavior (find example)*/
-			core->x[0]=core->x[0]/(10.+(xmax-xmin));
-			core->x[1]=core->x[1]/(10.+(ymax-ymin));
-		}
-		CALC.poscar_ux=10.+(xmax-xmin);
-		CALC.poscar_uy=0.;
-		CALC.poscar_uz=0.;
-		CALC.poscar_vx=0.;
-		CALC.poscar_vy=10.+(ymax-ymin);
-		CALC.poscar_vz=0.;
-		CALC.poscar_wx=0.;
-		CALC.poscar_wy=0.;
-		CALC.poscar_wz=data->latmat[0];
-	} else if(data->periodic<3){/* 2D-periodic: add a 10. unit vacuum layer */
-		gdouble zmax=0.;
-		gdouble zmin=0.;
-		for (list2=data->cores ; list2 ; list2=g_slist_next(list2)){
-			core=list2->data;
-			if(zmax<(core->x[2])) zmax=core->x[2];
-			if(zmin>(core->x[2])) zmin=core->x[2];
-		}
-		for (list2=data->cores ; list2 ; list2=g_slist_next(list2)){
-			core=list2->data;
-			core->x[2]=core->x[2]/(10.+(zmax-zmin));
-		}
-		CALC.poscar_ux=data->latmat[0];
-		CALC.poscar_uy=data->latmat[3];
-		CALC.poscar_uz=data->latmat[6];
-		CALC.poscar_vx=data->latmat[1];
-		CALC.poscar_vy=data->latmat[4];
-		CALC.poscar_vz=data->latmat[7];
-		CALC.poscar_wx=0.;
-		CALC.poscar_wy=0.;
-		CALC.poscar_wz=10.+(zmax-zmin);
-	} else {/* 3D-periodic: Nothing much to do */
-		CALC.poscar_ux=data->latmat[0];
-		CALC.poscar_uy=data->latmat[3];
-		CALC.poscar_uz=data->latmat[6];
-		CALC.poscar_vx=data->latmat[1];
-		CALC.poscar_vy=data->latmat[4];
-		CALC.poscar_vz=data->latmat[7];
-		CALC.poscar_wx=data->latmat[2];
-		CALC.poscar_wy=data->latmat[5];
-		CALC.poscar_wz=data->latmat[8];
-	}
-	CALC.poscar_sd=TRUE;
-/*5-KPOINTS*/
-        CALC.kpoints_nkpts=0;
-/*...*/
-        CALC.tetra_a=1;
-        CALC.tetra_b=1;
-        CALC.tetra_c=1;
-        CALC.tetra_d=1;
-/*6-POTCAR*/
-        CALC.potcar_folder=NULL;
-        CALC.potcar_file=NULL;
-        CALC.potcar_species=NULL;
-        CALC.potcar_species_flavor=NULL;
-/*7-RUN*/
-        CALC.job_vasp_exe=g_strdup_printf("%s",sysenv.vasp_path);
-        CALC.job_mpirun=g_strdup_printf("%s",sysenv.mpirun_path);
-        CALC.job_path=g_strdup_printf("%s",sysenv.cwd);
-        CALC.job_nproc=1.;
-        CALC.ncore=1.;
-        CALC.kpar=1.;
+  /*specific part starts here*/
 
-/*specific part starts here*/
+  if (filename)
+  {
 
-	if(filename){
+    /*load most values from provided file*/
+    /*TODO: add vaspxml reader*/
+    FILE *fp = fopen(filename, "r");
+    gint load_ok = 0;
+    if (fp)
+    {
+      if (vasp_xml_load_calc(fp, calc) == 0)
+        load_ok = 1;
+      fclose(fp);
+    }
+    if (!load_ok)
+    {
+      vasprun_update(NULL, calc);
+      CALC.lwave = TRUE;
+      CALC.lcharg = TRUE;
+      CALC.lvtot = FALSE;
+      CALC.lvhar = FALSE;
+      CALC.lelf = FALSE;
+      CALC.lplane = TRUE;
+      CALC.lscalapack = FALSE;
+      CALC.lscalu = FALSE;
+    }
+    CALC.use_prec = TRUE;
+    CALC.auto_elec = TRUE;
+    CALC.auto_mixer = TRUE;
+    CALC.auto_grid = TRUE;
 
-		/*load most values from provided file*/
-		/*TODO: add vaspxml reader*/
-		FILE *fp=fopen(filename,"r");
-		if(!fp) vasprun_update(NULL,calc);
-		if(vasp_xml_load_calc(fp,calc)!=0) vasprun_update(NULL,calc);
-		fclose(fp);
-		CALC.use_prec=TRUE;
-		CALC.auto_elec=TRUE;
-		CALC.auto_mixer=TRUE;
-		CALC.auto_grid=TRUE;
+    /*POTCAR is unrealated to vasprun.xml*/
+    CALC.potcar_folder = NULL;
+    CALC.potcar_file = NULL;
+    CALC.potcar_species = NULL;
+    CALC.potcar_species_flavor = NULL;
 
-		/*POTCAR is unrealated to vasprun.xml*/
-                CALC.potcar_folder=NULL;
-                CALC.potcar_file=NULL;
-                CALC.potcar_species=NULL;
-                CALC.potcar_species_flavor=NULL;
-
-		/*this might be caught in INCAR*/
-		CALC.algo=VA_IALGO;
-		CALC.ncore=1.;
-		CALC.kpar=1.;
-	}else{
-		/*use some default values*/
-/*name*/
-		CALC.name=NULL;
-/*1-general*/
-		CALC.prec=VP_NORM;
-		CALC.use_prec=TRUE;
-		CALC.encut=0.0;/*ie not set*/
-		CALC.enaug=0.0;/*ie not set*/
-		CALC.ediff=1e-4;
-		CALC.algo=VA_NORM;
-		CALC.ialgo=VIA_KOSUGI;
-		CALC.ldiag=TRUE;
-		CALC.auto_elec=TRUE;
-		CALC.nbands=0;/*ie not set*/
-		CALC.nelect=0.0;/*ie not set*/
-		CALC.iwavpr=10;
-		CALC.nsim=4;
-		CALC.vtime=0.4;
-/*2-smearing*/
-		CALC.ismear=1;
-		CALC.sigma=0.2;
-		CALC.fermwe=NULL;
-		CALC.fermdo=NULL;
-		CALC.kspacing=0.5;
-		CALC.kgamma=TRUE;
-/*3-projector*/
-	        CALC.lreal=VLR_FALSE;
-	        CALC.ropt=NULL;
-	        CALC.addgrid=FALSE;
-	        CALC.lmaxmix=2;
-	        CALC.lmaxpaw=-100;/*ie don't show*/
-/*4-startup*/
-		CALC.istart=-1;/*ie not set*/
-		CALC.icharg=-1;/*ie not set*/
-		CALC.iniwav=TRUE;
-/*5-spin*/
-		CALC.ispin=FALSE;
-		CALC.non_collinear=FALSE;
-		CALC.magmom=NULL;
-		CALC.nupdown=-1.0;/*ie not set*/
-		CALC.lsorbit=FALSE;
-		CALC.saxis=NULL;
-		CALC.gga_compat=TRUE;
-/*6-xc*/
-		CALC.gga=VG_PE;
-		CALC.voskown=FALSE;
-		CALC.lasph=FALSE;
-		CALC.lmaxtau=0;
-		CALC.lmixtau=FALSE;
-		CALC.lmetagga=FALSE;
-		CALC.mgga=VMG_MBJ;/*default is none actually*/
-		CALC.cmbj=NULL;
-		CALC.cmbja=-0.012;
-		CALC.cmbjb=1.023;
-		/*vdw part*/
-/*7-convergence*/
-		CALC.nelm=60;
-		CALC.nelmdl=-12;
-		CALC.nelmin=2;
-/*8-mixer*/
-		CALC.auto_mixer=TRUE;
-		CALC.imix=VM_4;
-		CALC.amix=0.4;
-		CALC.bmix=1.0;
-		CALC.amin=0.1;
-		CALC.amix_mag=1.6;
-		CALC.bmix_mag=1.0;
-		CALC.maxmix=-45;
-		CALC.wc=1000.;
-		CALC.inimix=VIM_1;
-		CALC.mixpre=VMP_1;
-/*9-dipole*/
-		CALC.idipol=VID_0;
-		CALC.ldipol=FALSE;
-		CALC.lmono=FALSE;
-		CALC.epsilon=1.0;/*assuming dielectric constant for vacuum*/
-		CALC.dipol=NULL;
-		CALC.efield=0.0;
-/*10-dos*/
-		CALC.lorbit=0;
-		CALC.nedos=301;
-		CALC.emin=0.0;/*ie not set*/
-		CALC.emax=0.0;/*ie not set*/
-		CALC.efermi=0.0;/*undocument*/
-		CALC.rwigs=NULL;
-/*11-linear response*/
-		CALC.loptics=FALSE;
-		CALC.lepsilon=FALSE;
-		CALC.lrpa=FALSE;
-		CALC.lnabla=FALSE;
-		CALC.cshift=0.1;
-		CALC.lcalceps=FALSE;/*use for hybride-DFT TODO (adv.)*/
-/*ionic*/
-/*0-grid*/
-		CALC.auto_grid=TRUE;/*no default values for grids integers*/
-/*1-general*/
-		CALC.nsw=0;
-		CALC.ibrion=-1;
-		CALC.isif=2;
-		CALC.pstress=0.0;
-		CALC.ediffg=CALC.ediff*10.0;
-		CALC.potim=0.5;
-		CALC.nfree=2;/*actually there is no default*/
-/*2-md*/
-		CALC.smass=-3.0;
-		CALC.npaco=256;
-		CALC.apaco=16.;/*an integer in Ang?*/
-		CALC.tebeg=0.0;
-		CALC.teend=CALC.tebeg;
-		CALC.nblock=1;
-		CALC.kblock=CALC.nsw;
-/*3-symmetry*/
-		CALC.isym=2;/*let's take the PAW default*/
-		CALC.sym_prec=1e-5;
-/* PERFS */
-		CALC.lplane=TRUE;
-		CALC.lscalu=TRUE;
-		CALC.lscalapack=TRUE;
-		/*output*/
-		CALC.nwrite=2;
-		CALC.lwave=TRUE;
-		CALC.lcharg=TRUE;
-		CALC.lvtot=FALSE;
-		CALC.lvhar=FALSE;
-		CALC.lelf=FALSE;
-	}
-	return 0;
+    /*this might be caught in INCAR*/
+    CALC.algo = VA_IALGO; /* TODO translate back ie. IALGO=68 -> ALGO=FAST */
+    CALC.ncore = 1.;
+    CALC.kpar = 1.;
+  } else
+  {
+    /*use some default values*/
+    /*name*/
+    CALC.name = NULL;
+    /*1-general*/
+    CALC.prec = VP_NORM;
+    CALC.use_prec = TRUE;
+    CALC.encut = 0.0; /*ie not set*/
+    CALC.enaug = 0.0; /*ie not set*/
+    CALC.ediff = 1e-4;
+    CALC.algo = VA_NORM;
+    CALC.ialgo = VIA_KOSUGI;
+    CALC.ldiag = TRUE;
+    CALC.auto_elec = TRUE;
+    CALC.nbands = 0;   /*ie not set*/
+    CALC.nelect = 0.0; /*ie not set*/
+    CALC.iwavpr = 10;
+    CALC.nsim = 4;
+    CALC.vtime = 0.4;
+    /*2-smearing*/
+    CALC.ismear = 1;
+    CALC.sigma = 0.2;
+    CALC.fermwe = NULL;
+    CALC.fermdo = NULL;
+    CALC.kspacing = 0.5;
+    CALC.kgamma = TRUE;
+    /*3-projector*/
+    CALC.lreal = VLR_FALSE;
+    CALC.ropt = NULL;
+    CALC.addgrid = FALSE;
+    CALC.lmaxmix = 2;
+    CALC.lmaxpaw = -100; /*ie don't show*/
+                         /*4-startup*/
+    CALC.istart = -1;    /*ie not set*/
+    CALC.icharg = -1;    /*ie not set*/
+    CALC.iniwav = TRUE;
+    /*5-spin*/
+    CALC.ispin = FALSE;
+    CALC.non_collinear = FALSE;
+    CALC.magmom = NULL;
+    CALC.nupdown = -1.0; /*ie not set*/
+    CALC.lsorbit = FALSE;
+    CALC.saxis = NULL;
+    CALC.gga_compat = TRUE;
+    /*6-xc*/
+    CALC.gga = VG_PE;
+    CALC.voskown = FALSE;
+    CALC.lasph = FALSE;
+    CALC.lmaxtau = 0;
+    CALC.lmixtau = FALSE;
+    CALC.lmetagga = FALSE;
+    CALC.mgga = VMG_MBJ; /*default is none actually*/
+    CALC.cmbj = NULL;
+    CALC.cmbja = -0.012;
+    CALC.cmbjb = 1.023;
+    /*vdw part*/
+    /*7-convergence*/
+    CALC.nelm = 60;
+    CALC.nelmdl = -12;
+    CALC.nelmin = 2;
+    /*8-mixer*/
+    CALC.auto_mixer = TRUE;
+    CALC.imix = VM_4;
+    CALC.amix = 0.4;
+    CALC.bmix = 1.0;
+    CALC.amin = 0.1;
+    CALC.amix_mag = 1.6;
+    CALC.bmix_mag = 1.0;
+    CALC.maxmix = -45;
+    CALC.wc = 1000.;
+    CALC.inimix = VIM_1;
+    CALC.mixpre = VMP_1;
+    /*9-dipole*/
+    CALC.idipol = VID_0;
+    CALC.ldipol = FALSE;
+    CALC.lmono = FALSE;
+    CALC.epsilon = 1.0; /*assuming dielectric constant for vacuum*/
+    CALC.dipol = NULL;
+    CALC.efield = 0.0;
+    /*10-dos*/
+    CALC.lorbit = 0;
+    CALC.nedos = 301;
+    CALC.emin = 0.0;   /*ie not set*/
+    CALC.emax = 0.0;   /*ie not set*/
+    CALC.efermi = 0.0; /*undocument*/
+    CALC.rwigs = NULL;
+    /*11-linear response*/
+    CALC.loptics = FALSE;
+    CALC.lepsilon = FALSE;
+    CALC.lrpa = FALSE;
+    CALC.lnabla = FALSE;
+    CALC.cshift = 0.1;
+    CALC.lcalceps = FALSE; /*use for hybride-DFT TODO (adv.)*/
+                           /*ionic*/
+                           /*0-grid*/
+    CALC.auto_grid = TRUE; /*no default values for grids integers*/
+                           /*1-general*/
+    CALC.nsw = 0;
+    CALC.ibrion = -1;
+    CALC.isif = 2;
+    CALC.pstress = 0.0;
+    CALC.ediffg = CALC.ediff * 10.0;
+    CALC.potim = 0.5;
+    CALC.nfree = 2; /*actually there is no default*/
+                    /*2-md*/
+    CALC.smass = -3.0;
+    CALC.npaco = 256;
+    CALC.apaco = 16.; /*an integer in Ang?*/
+    CALC.tebeg = 0.0;
+    CALC.teend = CALC.tebeg;
+    CALC.nblock = 1;
+    CALC.kblock = CALC.nsw;
+    /*3-symmetry*/
+    CALC.isym = 2; /*let's take the PAW default*/
+    CALC.sym_prec = 1e-5;
+    /* PERFS */
+    CALC.lplane = TRUE;
+    CALC.lscalu = TRUE;
+    CALC.lscalapack = TRUE;
+    /*output*/
+    CALC.nwrite = 2;
+    CALC.lwave = TRUE;
+    CALC.lcharg = TRUE;
+    CALC.lvtot = FALSE;
+    CALC.lvhar = FALSE;
+    CALC.lelf = FALSE;
+    /* EXEC flags */
+    CALC.lplane = TRUE;
+    CALC.lscalapack = FALSE;
+    CALC.lscalu = FALSE;
+  }
+  return 0;
 #undef CALC
 }
 /****************************/
 /* free vasp_calc structure */
 /****************************/
-void vasprun_free(vasp_calc_struct *calc){
+void vasprun_free(vasp_calc_struct *calc)
+{
 #define CALC (*calc)
-	if(calc==NULL) return;
-	if(CALC.name!=NULL) g_free(CALC.name);
-	if(CALC.fermwe!=NULL) g_free(CALC.fermwe);
-	if(CALC.fermdo!=NULL) g_free(CALC.fermdo);
-	if(CALC.ropt!=NULL) g_free(CALC.ropt);
-	if(CALC.magmom!=NULL) g_free(CALC.magmom);
-	if(CALC.saxis!=NULL) g_free(CALC.saxis);
-	if(CALC.cmbj!=NULL) g_free(CALC.cmbj);
-	if(CALC.ldaul!=NULL) g_free(CALC.ldaul);
-	if(CALC.ldauu!=NULL) g_free(CALC.ldauu);
-	if(CALC.ldauj!=NULL) g_free(CALC.ldauj);
-	if(CALC.dipol!=NULL) g_free(CALC.dipol);
-	if(CALC.species_symbols!=NULL) g_free(CALC.species_symbols);
-	if(CALC.species_numbers!=NULL) g_free(CALC.species_numbers);
-	if(CALC.potcar_folder!=NULL) g_free(CALC.potcar_folder);
-	if(CALC.potcar_file!=NULL) g_free(CALC.potcar_file);
-	if(CALC.potcar_species!=NULL) g_free(CALC.potcar_species);
-	if(CALC.potcar_species_flavor!=NULL) g_free(CALC.potcar_species_flavor);
-	if(CALC.rwigs!=NULL) g_free(CALC.rwigs);
-	if(CALC.job_vasp_exe!=NULL) g_free(CALC.job_vasp_exe);
-	if(CALC.job_mpirun!=NULL) g_free(CALC.job_mpirun);
-	if(CALC.job_path!=NULL) g_free(CALC.job_path);
-//result_model should not be freed ;)
+  if (calc == NULL)
+    return;
+  if (CALC.name != NULL)
+    g_free(CALC.name);
+  if (CALC.fermwe != NULL)
+    g_free(CALC.fermwe);
+  if (CALC.fermdo != NULL)
+    g_free(CALC.fermdo);
+  if (CALC.ropt != NULL)
+    g_free(CALC.ropt);
+  if (CALC.magmom != NULL)
+    g_free(CALC.magmom);
+  if (CALC.saxis != NULL)
+    g_free(CALC.saxis);
+  if (CALC.cmbj != NULL)
+    g_free(CALC.cmbj);
+  if (CALC.ldaul != NULL)
+    g_free(CALC.ldaul);
+  if (CALC.ldauu != NULL)
+    g_free(CALC.ldauu);
+  if (CALC.ldauj != NULL)
+    g_free(CALC.ldauj);
+  if (CALC.dipol != NULL)
+    g_free(CALC.dipol);
+  if (CALC.species_symbols != NULL)
+    g_free(CALC.species_symbols);
+  if (CALC.species_numbers != NULL)
+    g_free(CALC.species_numbers);
+  if (CALC.potcar_folder != NULL)
+    g_free(CALC.potcar_folder);
+  if (CALC.potcar_file != NULL)
+    g_free(CALC.potcar_file);
+  if (CALC.potcar_species != NULL)
+    g_free(CALC.potcar_species);
+  if (CALC.potcar_species_flavor != NULL)
+    g_free(CALC.potcar_species_flavor);
+  if (CALC.rwigs != NULL)
+    g_free(CALC.rwigs);
+  if (CALC.job_vasp_exe != NULL)
+    g_free(CALC.job_vasp_exe);
+  if (CALC.job_mpirun != NULL)
+    g_free(CALC.job_mpirun);
+  if (CALC.job_path != NULL)
+    g_free(CALC.job_path);
+  if (CALC.selective_tx)
+    g_free(CALC.selective_tx);
+  if (CALC.selective_ty)
+    g_free(CALC.selective_ty);
+  if (CALC.selective_tz)
+    g_free(CALC.selective_tz);
+// result_model should not be freed ;)
 #undef CALC
 }
 /***********************************/
 /* convert vasp structure to INCAR */
 /***********************************/
-void vasp_calc_to_incar(FILE *output,vasp_calc_struct calc){
-/*skipping default parts*/
-	fprintf(output,"!INCAR GENERATED BY GDIS %4.2f.%d (C) %d\n",VERSION,PATCH,YEAR);
-	if(calc.name!=NULL) fprintf(output,"SYSTEM=%s\n",calc.name);
-	fprintf(output,"PREC=");
-	switch (calc.prec){
-		case VP_SINGLE:
-			fprintf(output,"SINGLE\n");break;
-		case VP_ACCURATE:
-			fprintf(output,"ACCURATE\n");break;
-		case VP_HIGH:
-			fprintf(output,"HIGH\n");break;
-		case VP_MED:
-			fprintf(output,"MEDIUM\n");break;
-		case VP_LOW:
-			fprintf(output,"LOW\n");break;
-		case VP_NORM:
-		default:
-			fprintf(output,"NORMAL\n");
-	}
-	if(calc.use_prec) fprintf(output,"!USING PREC SETTINGS FOR ENCUT and ENAUG\n");
-	else{
-		if(calc.encut!=0.0) fprintf(output,"ENCUT=%lf\n",calc.encut);
-		if(calc.enaug!=0.0) fprintf(output,"ENAUG=%lf\n",calc.enaug);
-	}
-	if(calc.ediff!=1E-4) fprintf(output,"EDIFF=%lE\n",calc.ediff);
-	if(calc.algo!=VA_IALGO){
-		fprintf(output,"ALGO=");
-		switch (calc.algo){
-		case VA_NORM:
-			fprintf(output,"NORMAL\n");break;
-		case VA_VERYFAST:
-			fprintf(output,"VERYFAST\n");break;
-		case VA_FAST:
-			fprintf(output,"FAST\n");break;
-		case VA_CONJ:
-			fprintf(output,"CONJ\n");break;
-		case VA_ALL:
-			fprintf(output,"ALL\n");break;
-		case VA_DAMPED:
-			fprintf(output,"DAMPED\n");break;
-		case VA_SUBROT:
-			fprintf(output,"SUBROT\n");break;
-		case VA_EIGEN:
-			fprintf(output,"EIGENVAL\n");break;
-		case VA_NONE:
-			fprintf(output,"NONE\n");break;
-		case VA_NOTHING:
-			fprintf(output,"NOTHING\n");break;
-		case VA_EXACT:
-			fprintf(output,"EXACT\n");break;
-		case VA_DIAG:
-			fprintf(output,"DIAG\n");break;
-		case VA_IALGO:
-		default:
-			/*should never happen*/
-			fprintf(output,"NORMAL\n");
-		}
-	} else fprintf(output,"IALGO=%i\n",(gint)calc.ialgo);
-	if(!(calc.ldiag)) fprintf(output,"LDIAG=.FALSE.\n");
-	if(!(calc.auto_elec)){
-		if(calc.nbands!=0) fprintf(output,"NBANDS=%i\n",calc.nbands);
-		if(calc.nelect!=0.0) fprintf(output,"NELECT=%lf\n",calc.nelect);
-		if(calc.iwavpr!=10) fprintf(output,"IWAVPR=%i\n",calc.iwavpr);
-		if(calc.nsim!=4) fprintf(output,"NSIM=%i\n",calc.nsim);
-		if(calc.vtime!=0.4) fprintf(output,"VTIME=%lf\n",calc.vtime);
-	}
-	if(calc.ismear!=1) fprintf(output,"ISMEAR=%i\n",calc.ismear);
-	if(calc.sigma!=0.2) fprintf(output,"SIGMA=%lf\n",calc.sigma);
-	if(calc.fermwe!=NULL) fprintf(output,"FERMWE=%s\n",calc.fermwe);
-	if(calc.fermdo!=NULL) fprintf(output,"FERMDO=%s\n",calc.fermdo);
-	if(calc.kspacing!=0.5) fprintf(output,"KSPACING=%lf\n",calc.kspacing);
-	if(!calc.kgamma) fprintf(output,"KGAMMA=.FALSE.\n");
-	/*always write LREAL tag*/
-	fprintf(output,"LREAL=");
-	switch (calc.lreal){
-	case VLR_AUTO:
-		fprintf(output,"AUTO\n");break;
-	case VLR_ON:
-		fprintf(output,"ON\n");break;
-	case VLR_TRUE:
-		fprintf(output,".TRUE.\n");break;
-	case VLR_FALSE:
-	default:
-		fprintf(output,".FALSE.\n");
-	}
-	if(calc.ropt!=NULL) fprintf(output,"ROPT=%s\n",calc.ropt);
-	if(calc.addgrid) fprintf(output,"ADDGRID=.TRUE.\n");
-	if(calc.lmaxmix!=2) fprintf(output,"LMAXMIX=%i\n",calc.lmaxmix);
-	if(calc.lmaxpaw!=-100) fprintf(output,"LMAXPAW=%i\n",calc.lmaxpaw);
-        if(calc.istart!=-1) fprintf(output,"ISTART=%i\n",calc.istart);
-        if(calc.icharg!=-1) fprintf(output,"ICHARG=%i\n",calc.icharg);
-        if(!calc.iniwav) fprintf(output,"INIWAV=0\n");
-	if(calc.ispin) fprintf(output,"ISPIN=2\n");
-	if(calc.non_collinear) fprintf(output,"LNONCOLLINEAR=.TRUE.\n");
-	if(calc.magmom!=NULL) fprintf(output,"MAGMOM=%s\n",calc.magmom);
-	if(calc.nupdown!=-1) fprintf(output,"NUPDOWN=%lf\n",calc.nupdown);
-	if(calc.lsorbit) fprintf(output,"LSORBIT=.TRUE.\n");
-	if(calc.saxis!=NULL) fprintf(output,"MAGMOM=%s\n",calc.saxis);
-	if(!calc.gga_compat) fprintf(output,"GGA_COMPAT=.FALSE.\n");
-	/*always write GGA tag*/
-	fprintf(output,"GGA=");
-	switch (calc.gga){
-	case VG_91:
-		fprintf(output,"91\n");break;
-	case VG_RP:
-		fprintf(output,"RP\n");break;
-	case VG_AM:
-		fprintf(output,"AM\n");break;
-	case VG_PS:
-		fprintf(output,"PS\n");break;
-	case VG_PE:
-	default:
-		fprintf(output,"PE\n");
-	}
-	if(calc.voskown) fprintf(output,"VOSKOWN=1\n");
-	if(calc.lasph) fprintf(output,"LASPH=.TRUE.\n");
-	if(calc.lmaxtau!=0) fprintf(output,"LMAXTAU=%i\n",calc.lmaxtau);
-	if(calc.lmixtau) fprintf(output,"LMIXTAU=.TRUE.\n");
-	if(calc.lmetagga){
-		fprintf(output,"METAGGA=");
-		switch (calc.mgga){
-		case VMG_TPSS:
-			fprintf(output,"TPSS\n");break;
-		case VMG_RTPSS:
-			fprintf(output,"RTPSS\n");break;
-		case VMG_M06L:
-			fprintf(output,"M06L\n");break;
-		case VMG_MBJ:
-		default:
-			fprintf(output,"MBJ\n");
-		}
-		if(calc.mgga==VMG_MBJ){/*print parameters as well*/
-			if(calc.cmbj!=NULL) fprintf(output,"CMBJ=%s\n",calc.cmbj);
-			if(calc.cmbja!=-0.012) fprintf(output,"CMBJA=%lf\n",calc.cmbja);
-			if(calc.cmbjb!=1.023) fprintf(output,"CMBJB=%lf\n",calc.cmbjb);
-		}
-	}
-	if(calc.ldau){
-		fprintf(output,"LDAU=.TRUE.\n");
-		fprintf(output,"LDAUTYPE=%i\n",(gint)calc.ldau_type);/*always write*/
-		fprintf(output,"LDAUPRINT=%i\n",(gint)calc.ldau_output);/*always write*/
-		if(calc.ldaul!=NULL) fprintf(output,"LDAUL=%s\n",calc.ldaul);
-		if(calc.ldauu!=NULL) fprintf(output,"LDAUU=%s\n",calc.ldauu);
-		if(calc.ldauj!=NULL) fprintf(output,"LDAUJ=%s\n",calc.ldauj);
-	}
-	if(calc.nelm!=60) fprintf(output,"NELM=%i\n",calc.nelm);
-	if(calc.nelmdl!=-12) fprintf(output,"NELMDL=%i\n",calc.nelmdl);
-	if(calc.nelmin!=2) fprintf(output,"NELMIN=%i\n",calc.nelmin);
-	if(!calc.auto_mixer){
-		fprintf(output,"IMIX=%i\n",(gint)calc.imix);/*always write*/
-		if(calc.amix!=0.4) fprintf(output,"AMIX=%lf\n",calc.amix);
-		if(calc.bmix!=1.0) fprintf(output,"BMIX=%lf\n",calc.bmix);
-		if(calc.amin!=0.1) fprintf(output,"AMIN=%lf\n",calc.amin);
-		if(calc.amix_mag!=1.6) fprintf(output,"AMIX_MAG=%lf\n",calc.amix_mag);
-		if(calc.bmix_mag!=1.0) fprintf(output,"BMIX_MAG=%lf\n",calc.bmix_mag);
-		if(calc.maxmix!=-45) fprintf(output,"MAXMIX=%i\n",calc.maxmix);
-		if(calc.wc!=1000.0) fprintf(output,"WC=%lf\n",calc.wc);
-		if(calc.inimix!=VIM_1) fprintf(output,"INIMIX=%i\n",(gint)calc.inimix);
-		if(calc.mixpre!=VMP_1) fprintf(output,"MIXPRE=%i\n",(gint)calc.mixpre);
-	}
-	if(calc.idipol!=VID_0){
-		if(calc.ldipol) fprintf(output,"LDIPOL=.TRUE.\n");
-		if(calc.lmono) fprintf(output,"LMONO=.TRUE.\n");
-		if(calc.epsilon!=1.0) fprintf(output,"EPSILON=%lf\n",calc.epsilon);
-		if(calc.dipol!=NULL) fprintf(output,"DIPOL=%s\n",calc.dipol);
-		if((calc.efield!=0.0)&&(calc.idipol!=VID_4)) fprintf(output,"EFIELD=%lf\n",calc.efield);
-	}
-	if(calc.lorbit!=0) fprintf(output,"LORBIT=%i\n",calc.lorbit);
-	if(calc.nedos!=301) fprintf(output,"NEDOS=%i\n",calc.nedos);
-	if(calc.emin!=0.) fprintf(output,"EMIN=%lf\n",calc.emin);
-	if(calc.emax!=0.) fprintf(output,"EMAX=%lf\n",calc.emax);
-	if(calc.efermi!=0.) fprintf(output,"EFERMI=%lf\n",calc.efermi);
-	if(calc.rwigs!=NULL) fprintf(output,"RWIGS=%s\n",calc.rwigs);
-	if(calc.loptics) fprintf(output,"LOPTICS=.TRUE.\n");
-	if(calc.lepsilon) fprintf(output,"LEPSILON=.TRUE.\n");
-	if(calc.lrpa) fprintf(output,"LRPA=.TRUE.\n");
-	if(calc.lnabla) fprintf(output,"LNABLA=.TRUE.\n");
-	if(calc.lcalceps) fprintf(output,"LCALCEPS=.TRUE.\n");
-	if(calc.cshift!=0.1) fprintf(output,"CSHIFT=%lf\n",calc.cshift);
-	if(!calc.auto_grid){
-		if(calc.ngx>0) fprintf(output,"NGX=%i\n",(gint)calc.ngx);
-		if(calc.ngy>0) fprintf(output,"NGY=%i\n",(gint)calc.ngy);
-		if(calc.ngz>0) fprintf(output,"NGZ=%i\n",(gint)calc.ngz);
-		if(calc.ngxf>0) fprintf(output,"NGXF=%i\n",(gint)calc.ngxf);
-		if(calc.ngyf>0) fprintf(output,"NGYF=%i\n",(gint)calc.ngyf);
-		if(calc.ngzf>0) fprintf(output,"NGZF=%i\n",(gint)calc.ngzf);
-	}
-	if(calc.nsw!=0) fprintf(output,"NSW=%i\n",calc.nsw);
-	if(calc.ibrion!=-1) fprintf(output,"IBRION=%i\n",calc.ibrion);
-	if(calc.isif!=2) fprintf(output,"ISIF=%i\n",calc.isif);
-	if(calc.pstress!=0.0) fprintf(output,"PSTRESS=%lf\n",calc.pstress);
-	if(calc.ediffg!=(calc.ediff*10.0)) fprintf(output,"EDIFFG=%lE\n",calc.ediffg);
-	if(calc.potim!=0.5) fprintf(output,"POTIM=%lf\n",calc.potim);
-	if(calc.nfree!=2) fprintf(output,"NFREE=%i\n",calc.nfree);
-	if(calc.ibrion==0){
-		if(calc.smass!=-3.0) fprintf(output,"SMASS=%lf\n",calc.smass);
-		if(calc.npaco!=256) fprintf(output,"NPACO=%i\n",calc.npaco);
-		if(calc.apaco!=16.) fprintf(output,"APACO=%lf\n",calc.apaco);
-		if(calc.tebeg!=0.0) fprintf(output,"TEBEG=%lf\n",calc.tebeg);
-		if(calc.teend!=calc.tebeg) fprintf(output,"TEEND=%lf\n",calc.teend);
-		if(calc.nblock!=1) fprintf(output,"NBLOCK=%i\n",calc.nblock);
-		if(calc.kblock!=calc.nsw) fprintf(output,"KBLOCK=%i\n",calc.kblock);
-	}
-	if(calc.isym!=2) fprintf(output,"ISYM=%i\n",calc.isym);
-	if((calc.isym>0)&&(calc.sym_prec!=1e-5)) fprintf(output,"SYM_PREC=%lE\n",calc.sym_prec);
-	if(calc.ncore>1.) fprintf(output,"NCORE=%i\n",(gint)calc.ncore);
-	if(calc.kpar>1.) fprintf(output,"KPAR=%i\n",(gint)calc.kpar);
-	if(!calc.lplane) fprintf(output,"LPLANE=.FALSE.\n");
-	if(!calc.lscalu) fprintf(output,"LSCALU=.FALSE.\n");
-	if(!calc.lscalapack) fprintf(output,"LSCALAPACK=.FALSE.\n");
-	if(!calc.lwave) fprintf(output,"LWAVE=.FALSE.\n");
-	if(!calc.lcharg) fprintf(output,"LCHARG=.FALSE.\n");
-	if(calc.lvtot) fprintf(output,"LVTOT=.TRUE.\n");
-	if(calc.lvhar) fprintf(output,"LVHAR=.TRUE.\n");
-	if(calc.lelf) fprintf(output,"LELF=.TRUE.\n");
+void vasp_calc_to_incar(FILE *output, vasp_calc_struct calc)
+{
+  /*skipping default parts*/
+  fprintf(output, "!INCAR GENERATED BY GDIS %4.2f.%d (C) %d\n", VERSION, PATCH, YEAR);
+  if (calc.name != NULL)
+    fprintf(output, "SYSTEM=%s\n", calc.name);
+  fprintf(output, "PREC=");
+  switch (calc.prec)
+  {
+  case VP_SINGLE:
+    fprintf(output, "SINGLE\n");
+    break;
+  case VP_ACCURATE:
+    fprintf(output, "ACCURATE\n");
+    break;
+  case VP_HIGH:
+    fprintf(output, "HIGH\n");
+    break;
+  case VP_MED:
+    fprintf(output, "MEDIUM\n");
+    break;
+  case VP_LOW:
+    fprintf(output, "LOW\n");
+    break;
+  case VP_NORM:
+  default:
+    fprintf(output, "NORMAL\n");
+  }
+  if (calc.use_prec)
+    fprintf(output, "!USING PREC SETTINGS FOR ENCUT and ENAUG\n");
+  else
+  {
+    if (calc.encut != 0.0)
+      fprintf(output, "ENCUT=%lf\n", calc.encut);
+    if (calc.enaug != 0.0)
+      fprintf(output, "ENAUG=%lf\n", calc.enaug);
+  }
+  if (calc.ediff != 1E-4)
+    fprintf(output, "EDIFF=%lE\n", calc.ediff);
+  if (calc.algo != VA_IALGO)
+  {
+    fprintf(output, "ALGO=");
+    switch (calc.algo)
+    {
+    case VA_NORM:
+      fprintf(output, "NORMAL\n");
+      break;
+    case VA_VERYFAST:
+      fprintf(output, "VERYFAST\n");
+      break;
+    case VA_FAST:
+      fprintf(output, "FAST\n");
+      break;
+    case VA_CONJ:
+      fprintf(output, "CONJ\n");
+      break;
+    case VA_ALL:
+      fprintf(output, "ALL\n");
+      break;
+    case VA_DAMPED:
+      fprintf(output, "DAMPED\n");
+      break;
+    case VA_SUBROT:
+      fprintf(output, "SUBROT\n");
+      break;
+    case VA_EIGEN:
+      fprintf(output, "EIGENVAL\n");
+      break;
+    case VA_NONE:
+      fprintf(output, "NONE\n");
+      break;
+    case VA_NOTHING:
+      fprintf(output, "NOTHING\n");
+      break;
+    case VA_EXACT:
+      fprintf(output, "EXACT\n");
+      break;
+    case VA_DIAG:
+      fprintf(output, "DIAG\n");
+      break;
+    case VA_IALGO:
+    default:
+      /*should never happen*/
+      fprintf(output, "NORMAL\n");
+    }
+  } else
+    fprintf(output, "IALGO=%i\n", (gint) calc.ialgo);
+  if (!(calc.ldiag))
+    fprintf(output, "LDIAG=.FALSE.\n");
+  if (!(calc.auto_elec))
+  {
+    if (calc.nbands != 0)
+      fprintf(output, "NBANDS=%i\n", calc.nbands);
+    if (calc.nelect != 0.0)
+      fprintf(output, "NELECT=%lf\n", calc.nelect);
+    if (calc.iwavpr != 10)
+      fprintf(output, "IWAVPR=%i\n", calc.iwavpr);
+    if (calc.nsim != 4)
+      fprintf(output, "NSIM=%i\n", calc.nsim);
+    if (calc.vtime != 0.4)
+      fprintf(output, "VTIME=%lf\n", calc.vtime);
+  }
+  if (calc.ismear != 1)
+    fprintf(output, "ISMEAR=%i\n", calc.ismear);
+  if (calc.sigma != 0.2)
+    fprintf(output, "SIGMA=%lf\n", calc.sigma);
+  if (calc.fermwe != NULL)
+    fprintf(output, "FERMWE=%s\n", calc.fermwe);
+  if (calc.fermdo != NULL)
+    fprintf(output, "FERMDO=%s\n", calc.fermdo);
+  if (calc.kspacing != 0.5)
+    fprintf(output, "KSPACING=%lf\n", calc.kspacing);
+  if (!calc.kgamma)
+    fprintf(output, "KGAMMA=.FALSE.\n");
+  /*always write LREAL tag*/
+  fprintf(output, "LREAL=");
+  switch (calc.lreal)
+  {
+  case VLR_AUTO:
+    fprintf(output, "AUTO\n");
+    break;
+  case VLR_ON:
+    fprintf(output, "ON\n");
+    break;
+  case VLR_TRUE:
+    fprintf(output, ".TRUE.\n");
+    break;
+  case VLR_FALSE:
+  default:
+    fprintf(output, ".FALSE.\n");
+  }
+  if (calc.ropt != NULL)
+    fprintf(output, "ROPT=%s\n", calc.ropt);
+  if (calc.addgrid)
+    fprintf(output, "ADDGRID=.TRUE.\n");
+  if (calc.lmaxmix != 2)
+    fprintf(output, "LMAXMIX=%i\n", calc.lmaxmix);
+  if (calc.lmaxpaw != -100)
+    fprintf(output, "LMAXPAW=%i\n", calc.lmaxpaw);
+  if (calc.istart != -1)
+    fprintf(output, "ISTART=%i\n", calc.istart);
+  if (calc.icharg != -1)
+    fprintf(output, "ICHARG=%i\n", calc.icharg);
+  if (!calc.iniwav)
+    fprintf(output, "INIWAV=0\n");
+  if (calc.ispin)
+    fprintf(output, "ISPIN=2\n");
+  if (calc.non_collinear)
+    fprintf(output, "LNONCOLLINEAR=.TRUE.\n");
+  if (calc.magmom != NULL)
+    fprintf(output, "MAGMOM=%s\n", calc.magmom);
+  if (calc.nupdown != -1)
+    fprintf(output, "NUPDOWN=%lf\n", calc.nupdown);
+  if (calc.lsorbit)
+    fprintf(output, "LSORBIT=.TRUE.\n");
+  if (calc.saxis != NULL)
+    fprintf(output, "SAXIS=%s\n", calc.saxis);
+  if (!calc.gga_compat)
+    fprintf(output, "GGA_COMPAT=.FALSE.\n");
+  /*always write GGA tag*/
+  fprintf(output, "GGA=");
+  switch (calc.gga)
+  {
+  case VG_91:
+    fprintf(output, "91\n");
+    break;
+  case VG_RP:
+    fprintf(output, "RP\n");
+    break;
+  case VG_AM:
+    fprintf(output, "AM\n");
+    break;
+  case VG_PS:
+    fprintf(output, "PS\n");
+    break;
+  case VG_PE:
+  default:
+    fprintf(output, "PE\n");
+  }
+  if (calc.voskown)
+    fprintf(output, "VOSKOWN=1\n");
+  if (calc.lasph)
+    fprintf(output, "LASPH=.TRUE.\n");
+  if (calc.lmaxtau != 0)
+    fprintf(output, "LMAXTAU=%i\n", calc.lmaxtau);
+  if (calc.lmixtau)
+    fprintf(output, "LMIXTAU=.TRUE.\n");
+  if (calc.lmetagga)
+  {
+    fprintf(output, "METAGGA=");
+    switch (calc.mgga)
+    {
+    case VMG_TPSS:
+      fprintf(output, "TPSS\n");
+      break;
+    case VMG_RTPSS:
+      fprintf(output, "RTPSS\n");
+      break;
+    case VMG_M06L:
+      fprintf(output, "M06L\n");
+      break;
+    case VMG_MBJ:
+    default:
+      fprintf(output, "MBJ\n");
+    }
+    if (calc.mgga == VMG_MBJ)
+    { /*print parameters as well*/
+      if (calc.cmbj != NULL)
+        fprintf(output, "CMBJ=%s\n", calc.cmbj);
+      if (calc.cmbja != -0.012)
+        fprintf(output, "CMBJA=%lf\n", calc.cmbja);
+      if (calc.cmbjb != 1.023)
+        fprintf(output, "CMBJB=%lf\n", calc.cmbjb);
+    }
+  }
+  if (calc.ldau)
+  {
+    fprintf(output, "LDAU=.TRUE.\n");
+    fprintf(output, "LDAUTYPE=%i\n", (gint) calc.ldau_type);    /*always write*/
+    fprintf(output, "LDAUPRINT=%i\n", (gint) calc.ldau_output); /*always write*/
+    if (calc.ldaul != NULL)
+      fprintf(output, "LDAUL=%s\n", calc.ldaul);
+    if (calc.ldauu != NULL)
+      fprintf(output, "LDAUU=%s\n", calc.ldauu);
+    if (calc.ldauj != NULL)
+      fprintf(output, "LDAUJ=%s\n", calc.ldauj);
+  }
+  if (calc.nelm != 60)
+    fprintf(output, "NELM=%i\n", calc.nelm);
+  if (calc.nelmdl != -12)
+    fprintf(output, "NELMDL=%i\n", calc.nelmdl);
+  if (calc.nelmin != 2)
+    fprintf(output, "NELMIN=%i\n", calc.nelmin);
+  if (!calc.auto_mixer)
+  {
+    fprintf(output, "IMIX=%i\n", (gint) calc.imix); /*always write*/
+    if (calc.amix != 0.4)
+      fprintf(output, "AMIX=%lf\n", calc.amix);
+    if (calc.bmix != 1.0)
+      fprintf(output, "BMIX=%lf\n", calc.bmix);
+    if (calc.amin != 0.1)
+      fprintf(output, "AMIN=%lf\n", calc.amin);
+    if (calc.amix_mag != 1.6)
+      fprintf(output, "AMIX_MAG=%lf\n", calc.amix_mag);
+    if (calc.bmix_mag != 1.0)
+      fprintf(output, "BMIX_MAG=%lf\n", calc.bmix_mag);
+    if (calc.maxmix != -45)
+      fprintf(output, "MAXMIX=%i\n", calc.maxmix);
+    if (calc.wc != 1000.0)
+      fprintf(output, "WC=%lf\n", calc.wc);
+    if (calc.inimix != VIM_1)
+      fprintf(output, "INIMIX=%i\n", (gint) calc.inimix);
+    if (calc.mixpre != VMP_1)
+      fprintf(output, "MIXPRE=%i\n", (gint) calc.mixpre);
+  }
+  if (calc.idipol != VID_0)
+  {
+    if (calc.ldipol)
+      fprintf(output, "LDIPOL=.TRUE.\n");
+    if (calc.lmono)
+      fprintf(output, "LMONO=.TRUE.\n");
+    if (calc.epsilon != 1.0)
+      fprintf(output, "EPSILON=%lf\n", calc.epsilon);
+    if (calc.dipol != NULL)
+      fprintf(output, "DIPOL=%s\n", calc.dipol);
+    if ((calc.efield != 0.0) && (calc.idipol != VID_4))
+      fprintf(output, "EFIELD=%lf\n", calc.efield);
+  }
+  if (calc.lorbit != 0)
+    fprintf(output, "LORBIT=%i\n", calc.lorbit);
+  if (calc.nedos != 301)
+    fprintf(output, "NEDOS=%i\n", calc.nedos);
+  if (calc.emin != 0.)
+    fprintf(output, "EMIN=%lf\n", calc.emin);
+  if (calc.emax != 0.)
+    fprintf(output, "EMAX=%lf\n", calc.emax);
+  if (calc.efermi != 0.)
+    fprintf(output, "EFERMI=%lf\n", calc.efermi);
+  if (calc.rwigs != NULL)
+    fprintf(output, "RWIGS=%s\n", calc.rwigs);
+  if (calc.loptics)
+    fprintf(output, "LOPTICS=.TRUE.\n");
+  if (calc.lepsilon)
+    fprintf(output, "LEPSILON=.TRUE.\n");
+  if (calc.lrpa)
+    fprintf(output, "LRPA=.TRUE.\n");
+  if (calc.lnabla)
+    fprintf(output, "LNABLA=.TRUE.\n");
+  if (calc.lcalceps)
+    fprintf(output, "LCALCEPS=.TRUE.\n");
+  if (calc.cshift != 0.1)
+    fprintf(output, "CSHIFT=%lf\n", calc.cshift);
+  if (!calc.auto_grid)
+  {
+    if (calc.ngx > 0)
+      fprintf(output, "NGX=%i\n", (gint) calc.ngx);
+    if (calc.ngy > 0)
+      fprintf(output, "NGY=%i\n", (gint) calc.ngy);
+    if (calc.ngz > 0)
+      fprintf(output, "NGZ=%i\n", (gint) calc.ngz);
+    if (calc.ngxf > 0)
+      fprintf(output, "NGXF=%i\n", (gint) calc.ngxf);
+    if (calc.ngyf > 0)
+      fprintf(output, "NGYF=%i\n", (gint) calc.ngyf);
+    if (calc.ngzf > 0)
+      fprintf(output, "NGZF=%i\n", (gint) calc.ngzf);
+  }
+  if (calc.nsw != 0)
+    fprintf(output, "NSW=%i\n", calc.nsw);
+  if (calc.ibrion != -1)
+    fprintf(output, "IBRION=%i\n", calc.ibrion);
+  if (calc.isif != 2)
+    fprintf(output, "ISIF=%i\n", calc.isif);
+  if (calc.pstress != 0.0)
+    fprintf(output, "PSTRESS=%lf\n", calc.pstress);
+  if (calc.ediffg != (calc.ediff * 10.0))
+    fprintf(output, "EDIFFG=%lE\n", calc.ediffg);
+  if (calc.potim != 0.5)
+    fprintf(output, "POTIM=%lf\n", calc.potim);
+  if (calc.nfree != 2)
+    fprintf(output, "NFREE=%i\n", calc.nfree);
+  if (calc.ibrion == 0)
+  {
+    if (calc.smass != -3.0)
+      fprintf(output, "SMASS=%lf\n", calc.smass);
+    if (calc.npaco != 256)
+      fprintf(output, "NPACO=%i\n", calc.npaco);
+    if (calc.apaco != 16.)
+      fprintf(output, "APACO=%lf\n", calc.apaco);
+    if (calc.tebeg != 0.0)
+      fprintf(output, "TEBEG=%lf\n", calc.tebeg);
+    if (calc.teend != calc.tebeg)
+      fprintf(output, "TEEND=%lf\n", calc.teend);
+    if (calc.nblock != 1)
+      fprintf(output, "NBLOCK=%i\n", calc.nblock);
+    if (calc.kblock != calc.nsw)
+      fprintf(output, "KBLOCK=%i\n", calc.kblock);
+  }
+  if (calc.isym != 2)
+    fprintf(output, "ISYM=%i\n", calc.isym);
+  if ((calc.isym > 0) && (calc.sym_prec != 1e-5))
+    fprintf(output, "SYM_PREC=%lE\n", calc.sym_prec);
+  if (calc.ncore > 1.)
+    fprintf(output, "NCORE=%i\n", (gint) calc.ncore);
+  if (calc.kpar > 1.)
+    fprintf(output, "KPAR=%i\n", (gint) calc.kpar);
+  /* LPLANE default is TRUE per VASP manual — omit when default */
+  if (calc.lscalu)
+    fprintf(output, "LSCALU=.TRUE.\n");
+  if (calc.lscalapack)
+    fprintf(output, "LSCALAPACK=.TRUE.\n");
+  if (!calc.lwave)
+    fprintf(output, "LWAVE=.FALSE.\n");
+  if (!calc.lcharg)
+    fprintf(output, "LCHARG=.FALSE.\n");
+  if (calc.lvtot)
+    fprintf(output, "LVTOT=.TRUE.\n");
+  if (calc.lvhar)
+    fprintf(output, "LVHAR=.TRUE.\n");
+  if (calc.lelf)
+    fprintf(output, "LELF=.TRUE.\n");
 
-	/*TODO (adv.)*/
-	
+  /*TODO (adv.)*/
 }
 
-
-int vasp_xml_read_atominfo(FILE *vf, struct model_pak *model){
-/* read current information about atoms */
-	gchar *line;
-	int idx=0;
-	int natom=0;
-	int ii;
-	gchar *label=NULL;
-	gint number;
-	gdouble charge;
-	struct core_pak *core;
-	/* Goto end of first <set> array */
-	if(fetch_in_file(vf,"</set>")==0) return -1;
-	/* Goto the begining of 2nd <set> array */
-	if(fetch_in_file(vf,"<set>")==0) return -1;
-	/* Construct the species list */
-	line = file_read_line(vf);
-	label = g_malloc(3*sizeof(gchar));
-	while (line) {
-		if (find_in_string("</set>",line) != NULL) break;
-		sscanf(line," <rc><c>  %i</c><c>%2c</c><c> %*f</c><c> %lf</c><c> %*s",&number,label,&charge);
-		label[2]='\0';
-		for(ii=0;ii<number;ii++){
-			core=new_core(label,model);
-			core->charge=charge;
-			model->cores=g_slist_append(model->cores,core);
-		}
-		idx++;
-		natom+=number;
-		g_free(line);
-		line = file_read_line(vf);
-	}
-	free(label);
-	if (line == NULL) return -1;/* Incomplete atom definition? */
-	g_free(line);
-	/* set total number of atoms */
-        model->num_species=idx;
-	model->expected_cores=natom;
-        model->expected_shells=0;
-	model->num_atoms=natom;
-        /* exit at </atominfo> */
-	if(fetch_in_file(vf,"</atominfo>")==0) return -1;
-	return 0;
+int vasp_xml_read_atominfo(FILE *vf, struct model_pak *model)
+{
+  /* read current information about atoms */
+  gchar *line;
+  int idx = 0;
+  int natom = 0;
+  int ii;
+  gchar *label = NULL;
+  gint number;
+  gdouble charge;
+  struct core_pak *core;
+  /* Goto end of first <set> array */
+  if (fetch_in_file(vf, "</set>") == 0)
+    return -1;
+  /* Goto the begining of 2nd <set> array */
+  if (fetch_in_file(vf, "<set>") == 0)
+    return -1;
+  /* Construct the species list */
+  line = file_read_line(vf);
+  label = g_malloc(3 * sizeof(gchar));
+  while (line)
+  {
+    if (find_in_string("</set>", line) != NULL)
+      break;
+    sscanf(line, " <rc><c>  %i</c><c>%2c</c><c> %*f</c><c> %lf</c><c> %*s", &number, label, &charge);
+    label[2] = '\0';
+    for (ii = 0; ii < number; ii++)
+    {
+      core = new_core(label, model);
+      core->charge = charge;
+      model->cores = g_slist_append(model->cores, core);
+    }
+    idx++;
+    natom += number;
+    g_free(line);
+    line = file_read_line(vf);
+  }
+  free(label);
+  if (line == NULL)
+    return -1; /* Incomplete atom definition? */
+  g_free(line);
+  /* set total number of atoms */
+  model->num_species = idx;
+  model->expected_cores = natom;
+  model->expected_shells = 0;
+  model->num_atoms = natom;
+  /* exit at </atominfo> */
+  if (fetch_in_file(vf, "</atominfo>") == 0)
+    return -1;
+  return 0;
 }
 
-int vasp_xml_read_energy(FILE *vf, struct model_pak *model){
-	gchar *line;
-	gdouble energy=0.;
-	long int vfpos=ftell(vf);
-	if(fetch_in_file(vf,"<energy>")==0) {
-		/*we didnt't get it until EOF, which is normal when using finalpos*/
-		rewind(vf);
-		/*find the last valid <structure>*/
-		while(fetch_in_file(vf,"<structure>")!=0) vfpos=ftell(vf);/*flag*/
-		fseek(vf,vfpos,SEEK_SET);/* rewind to flag */
-		if(fetch_in_file(vf,"<energy>")==0) return -1;/*still no <energy> tag?*/
-	}
-	if(fetch_in_file(vf,"e_fr_energy")==0) return -1;/*no energy information in <energy>?*/
-	line = file_read_line(vf);/*next line is e_wo_entrp*/
-	if (find_in_string("e_wo_entrp",line) != NULL) {
-		sscanf(line," <i name=\"e_wo_entrp\"> %lf </i>",&energy);
-		sprintf(line,"%lf eV",energy);
-		property_add_ranked(3, "Energy", line, model);
-	} else {
-		return -1;
-	}
-	g_free(line);
-	return 0;
+int vasp_xml_read_energy(FILE *vf, struct model_pak *model)
+{
+  gchar *line;
+  gdouble energy = 0.;
+  long int vfpos = ftell(vf);
+  if (fetch_in_file(vf, "<energy>") == 0)
+  {
+    /*we didnt't get it until EOF, which is normal when using finalpos*/
+    rewind(vf);
+    /*find the last valid <structure>*/
+    while (fetch_in_file(vf, "<structure>") != 0)
+      vfpos = ftell(vf);        /*flag*/
+    fseek(vf, vfpos, SEEK_SET); /* rewind to flag */
+    if (fetch_in_file(vf, "<energy>") == 0)
+      return -1; /*still no <energy> tag?*/
+  }
+  if (fetch_in_file(vf, "e_fr_energy") == 0)
+    return -1;               /*no energy information in <energy>?*/
+  line = file_read_line(vf); /*next line is e_wo_entrp*/
+  if (find_in_string("e_wo_entrp", line) != NULL)
+  {
+    sscanf(line, " <i name=\"e_wo_entrp\"> %lf </i>", &energy);
+    sprintf(line, "%lf eV", energy);
+    property_add_ranked(3, "Energy", line, model);
+  } else
+  {
+    return -1;
+  }
+  g_free(line);
+  return 0;
 }
-int vasp_xml_plot_energy(struct model_pak *model){
-#ifdef   WITH_GUI
-/* FIXME: should test line for NULL each time? */
-	int idx,jdx;
-	FILE *vf;
-	int ret_val;
-	gchar *line;
-	g_data_x gx;
-	g_data_y gy;
-	gdouble min_E,max_E,E;
-	vasp_output_struct *vasp_out;
-	/*NEW: attach an energy plot*/
-	ret_val=0;
-	if(model==NULL) return 3;
-	if(model->vasp==NULL) return 3;
-	vasp_out=(vasp_output_struct *)model->vasp;
-	/*not an error but no energy graph on a singlepoint calculation*/
-	if(vasp_out->calc_type==VASP_SINGLE) return ret_val;
-	/*not an error but no energy graph on a frequency calculation*/
-	if(vasp_out->calc_type&VASP_FREQ) return ret_val;
-	if(model->num_frames<1) return 3;
-	/*populate Y first!*/
-	vf = fopen(model->filename, "rt");
-	if (!vf) return 1;
-	/*1- count n_scf*/
-	vasp_out->n_scf=0;
-	vasp_out->last_pos=ftell(vf);/*flag*/
-	/*skip first energy though*/
-	if(fetch_in_file(vf,"<energy>")==0) return 4;/*not normal*/
-	line = file_read_line(vf);
-	while(line){
-		if (find_in_string("<energy>",line) != NULL) {
-			g_free(line);
-			line = file_read_line(vf);
-			if (find_in_string("e_fr_energy",line) != NULL) vasp_out->n_scf++;
-		}
-		g_free(line);
-		line = file_read_line(vf);
-	}
-//fprintf(stdout,"FOUND N_SCF=%i\n",vasp_out->n_scf);
-	if(vasp_out->n_scf < 3) return 0;/*NOT enough energy data*/
-	gy.y_size=vasp_out->n_scf;
-	gy.y=g_malloc0(gy.y_size*sizeof(gdouble));
-	gy.idx=g_malloc0(gy.y_size*sizeof(gint32));/*<- will set structure frame automagically*/
-	gy.symbol=g_malloc0(gy.y_size*sizeof(graph_symbol));
-	gy.mixed_symbol=TRUE;/*<- to differenciate between SCF and STEP*/
-	gy.sym_color=NULL;
-	gy.y[0]=NAN;/*frame 0 does not exist*/
-	/*2- rewind, process each energy*/
-	rewind(vf);
-	if(fetch_in_file(vf,"<energy>")==0) {
-		ret_val=4;
-		goto plot_energy_fail;
-		/*NO energy... but, n_scf>0 ??*/
-	}
-	line = file_read_line(vf);
-	if(line==NULL) {
-		ret_val=4;
-		goto plot_energy_fail;
-		/*this is not normal*/
-	}
-	if (find_in_string("alphaZ",line) == NULL) {
-		ret_val=4;
-		goto plot_energy_fail;
-		/*this is not normal*/
-	}
-	g_free(line);
-	/*first value is discarded, look for next one (hence repetition)*/
-	if(fetch_in_file(vf,"<energy>")==0) {
-		ret_val=4;
-		goto plot_energy_fail;
-		/*not normal*/
-	}
-	if(fetch_in_file(vf,"<energy>")==0) {
-		ret_val=4;
-		goto plot_energy_fail;
-		/*not normal*/
-	}
-	line = file_read_line(vf);
-	if (find_in_string("e_fr_energy",line) != NULL) {
-		g_free(line);line = file_read_line(vf);
-		if (find_in_string("e_wo_entrp",line) == NULL) {
-			ret_val=4;
-			goto plot_energy_fail;
-			/*NOT OK*/
-		}
-		sscanf(line," <i name=\"e_wo_entrp\"> %lf </i>",&E);
-		gy.y[1]=E;
-		gy.idx[1]=-1;/*not a STEP -> SCF*/
-		gy.symbol[1]=GRAPH_SYMB_CROSS;
-		vasp_out->last_pos=ftell(vf);/*flag*/
-//fprintf(stdout,"SCF: E[1]=%lf\n",E);
-	}else {
-		ret_val=3;
-		goto plot_energy_fail;
-	}
-	g_free(line);
-	min_E=E;
-	max_E=E;
-	idx=1;jdx=1;
-	while(idx<(vasp_out->n_scf-1)){
-		if(fetch_in_file(vf,"<energy>")==0) break;/*no more <energy> -> EOF*/
-		line = file_read_line(vf);if(line==NULL) break;
-		if (find_in_string("e_fr_energy",line) != NULL) {
-			g_free(line);line = file_read_line(vf);if(line==NULL) break;
-			if (find_in_string("e_wo_entrp",line) == NULL) {
-				ret_val=4;
-				goto plot_energy_fail;
-				/*NOT OK*/
-			}
-			sscanf(line," <i name=\"e_wo_entrp\"> %lf </i>",&E);
-			gy.y[idx+1]=E;
-			/*detect if SCF is a IONIC STEP*/
-			if(fetch_in_file(vf,"</energy>")==0) break;/*unfinished calculation?*/
-			g_free(line);line = file_read_line(vf);if(line==NULL) break;
-			if (find_in_string("scstep",line) != NULL) {
-				/*was a SCF*/
-				gy.idx[idx+1]=-1;
-				gy.symbol[idx+1]=GRAPH_SYMB_CROSS;
-//fprintf(stdout,"SCF: E[%i]=%lf\n",idx+1,E);
-			}else{
-				/*was a step*/
-//fprintf(stdout,"IONIC_STEP: E[%i]=%lf\n",jdx,E);
-				gy.idx[idx+1]=jdx;
-				gy.symbol[idx+1]=GRAPH_SYMB_DIAM;
-				jdx++;
-			}
-			idx++;
-			g_free(line);
-			vasp_out->last_pos=ftell(vf);/*flag*/
-		}
-		if(E<min_E) min_E=E;
-		if(E>max_E) max_E=E;
-	}
-	fclose(vf);/*no longer needed*/
-	if(vasp_out->graph_energy==NULL){
-		vasp_out->graph_energy=graph_new("ENERGY",model);
-		dat_graph_set_title("<big>Energy <i>vs.</i> SCF step</big>",vasp_out->graph_energy);
-		dat_graph_set_sub_title("<small>(From <b>vasprun.xml</b> file)</small>",vasp_out->graph_energy);
-		dat_graph_set_x_title("SCF steps",vasp_out->graph_energy);
-		dat_graph_set_y_title("Energy (eV)",vasp_out->graph_energy);
-		dat_graph_set_limits(0,vasp_out->n_scf,min_E-(max_E-min_E)*0.05,max_E+(max_E-min_E)*0.05,vasp_out->graph_energy);
-		gy.type=GRAPH_IY_TYPE;
-		gy.line=GRAPH_LINE_THICK;
-		gy.color=GRAPH_COLOR_DEFAULT;
-		graph_set_xticks(TRUE,2,vasp_out->graph_energy);
-		graph_set_yticks(TRUE,2,vasp_out->graph_energy);
-	}else{
-		gy.type=GRAPH_IY_TYPE;
-		gy.line=GRAPH_LINE_THICK;
-		gy.color=GRAPH_COLOR_DEFAULT;
-		graph_reset_data((struct graph_pak *)vasp_out->graph_energy);
-		dat_graph_set_limits(0,vasp_out->n_scf,min_E-(max_E-min_E)*0.05,max_E+(max_E-min_E)*0.05,vasp_out->graph_energy);
-		graph_set_xticks(TRUE,2,vasp_out->graph_energy);
-	}
-	/*X*/
-	gx.x_size=vasp_out->n_scf;/*frame 0 does not count*/
-	gx.x=g_malloc0(gx.x_size*sizeof(gdouble));
-	for(idx=0;idx<gx.x_size;idx++) gx.x[idx]=(gdouble)(idx);
-	dat_graph_set_x(gx,vasp_out->graph_energy);
-	dat_graph_set_type(GRAPH_IY_TYPE,vasp_out->graph_energy);
-	g_free(gx.x);
-	/*Y*/
-	dat_graph_add_y(gy,vasp_out->graph_energy);
-	/*EOF*/
-	g_free(gy.y);
-	g_free(gy.idx);
-	g_free(gy.symbol);
-	return ret_val;
+int vasp_xml_plot_energy(struct model_pak *model)
+{
+#ifdef WITH_GUI
+  /* FIXME: should test line for NULL each time? */
+  int idx, jdx;
+  FILE *vf;
+  int ret_val;
+  gchar *line;
+  g_data_x gx;
+  g_data_y gy;
+  gdouble min_E, max_E, E;
+  vasp_output_struct *vasp_out;
+  /*NEW: attach an energy plot*/
+  ret_val = 0;
+  if (model == NULL)
+    return 3;
+  if (model->vasp == NULL)
+    return 3;
+  vasp_out = (vasp_output_struct *) model->vasp;
+  /*not an error but no energy graph on a singlepoint calculation*/
+  if (vasp_out->calc_type == VASP_SINGLE)
+    return ret_val;
+  /*not an error but no energy graph on a frequency calculation*/
+  if (vasp_out->calc_type & VASP_FREQ)
+    return ret_val;
+  if (model->num_frames < 1)
+    return 3;
+  /*populate Y first!*/
+  vf = fopen(model->filename, "rt");
+  if (!vf)
+    return 1;
+  /*1- count n_scf*/
+  vasp_out->n_scf = 0;
+  vasp_out->last_pos = ftell(vf); /*flag*/
+  /*skip first energy though*/
+  if (fetch_in_file(vf, "<energy>") == 0)
+    return 4; /*not normal*/
+  line = file_read_line(vf);
+  while (line)
+  {
+    if (find_in_string("<energy>", line) != NULL)
+    {
+      g_free(line);
+      line = file_read_line(vf);
+      if (find_in_string("e_fr_energy", line) != NULL)
+        vasp_out->n_scf++;
+    }
+    g_free(line);
+    line = file_read_line(vf);
+  }
+  // fprintf(stdout,"FOUND N_SCF=%i\n",vasp_out->n_scf);
+  if (vasp_out->n_scf < 3)
+    return 0; /*NOT enough energy data*/
+  gy.y_size = vasp_out->n_scf;
+  gy.y = g_malloc0(gy.y_size * sizeof(gdouble));
+  gy.idx = g_malloc0(gy.y_size * sizeof(gint32)); /*<- will set structure frame automagically*/
+  gy.symbol = g_malloc0(gy.y_size * sizeof(graph_symbol));
+  gy.mixed_symbol = TRUE; /*<- to differenciate between SCF and STEP*/
+  gy.sym_color = NULL;
+  gy.y[0] = NAN; /*frame 0 does not exist*/
+  /*2- rewind, process each energy*/
+  rewind(vf);
+  if (fetch_in_file(vf, "<energy>") == 0)
+  {
+    ret_val = 4;
+    goto plot_energy_fail;
+    /*NO energy... but, n_scf>0 ??*/
+  }
+  line = file_read_line(vf);
+  if (line == NULL)
+  {
+    ret_val = 4;
+    goto plot_energy_fail;
+    /*this is not normal*/
+  }
+  if (find_in_string("alphaZ", line) == NULL)
+  {
+    ret_val = 4;
+    goto plot_energy_fail;
+    /*this is not normal*/
+  }
+  g_free(line);
+  /*first value is discarded, look for next one (hence repetition)*/
+  if (fetch_in_file(vf, "<energy>") == 0)
+  {
+    ret_val = 4;
+    goto plot_energy_fail;
+    /*not normal*/
+  }
+  if (fetch_in_file(vf, "<energy>") == 0)
+  {
+    ret_val = 4;
+    goto plot_energy_fail;
+    /*not normal*/
+  }
+  line = file_read_line(vf);
+  if (find_in_string("e_fr_energy", line) != NULL)
+  {
+    g_free(line);
+    line = file_read_line(vf);
+    if (find_in_string("e_wo_entrp", line) == NULL)
+    {
+      ret_val = 4;
+      goto plot_energy_fail;
+      /*NOT OK*/
+    }
+    sscanf(line, " <i name=\"e_wo_entrp\"> %lf </i>", &E);
+    gy.y[1] = E;
+    gy.idx[1] = -1; /*not a STEP -> SCF*/
+    gy.symbol[1] = GRAPH_SYMB_CROSS;
+    vasp_out->last_pos = ftell(vf); /*flag*/
+                                    // fprintf(stdout,"SCF: E[1]=%lf\n",E);
+  } else
+  {
+    ret_val = 3;
+    goto plot_energy_fail;
+  }
+  g_free(line);
+  min_E = E;
+  max_E = E;
+  idx = 1;
+  jdx = 1;
+  while (idx < (vasp_out->n_scf - 1))
+  {
+    if (fetch_in_file(vf, "<energy>") == 0)
+      break; /*no more <energy> -> EOF*/
+    line = file_read_line(vf);
+    if (line == NULL)
+      break;
+    if (find_in_string("e_fr_energy", line) != NULL)
+    {
+      g_free(line);
+      line = file_read_line(vf);
+      if (line == NULL)
+        break;
+      if (find_in_string("e_wo_entrp", line) == NULL)
+      {
+        ret_val = 4;
+        goto plot_energy_fail;
+        /*NOT OK*/
+      }
+      sscanf(line, " <i name=\"e_wo_entrp\"> %lf </i>", &E);
+      gy.y[idx + 1] = E;
+      /*detect if SCF is a IONIC STEP*/
+      if (fetch_in_file(vf, "</energy>") == 0)
+        break; /*unfinished calculation?*/
+      g_free(line);
+      line = file_read_line(vf);
+      if (line == NULL)
+        break;
+      if (find_in_string("scstep", line) != NULL)
+      {
+        /*was a SCF*/
+        gy.idx[idx + 1] = -1;
+        gy.symbol[idx + 1] = GRAPH_SYMB_CROSS;
+        // fprintf(stdout,"SCF: E[%i]=%lf\n",idx+1,E);
+      } else
+      {
+        /*was a step*/
+        // fprintf(stdout,"IONIC_STEP: E[%i]=%lf\n",jdx,E);
+        gy.idx[idx + 1] = jdx;
+        gy.symbol[idx + 1] = GRAPH_SYMB_DIAM;
+        jdx++;
+      }
+      idx++;
+      g_free(line);
+      vasp_out->last_pos = ftell(vf); /*flag*/
+    }
+    if (E < min_E)
+      min_E = E;
+    if (E > max_E)
+      max_E = E;
+  }
+  fclose(vf); /*no longer needed*/
+  if (vasp_out->graph_energy == NULL)
+  {
+    vasp_out->graph_energy = graph_new("ENERGY", model);
+    dat_graph_set_title("<big>Energy <i>vs.</i> SCF step</big>", vasp_out->graph_energy);
+    dat_graph_set_sub_title("<small>(From <b>vasprun.xml</b> file)</small>", vasp_out->graph_energy);
+    dat_graph_set_x_title("SCF steps", vasp_out->graph_energy);
+    dat_graph_set_y_title("Energy (eV)", vasp_out->graph_energy);
+    dat_graph_set_limits(0, vasp_out->n_scf, min_E - (max_E - min_E) * 0.05, max_E + (max_E - min_E) * 0.05,
+                         vasp_out->graph_energy);
+    gy.type = GRAPH_IY_TYPE;
+    gy.line = GRAPH_LINE_THICK;
+    gy.color = GRAPH_COLOR_DEFAULT;
+    graph_set_xticks(TRUE, 2, vasp_out->graph_energy);
+    graph_set_yticks(TRUE, 2, vasp_out->graph_energy);
+  } else
+  {
+    gy.type = GRAPH_IY_TYPE;
+    gy.line = GRAPH_LINE_THICK;
+    gy.color = GRAPH_COLOR_DEFAULT;
+    graph_reset_data((struct graph_pak *) vasp_out->graph_energy);
+    dat_graph_set_limits(0, vasp_out->n_scf, min_E - (max_E - min_E) * 0.05, max_E + (max_E - min_E) * 0.05,
+                         vasp_out->graph_energy);
+    graph_set_xticks(TRUE, 2, vasp_out->graph_energy);
+  }
+  /*X*/
+  gx.x_size = vasp_out->n_scf; /*frame 0 does not count*/
+  gx.x = g_malloc0(gx.x_size * sizeof(gdouble));
+  for (idx = 0; idx < gx.x_size; idx++)
+    gx.x[idx] = (gdouble) (idx);
+  dat_graph_set_x(gx, vasp_out->graph_energy);
+  dat_graph_set_type(GRAPH_IY_TYPE, vasp_out->graph_energy);
+  g_free(gx.x);
+  /*Y*/
+  dat_graph_add_y(gy, vasp_out->graph_energy);
+  /*EOF*/
+  g_free(gy.y);
+  g_free(gy.idx);
+  g_free(gy.symbol);
+  /* In Qt mode, ensure the tracking model is active so its graph renders,
+   * and refresh the tree so the graph child appears */
+  if (vasp_out->graph_energy && !sysenv.tpane)
+  {
+    sysenv.active_model = model;
+    model->graph_active = vasp_out->graph_energy;
+    extern void redraw_canvas(gint);
+    extern void qt_tree_refresh(void);
+    extern void qt_refresh_qt_tree(void);
+    qt_tree_refresh();
+    qt_refresh_qt_tree();
+    redraw_canvas(1);
+  }
+  return ret_val;
 plot_energy_fail:
-	g_free(gy.y);
-	g_free(gy.idx);
-	g_free(gy.symbol);
-	return ret_val;
-#else  //WITH_GUI
-	return 0;
-#endif //WITH_GUI
+  g_free(gy.y);
+  g_free(gy.idx);
+  g_free(gy.symbol);
+  return ret_val;
+#else  // WITH_GUI
+  return 0;
+#endif // WITH_GUI
 }
-int vasp_xml_update_plot_energy(FILE *vf,struct model_pak *model){
-#ifdef   WITH_GUI
-/*we have a previous graph and just want to update latest values*/
-	long int vfpos;
-	int idx,jdx,old_size;
-	int n_add,last_step=0;
-	gchar *line=NULL;
-	g_data_x gx,*px;
-	g_data_y gy,*py;
-	gdouble min_E,max_E,E;
-	vasp_output_struct *vasp_out;
-	struct graph_pak *graph;
-	GSList *list;
-	/*CHECKS*/
-	if(model==NULL) return 3;
-	if(model->vasp==NULL) return 3;
-	vasp_out=(vasp_output_struct *)model->vasp;
-	if(vasp_out->calc_type==VASP_SINGLE) return 0;
-	if(vasp_out->calc_type&VASP_FREQ) return 0;
-	if(model->num_frames<1) return 3;
-	if(vasp_out->graph_energy==NULL) return 3;
-	graph=(struct graph_pak *)vasp_out->graph_energy;
-	if(graph==NULL) return 3;
-	if(graph->type==GRAPH_REGULAR) return 3;/*TO BE REMOVED*/
-	list=graph->set_list;
-	if(list==NULL) return 3;
-	/*SAVE px,py*/
-	px=(g_data_x *)list->data;
-	list=g_slist_next(list);
-	if(list==NULL) return 3;
-	py=(g_data_y *)list->data;
-	vfpos=ftell(vf);/*flag*/
-	fseek(vf,vasp_out->last_pos,SEEK_SET);/* goto last_pos */
-	old_size=px->x_size;
-	/*count additional energy data*/
-	if(fetch_in_file(vf,"<energy>")==0) {/*no new energy information*/
-		fseek(vf,vfpos,SEEK_SET);/* rewind to flag */
-		return 3;/*no additional data*/
-	}
-	line = file_read_line(vf);
-	if(line==NULL) return 4;/*this is not normal*/
-	if (find_in_string("e_fr_energy",line) != NULL) n_add=1;
-	else n_add=0;
-	g_free(line);line = file_read_line(vf);
-	while(line){
-		if (find_in_string("<energy>",line) != NULL) {
-			g_free(line);line = file_read_line(vf);
-			if(line==NULL){
-				/*very rare _BUG_ ~once per 72h of continuous update*/
-				return 3;
-			}
-			if (find_in_string("e_fr_energy",line) != NULL) n_add++;
-		}
-		g_free(line);line = file_read_line(vf);
-	}
-	if(n_add==0) {
-		fseek(vf,vfpos,SEEK_SET);/* rewind to flag */
-		return 3;/*no additional data*/
-	}
-//fprintf(stdout,"PLOT: ADD %i SCF.\n",n_add);
-	/*init gx,gy*/
-	gy.y_size=old_size+n_add;
-	gy.y=g_malloc0(gy.y_size*sizeof(gdouble));
-	gy.idx=g_malloc0(gy.y_size*sizeof(gint32));/*<- will set structure frame automagically*/
-	gy.symbol=g_malloc0(gy.y_size*sizeof(graph_symbol));
-	gy.mixed_symbol=TRUE;/*<- to differenciate between SCF and STEP*/
-	gy.sym_color=NULL;
-	gx.x_size=old_size+n_add;
-	gx.x=g_malloc0(gx.x_size*sizeof(gdouble));
-	for(idx=vasp_out->n_scf;idx<gx.x_size;idx++) gx.x[idx]=(gdouble)(idx);
-	/*COPY old px,py data*/
-	for(idx=0;idx<old_size;idx++){
-		gx.x[idx]=px->x[idx];
-		gy.y[idx]=py->y[idx];
-		gy.idx[idx]=py->idx[idx];
-		if(gy.idx[idx]>0) last_step=gy.idx[idx];/*get the latest step*/
-		gy.symbol[idx]=py->symbol[idx];
-	}
-	/*RESET graph*/
-	gy.type=GRAPH_IY_TYPE;
-	gy.line=GRAPH_LINE_THICK;
-	gy.color=GRAPH_COLOR_DEFAULT;
-	min_E=graph->ymin;
-	max_E=graph->ymax;
-	graph_reset_data(graph);
-	graph_set_xticks(TRUE,2,vasp_out->graph_energy);
-	/*X is now complete*/
-	dat_graph_set_x(gx,vasp_out->graph_energy);
-	dat_graph_set_type(GRAPH_IY_TYPE,vasp_out->graph_energy);/*useful?*/
-	g_free(gx.x);
-	/*get Y new data*/
-	fseek(vf,vasp_out->last_pos,SEEK_SET);/* goto last_pos */
-	idx=vasp_out->n_scf;
-	jdx=last_step+1;
-	while(idx<gy.y_size){/*while reading there is a risk that additional energy pops-up, hence the idx check*/
-		if(fetch_in_file(vf,"<energy>")==0) break;/*no more <energy> -> EOF*/
-		line = file_read_line(vf);if(line==NULL) break;
-		if (find_in_string("e_fr_energy",line) != NULL) {
-			g_free(line);line = file_read_line(vf);if(line==NULL) break;
-			if (find_in_string("e_wo_entrp",line) == NULL) {
-				fseek(vf,vfpos,SEEK_SET);/* rewind to flag */
-				g_free(gy.y);
-				g_free(gy.idx);
-				g_free(gy.symbol);
-				return 4;/*NOT OK*/
-			}
-			sscanf(line," <i name=\"e_wo_entrp\"> %lf </i>",&E);
-			gy.y[idx]=E;
-			if(fetch_in_file(vf,"</energy>")==0) break;/*unfinished calculation?*/
-			g_free(line);line = file_read_line(vf);
-			if(!line) {/*sometime, we'll reach EOF here*/
-				/*which means it's a STEP*/
-//fprintf(stdout,"EOF! ADD-STEP: E[%i]=%lf\n",jdx,E);
-				gy.idx[idx]=jdx;
-				gy.symbol[idx]=GRAPH_SYMB_DIAM;
-				vasp_out->last_pos=ftell(vf);/*flag <- this one will work?*/
-				if(E<min_E) min_E=E;
-				if(E>max_E) max_E=E;
-				break;
-			}
-			if (find_in_string("scstep",line) != NULL) {
-				/*was a SCF*/
-				gy.idx[idx]=-1;
-				gy.symbol[idx]=GRAPH_SYMB_CROSS;
-//fprintf(stdout,"ADD-SCF: E[%i]=%lf\n",idx,E);
-			}else{
-				/*was a STEP*/
-				gy.idx[idx]=jdx;
-				gy.symbol[idx]=GRAPH_SYMB_DIAM;
-//fprintf(stdout,"ADD-STEP: E[%i]=%lf\n",jdx,E);
-				jdx++;
-			}
-			idx++;
-			g_free(line);
-			vasp_out->last_pos=ftell(vf);/*flag*/
-			if(E<min_E) min_E=E;
-			if(E>max_E) max_E=E;
-		}
-	}
-	fseek(vf,vfpos,SEEK_SET);/* rewind to flag */
-	/*Y is now complete*/
-	dat_graph_add_y(gy,vasp_out->graph_energy);/*_BUG_ triggered #06/06/2019*/
-	g_free(gy.y);
-	g_free(gy.idx);
-	g_free(gy.symbol);
-	/*reset limits -- if necessary*/
-	vasp_out->n_scf+=n_add;/*keep up with SCF numbers*/
-	if((min_E<graph->ymin)||(max_E>graph->ymax)){
-//fprintf(stdout,"LIM: min_E=%lf max_E=%lf ymin=%lf ymax=%lf\n",min_E,max_E,graph->ymin,graph->ymax);
-		dat_graph_set_limits(0,vasp_out->n_scf,min_E-(max_E-min_E)*0.05,max_E+(max_E-min_E)*0.05,vasp_out->graph_energy);
-	}else{
-		dat_graph_set_limits(0,vasp_out->n_scf,min_E,max_E,vasp_out->graph_energy);
-	}
-#endif //WITH_GUI
-	return 0;
-}
-
-int vasp_xml_read_forces(FILE *vf, struct model_pak *model){
-	gchar *line;
-	gdouble force=0.;
-	gdouble f,fx,fy,fz;
-	long int vfpos=ftell(vf);
-	if(fetch_in_file(vf,"<varray name=\"forces\" >")==0){
-		/*finalpos exception*/
-		rewind(vf);
-		while(fetch_in_file(vf,"<structure>")!=0) vfpos=ftell(vf);/*flag*/
-		fseek(vf,vfpos,SEEK_SET);/* rewind to flag */
-		if(fetch_in_file(vf,"<varray name=\"forces\" >")==0) return -1;/*still no forces?*/
-	}
-	/*we are on the force varray begining*/
-	line = file_read_line(vf);/*first line of forces*/
-	sscanf(line," <v> %lf %lf %lf </v>",&fx,&fy,&fz);
-	force=sqrt(fx*fx+fy*fy+fz*fz);
-	g_free(line);
-	line = file_read_line(vf);/*next line*/
-	while (find_in_string("/varray",line) == NULL){
-		sscanf(line," <v> %lf %lf %lf </v>",&fx,&fy,&fz);
-		f=sqrt(fx*fx+fy*fy+fz*fz);
-		if(f>force) force=f;
-		g_free(line);
-		line = file_read_line(vf);
-	}
-	g_free(line);
-	line=g_strdup_printf("%lf eV/Ang",force);
-	property_add_ranked(4, "Force", line, model);
-	g_free(line);
-	return 0;
-}
-
-int vasp_xml_read_stress(FILE *vf, struct model_pak *model){
-	gchar *line;
-	gdouble stress=0.;
-	gdouble sx,sy,sz;
-	long int vfpos=ftell(vf);
-	if(fetch_in_file(vf,"<varray name=\"stress\" >")==0){
-		/*finalpos exception*/
-		rewind(vf);
-		while(fetch_in_file(vf,"<structure>")!=0) vfpos=ftell(vf);/*flag*/
-		fseek(vf,vfpos,SEEK_SET);/* rewind to flag */
-		if(fetch_in_file(vf,"<varray name=\"stress\" >")==0) return -1;/*still no stress?*/
-	}
-	/*we are on the stress varray begining*/
-	line = file_read_line(vf);/*first line of stress*/
-	sscanf(line," <v> %lf %lf %lf </v>",&sx,&sy,&sz);
-	stress+=sqrt(sx*sx+sy*sy+sz*sz);
-	g_free(line);
-	line = file_read_line(vf);/*second line of stress*/
-	sscanf(line," <v> %lf %lf %lf </v>",&sx,&sy,&sz);
-	stress+=sqrt(sx*sx+sy*sy+sz*sz);
-	g_free(line);
-	line = file_read_line(vf);/*third line of stress*/
-	sscanf(line," <v> %lf %lf %lf </v>",&sx,&sy,&sz);
-	stress+=sqrt(sx*sx+sy*sy+sz*sz);
-	g_free(line);
-	stress/=3.;
-	line=g_strdup_printf("%lf kB",stress);
-	property_add_ranked(5, "Stress", line, model);
-	g_free(line);
-	return 0;
+int vasp_xml_update_plot_energy(FILE *vf, struct model_pak *model)
+{
+#ifdef WITH_GUI
+  /*we have a previous graph and just want to update latest values*/
+  long int vfpos;
+  int idx, jdx, old_size;
+  int n_add, last_step = 0;
+  gchar *line = NULL;
+  g_data_x gx, *px;
+  g_data_y gy, *py;
+  gdouble min_E, max_E, E;
+  vasp_output_struct *vasp_out;
+  struct graph_pak *graph;
+  GSList *list;
+  /*CHECKS*/
+  if (model == NULL)
+    return 3;
+  if (model->vasp == NULL)
+    return 3;
+  vasp_out = (vasp_output_struct *) model->vasp;
+  if (vasp_out->calc_type == VASP_SINGLE)
+    return 0;
+  if (vasp_out->calc_type & VASP_FREQ)
+    return 0;
+  if (model->num_frames < 1)
+    return 3;
+  if (vasp_out->graph_energy == NULL)
+    return 3;
+  graph = (struct graph_pak *) vasp_out->graph_energy;
+  if (graph == NULL)
+    return 3;
+  if (graph->type == GRAPH_REGULAR)
+    return 3; /*TO BE REMOVED*/
+  list = graph->set_list;
+  if (list == NULL)
+    return 3;
+  /*SAVE px,py*/
+  px = (g_data_x *) list->data;
+  list = g_slist_next(list);
+  if (list == NULL)
+    return 3;
+  py = (g_data_y *) list->data;
+  vfpos = ftell(vf);                       /*flag*/
+  fseek(vf, vasp_out->last_pos, SEEK_SET); /* goto last_pos */
+  old_size = px->x_size;
+  /*count additional energy data*/
+  if (fetch_in_file(vf, "<energy>") == 0)
+  {                             /*no new energy information*/
+    fseek(vf, vfpos, SEEK_SET); /* rewind to flag */
+    return 3;                   /*no additional data*/
+  }
+  line = file_read_line(vf);
+  if (line == NULL)
+    return 4; /*this is not normal*/
+  if (find_in_string("e_fr_energy", line) != NULL)
+    n_add = 1;
+  else
+    n_add = 0;
+  g_free(line);
+  line = file_read_line(vf);
+  while (line)
+  {
+    if (find_in_string("<energy>", line) != NULL)
+    {
+      g_free(line);
+      line = file_read_line(vf);
+      if (line == NULL)
+      {
+        /*very rare _BUG_ ~once per 72h of continuous update*/
+        return 3;
+      }
+      if (find_in_string("e_fr_energy", line) != NULL)
+        n_add++;
+    }
+    g_free(line);
+    line = file_read_line(vf);
+  }
+  if (n_add == 0)
+  {
+    fseek(vf, vfpos, SEEK_SET); /* rewind to flag */
+    return 3;                   /*no additional data*/
+  }
+  // fprintf(stdout,"PLOT: ADD %i SCF.\n",n_add);
+  /*init gx,gy*/
+  gy.y_size = old_size + n_add;
+  gy.y = g_malloc0(gy.y_size * sizeof(gdouble));
+  gy.idx = g_malloc0(gy.y_size * sizeof(gint32)); /*<- will set structure frame automagically*/
+  gy.symbol = g_malloc0(gy.y_size * sizeof(graph_symbol));
+  gy.mixed_symbol = TRUE; /*<- to differenciate between SCF and STEP*/
+  gy.sym_color = NULL;
+  gx.x_size = old_size + n_add;
+  gx.x = g_malloc0(gx.x_size * sizeof(gdouble));
+  for (idx = vasp_out->n_scf; idx < gx.x_size; idx++)
+    gx.x[idx] = (gdouble) (idx);
+  /*COPY old px,py data*/
+  for (idx = 0; idx < old_size; idx++)
+  {
+    gx.x[idx] = px->x[idx];
+    gy.y[idx] = py->y[idx];
+    gy.idx[idx] = py->idx[idx];
+    if (gy.idx[idx] > 0)
+      last_step = gy.idx[idx]; /*get the latest step*/
+    gy.symbol[idx] = py->symbol[idx];
+  }
+  /*RESET graph*/
+  gy.type = GRAPH_IY_TYPE;
+  gy.line = GRAPH_LINE_THICK;
+  gy.color = GRAPH_COLOR_DEFAULT;
+  min_E = graph->ymin;
+  max_E = graph->ymax;
+  graph_reset_data(graph);
+  graph_set_xticks(TRUE, 2, vasp_out->graph_energy);
+  /*X is now complete*/
+  dat_graph_set_x(gx, vasp_out->graph_energy);
+  dat_graph_set_type(GRAPH_IY_TYPE, vasp_out->graph_energy); /*useful?*/
+  g_free(gx.x);
+  /*get Y new data*/
+  fseek(vf, vasp_out->last_pos, SEEK_SET); /* goto last_pos */
+  idx = vasp_out->n_scf;
+  jdx = last_step + 1;
+  while (idx < gy.y_size)
+  { /*while reading there is a risk that additional energy pops-up, hence the idx check*/
+    if (fetch_in_file(vf, "<energy>") == 0)
+      break; /*no more <energy> -> EOF*/
+    line = file_read_line(vf);
+    if (line == NULL)
+      break;
+    if (find_in_string("e_fr_energy", line) != NULL)
+    {
+      g_free(line);
+      line = file_read_line(vf);
+      if (line == NULL)
+        break;
+      if (find_in_string("e_wo_entrp", line) == NULL)
+      {
+        fseek(vf, vfpos, SEEK_SET); /* rewind to flag */
+        g_free(gy.y);
+        g_free(gy.idx);
+        g_free(gy.symbol);
+        return 4; /*NOT OK*/
+      }
+      sscanf(line, " <i name=\"e_wo_entrp\"> %lf </i>", &E);
+      gy.y[idx] = E;
+      if (fetch_in_file(vf, "</energy>") == 0)
+        break; /*unfinished calculation?*/
+      g_free(line);
+      line = file_read_line(vf);
+      if (!line)
+      { /*sometime, we'll reach EOF here*/
+        /*which means it's a STEP*/
+        // fprintf(stdout,"EOF! ADD-STEP: E[%i]=%lf\n",jdx,E);
+        gy.idx[idx] = jdx;
+        gy.symbol[idx] = GRAPH_SYMB_DIAM;
+        vasp_out->last_pos = ftell(vf); /*flag <- this one will work?*/
+        if (E < min_E)
+          min_E = E;
+        if (E > max_E)
+          max_E = E;
+        break;
+      }
+      if (find_in_string("scstep", line) != NULL)
+      {
+        /*was a SCF*/
+        gy.idx[idx] = -1;
+        gy.symbol[idx] = GRAPH_SYMB_CROSS;
+        // fprintf(stdout,"ADD-SCF: E[%i]=%lf\n",idx,E);
+      } else
+      {
+        /*was a STEP*/
+        gy.idx[idx] = jdx;
+        gy.symbol[idx] = GRAPH_SYMB_DIAM;
+        // fprintf(stdout,"ADD-STEP: E[%i]=%lf\n",jdx,E);
+        jdx++;
+      }
+      idx++;
+      g_free(line);
+      vasp_out->last_pos = ftell(vf); /*flag*/
+      if (E < min_E)
+        min_E = E;
+      if (E > max_E)
+        max_E = E;
+    }
+  }
+  fseek(vf, vfpos, SEEK_SET); /* rewind to flag */
+  /*Y is now complete*/
+  dat_graph_add_y(gy, vasp_out->graph_energy); /*_BUG_ triggered #06/06/2019*/
+  g_free(gy.y);
+  g_free(gy.idx);
+  g_free(gy.symbol);
+  /*reset limits -- if necessary*/
+  vasp_out->n_scf += n_add; /*keep up with SCF numbers*/
+  if ((min_E < graph->ymin) || (max_E > graph->ymax))
+  {
+    // fprintf(stdout,"LIM: min_E=%lf max_E=%lf ymin=%lf ymax=%lf\n",min_E,max_E,graph->ymin,graph->ymax);
+    dat_graph_set_limits(0, vasp_out->n_scf, min_E - (max_E - min_E) * 0.05, max_E + (max_E - min_E) * 0.05,
+                         vasp_out->graph_energy);
+  } else
+  {
+    dat_graph_set_limits(0, vasp_out->n_scf, min_E, max_E, vasp_out->graph_energy);
+  }
+#endif // WITH_GUI
+  return 0;
 }
 
-int vasp_xml_read_frequency(FILE *vf, struct model_pak *model){
-/*factor is actually:
- * factor = sqrt((1.60217733e-19/1e-20)/1.6605402e-27)/(2.*PI*2.99792458e+10)
- * calculated with quadmath precision. It convert eigenvalue of hessian to
- * frequency, in cm^{-1} 
-*/
-	gdouble factor=521.4708336735473879;
-	gchar *line;
-	long int vfpos;
-	gint idx,jdx;
-
-	if(fetch_in_file(vf,"<dynmat>")==0) return -1;/*we don't have a dynmat array*/
-	vfpos=ftell(vf);
-	if(fetch_in_file(vf,"eigenvalues")==0) return -1;/* no eigenvalues -> no frequency */
-	fseek(vf,vfpos,SEEK_SET);/* rewind to flag */
-	fetch_in_file(vf,"</varray>");
-	line = file_read_line(vf);/*next line is eigenvalues*/
-	/* count eigenvalues*/
-	idx=0;
-	while(line[idx]!='>') idx++;
-	/*from here the number of eigenvalues is equal to the number of space characters :)*/
-	model->nfreq=0;
-	while(line[idx]!='\0') {
-		if(line[idx]==' ') model->nfreq++;
-		idx++;
-	}
-	if(model->nfreq>0) model->have_frequency=TRUE;
-	else return -1;/*an eigenvalue array but no data?*/
-	model->freq=g_malloc(model->nfreq*(sizeof(gdouble)));
-	/*now, scan for each value TODO: do both at once?*/
-	idx=0;jdx=0;
-	while(line[idx]!='>') idx++;
-	idx++;
-	while(idx++){
-		sscanf(&line[idx],"%lE %*s",&(model->freq[jdx]));
-		model->freq[jdx]=factor*sqrt(fabs(model->freq[jdx]));
-		while((line[idx]!='\0')&&(line[idx]!=' ')) idx++;/*go to next number, if any*/
-		if(line[idx]=='\0') break;
-		jdx++;
-	}
-	g_free(line);
-	/*note that there is no frequency intensity information in vaspxml 
- * 	  and AFAIK there is no easy way to obtain such information. OVHPA*/
-	return 0;
+int vasp_xml_read_forces(FILE *vf, struct model_pak *model)
+{
+  gchar *line;
+  gdouble force = 0.;
+  gdouble f, fx, fy, fz;
+  long int vfpos = ftell(vf);
+  if (fetch_in_file(vf, "<varray name=\"forces\" >") == 0)
+  {
+    /*finalpos exception*/
+    rewind(vf);
+    while (fetch_in_file(vf, "<structure>") != 0)
+      vfpos = ftell(vf);        /*flag*/
+    fseek(vf, vfpos, SEEK_SET); /* rewind to flag */
+    if (fetch_in_file(vf, "<varray name=\"forces\" >") == 0)
+      return -1; /*still no forces?*/
+  }
+  /*we are on the force varray begining*/
+  line = file_read_line(vf); /*first line of forces*/
+  sscanf(line, " <v> %lf %lf %lf </v>", &fx, &fy, &fz);
+  force = sqrt(fx * fx + fy * fy + fz * fz);
+  g_free(line);
+  line = file_read_line(vf); /*next line*/
+  while (find_in_string("/varray", line) == NULL)
+  {
+    sscanf(line, " <v> %lf %lf %lf </v>", &fx, &fy, &fz);
+    f = sqrt(fx * fx + fy * fy + fz * fz);
+    if (f > force)
+      force = f;
+    g_free(line);
+    line = file_read_line(vf);
+  }
+  g_free(line);
+  line = g_strdup_printf("%lf eV/Ang", force);
+  property_add_ranked(4, "Force", line, model);
+  g_free(line);
+  return 0;
 }
 
-
-int vasp_xml_read_pos(FILE *vf,struct model_pak *model){
-/* read the atoms positions */
-	gchar *line;
-	int idx=0;
-	struct core_pak *core;
-	/* Goto crystal varray "basis" */
-	if(fetch_in_file(vf,"basis")==0) return -1;
-	/* Get 3x3 vector lattice */
-	line = file_read_line(vf);
-	while (line) {
-		if (find_in_string("/varray",line) != NULL) break;
-		sscanf(line," <v> %lf %lf %lf </v>",&model->latmat[idx],&model->latmat[idx+3],&model->latmat[idx+6]);
-		idx+=1;
-		g_free(line);
-		line = file_read_line(vf);
-	}
-	if (line == NULL) return -1;/*incomplete basis definition*/
-	g_free(line);
-	/*Always true in VASP*/
-	model->fractional=TRUE;
-	model->coord_units=ANGSTROM;
-	model->construct_pbc = TRUE;
-	model->periodic = 3;
-	/* next line should be volume */
-	line = file_read_line(vf);
-	if (find_in_string("volume",line) != NULL) {
-		sscanf(line," <i name=\"volume\"> %lf </i>",&model->volume);
-	}
-	g_free(line);
-	/* TODO: gdouble rlatmat[9] can be filled */
-	/* TODO: find the difference between ilatmat and rlatmat */
-	/* Goto to "positions" */
-	if(fetch_in_file(vf,"positions")==0) return -1;
-	/* fill every atom position */
-	line = file_read_line(vf);
-	idx=0;core=g_slist_nth_data(model->cores,0);
-	while((core)&&(line)) {
-		if (find_in_string("/varray",line) != NULL) break;
-		sscanf(line," <v> %lf %lf %lf </v>",&core->x[0],&core->x[1],&core->x[2]);
-		idx++;
-		core=g_slist_nth_data(model->cores,idx);
-		g_free(line);
-		line = file_read_line(vf);
-	}
-	if (line == NULL) return -1;/*incomplete positions*/
-	g_free(line);
-	if (idx != model->num_atoms){
-		if (model->track_me==FALSE)
-			fprintf(stderr,"WARNING: Expecting %i atoms but got %i!\n",model->num_atoms,idx);
-		else
-			model->num_atoms = idx;
-	}
-	/* look for energies */
-	vasp_xml_read_energy(vf,model);
-	vasp_xml_read_forces(vf,model);
-	vasp_xml_read_stress(vf,model);
-	return 0;
+int vasp_xml_read_stress(FILE *vf, struct model_pak *model)
+{
+  gchar *line;
+  gdouble stress = 0.;
+  gdouble sx, sy, sz;
+  long int vfpos = ftell(vf);
+  if (fetch_in_file(vf, "<varray name=\"stress\" >") == 0)
+  {
+    /*finalpos exception*/
+    rewind(vf);
+    while (fetch_in_file(vf, "<structure>") != 0)
+      vfpos = ftell(vf);        /*flag*/
+    fseek(vf, vfpos, SEEK_SET); /* rewind to flag */
+    if (fetch_in_file(vf, "<varray name=\"stress\" >") == 0)
+      return -1; /*still no stress?*/
+  }
+  /*we are on the stress varray begining*/
+  line = file_read_line(vf); /*first line of stress*/
+  sscanf(line, " <v> %lf %lf %lf </v>", &sx, &sy, &sz);
+  stress += sqrt(sx * sx + sy * sy + sz * sz);
+  g_free(line);
+  line = file_read_line(vf); /*second line of stress*/
+  sscanf(line, " <v> %lf %lf %lf </v>", &sx, &sy, &sz);
+  stress += sqrt(sx * sx + sy * sy + sz * sz);
+  g_free(line);
+  line = file_read_line(vf); /*third line of stress*/
+  sscanf(line, " <v> %lf %lf %lf </v>", &sx, &sy, &sz);
+  stress += sqrt(sx * sx + sy * sy + sz * sz);
+  g_free(line);
+  stress /= 3.;
+  line = g_strdup_printf("%lf kB", stress);
+  property_add_ranked(5, "Stress", line, model);
+  g_free(line);
+  return 0;
 }
-int vasp_xml_read_bands(FILE *vf,struct model_pak *model){
-/* get the (non-projected) bandstructure */
-        gchar *line;
-        gint idx;
-	gint ik,ib;
-        long int vfpos=ftell(vf);
-        /*start*/
+
+int vasp_xml_read_frequency(FILE *vf, struct model_pak *model)
+{
+  /*factor is actually:
+   * factor = sqrt((1.60217733e-19/1e-20)/1.6605402e-27)/(2.*PI*2.99792458e+10)
+   * calculated with quadmath precision. It convert eigenvalue of hessian to
+   * frequency, in cm^{-1}
+   */
+  gdouble factor = 521.4708336735473879;
+  gchar *line;
+  long int vfpos;
+  gint idx, jdx;
+
+  if (fetch_in_file(vf, "<dynmat>") == 0)
+    return -1; /*we don't have a dynmat array*/
+  vfpos = ftell(vf);
+  if (fetch_in_file(vf, "eigenvalues") == 0)
+    return -1;                /* no eigenvalues -> no frequency */
+  fseek(vf, vfpos, SEEK_SET); /* rewind to flag */
+  fetch_in_file(vf, "</varray>");
+  line = file_read_line(vf); /*next line is eigenvalues*/
+  /* count eigenvalues*/
+  idx = 0;
+  while (line[idx] != '>')
+    idx++;
+  /*from here the number of eigenvalues is equal to the number of space characters :)*/
+  model->nfreq = 0;
+  while (line[idx] != '\0')
+  {
+    if (line[idx] == ' ')
+      model->nfreq++;
+    idx++;
+  }
+  if (model->nfreq > 0)
+    model->have_frequency = TRUE;
+  else
+    return -1; /*an eigenvalue array but no data?*/
+  model->freq = g_malloc(model->nfreq * (sizeof(gdouble)));
+  /*now, scan for each value TODO: do both at once?*/
+  idx = 0;
+  jdx = 0;
+  while (line[idx] != '>')
+    idx++;
+  idx++;
+  while (idx++)
+  {
+    sscanf(&line[idx], "%lE %*s", &(model->freq[jdx]));
+    model->freq[jdx] = factor * sqrt(fabs(model->freq[jdx]));
+    while ((line[idx] != '\0') && (line[idx] != ' '))
+      idx++; /*go to next number, if any*/
+    if (line[idx] == '\0')
+      break;
+    jdx++;
+  }
+  g_free(line);
+  /*note that there is no frequency intensity information in vaspxml
+   * 	  and AFAIK there is no easy way to obtain such information. OVHPA*/
+  return 0;
+}
+
+int vasp_xml_read_pos(FILE *vf, struct model_pak *model)
+{
+  /* read the atoms positions */
+  gchar *line;
+  int idx = 0;
+  struct core_pak *core;
+  /* Goto crystal varray "basis" */
+  if (fetch_in_file(vf, "basis") == 0)
+    return -1;
+  /* Get 3x3 vector lattice */
+  line = file_read_line(vf);
+  while (line)
+  {
+    if (find_in_string("/varray", line) != NULL)
+      break;
+    sscanf(line, " <v> %lf %lf %lf </v>", &model->latmat[idx], &model->latmat[idx + 3], &model->latmat[idx + 6]);
+    idx += 1;
+    g_free(line);
+    line = file_read_line(vf);
+  }
+  if (line == NULL)
+    return -1; /*incomplete basis definition*/
+  g_free(line);
+  /*Always true in VASP*/
+  model->fractional = TRUE;
+  model->coord_units = ANGSTROM;
+  model->construct_pbc = TRUE;
+  model->periodic = 3;
+  /* next line should be volume */
+  line = file_read_line(vf);
+  if (find_in_string("volume", line) != NULL)
+  {
+    sscanf(line, " <i name=\"volume\"> %lf </i>", &model->volume);
+  }
+  g_free(line);
+  /* TODO: gdouble rlatmat[9] can be filled */
+  /* TODO: find the difference between ilatmat and rlatmat */
+  /* Goto to "positions" */
+  if (fetch_in_file(vf, "positions") == 0)
+    return -1;
+  /* fill every atom position */
+  line = file_read_line(vf);
+  idx = 0;
+  core = g_slist_nth_data(model->cores, 0);
+  while ((core) && (line))
+  {
+    if (find_in_string("/varray", line) != NULL)
+      break;
+    sscanf(line, " <v> %lf %lf %lf </v>", &core->x[0], &core->x[1], &core->x[2]);
+    idx++;
+    core = g_slist_nth_data(model->cores, idx);
+    g_free(line);
+    line = file_read_line(vf);
+  }
+  if (line == NULL)
+    return -1; /*incomplete positions*/
+  g_free(line);
+  if (idx != model->num_atoms)
+  {
+    if (model->track_me == FALSE)
+      fprintf(stderr, "WARNING: Expecting %i atoms but got %i!\n", model->num_atoms, idx);
+    else
+      model->num_atoms = idx;
+  }
+  /* look for energies */
+  vasp_xml_read_energy(vf, model);
+  vasp_xml_read_forces(vf, model);
+  vasp_xml_read_stress(vf, model);
+  return 0;
+}
+int vasp_xml_read_bands(FILE *vf, struct model_pak *model)
+{
+  /* get the (non-projected) bandstructure */
+  gchar *line;
+  gint idx;
+  gint ik, ib;
+  long int vfpos = ftell(vf);
+  /*start*/
 #define DEBUG_BAND 0
-	if(model->nkpoints<2) return 1;/*there is only one k-point*/
-	if(model->nbands<2) return 1;/*there is only one band (how is that even possible?)*/
-	if(fetch_in_file(vf,"<eigenvalues>")==0) {
-		/*when there is no band information after <dos>
- * 		it is still possible to find some before.. */
-		rewind(vf);
-		if(fetch_in_file(vf,"<eigenvalues>")==0) {
-			fseek(vf,vfpos,SEEK_SET);/* rewind to flag */
-			return -1;/* no band information */
-		}
-	}
-	/*NOTE: the projected information should be an <array> *AFTER* </eigenvalues>*/
-	/*there is nbands * nkpoints * nspin values of energy to get*/
-/*spin up*/
-	if(fetch_in_file(vf,"kpoint 1")==0) {
-		fseek(vf,vfpos,SEEK_SET);/* rewind to flag */
-		return -1;/*no values*/
-	}
-        if(model->band_up != NULL) g_free(model->band_up);
-        /*allocation TODO: g_malloc_try?*/
-        model->band_up=g_malloc((model->nkpoints*model->nbands)*sizeof(gdouble));
-	ik=0;ib=0;
-	/*FIX: a85092*/
-	line = file_read_line(vf);
-	while(line){
-		if(ib>(model->nbands-1)) {
-			ik++;
-			ib=0;
-		}
-		if(ik>(model->nkpoints-1)) break;
-		if(find_in_string("</set>",line) != NULL) {
-			g_free(line);
-			line = file_read_line(vf);
-			g_free(line);
-			line = file_read_line(vf);
-		}
-		if(find_in_string("set comment",line) != NULL) break;/*next component*/
-		if(find_in_string("</array>",line) != NULL) break;/*end of array*/
-		idx=ik*(model->nbands)+ib;/*current index*/
-		sscanf(line," <r> %lf %*s </r> ",&(model->band_up[idx]));
+  if (model->nkpoints < 2)
+    return 1; /*there is only one k-point*/
+  if (model->nbands < 2)
+    return 1; /*there is only one band (how is that even possible?)*/
+  if (fetch_in_file(vf, "<eigenvalues>") == 0)
+  {
+    /*when there is no band information after <dos>
+     * 		it is still possible to find some before.. */
+    rewind(vf);
+    if (fetch_in_file(vf, "<eigenvalues>") == 0)
+    {
+      fseek(vf, vfpos, SEEK_SET); /* rewind to flag */
+      return -1;                  /* no band information */
+    }
+  }
+  /*NOTE: the projected information should be an <array> *AFTER* </eigenvalues>*/
+  /*there is nbands * nkpoints * nspin values of energy to get*/
+  /*spin up*/
+  if (fetch_in_file(vf, "kpoint 1") == 0)
+  {
+    fseek(vf, vfpos, SEEK_SET); /* rewind to flag */
+    return -1;                  /*no values*/
+  }
+  if (model->band_up != NULL)
+    g_free(model->band_up);
+  /*allocation TODO: g_malloc_try?*/
+  model->band_up = g_malloc((model->nkpoints * model->nbands) * sizeof(gdouble));
+  ik = 0;
+  ib = 0;
+  /*FIX: a85092*/
+  line = file_read_line(vf);
+  while (line)
+  {
+    if (ib > (model->nbands - 1))
+    {
+      ik++;
+      ib = 0;
+    }
+    if (ik > (model->nkpoints - 1))
+      break;
+    if (find_in_string("</set>", line) != NULL)
+    {
+      g_free(line);
+      line = file_read_line(vf);
+      g_free(line);
+      line = file_read_line(vf);
+    }
+    if (find_in_string("set comment", line) != NULL)
+      break; /*next component*/
+    if (find_in_string("</array>", line) != NULL)
+      break;                         /*end of array*/
+    idx = ik * (model->nbands) + ib; /*current index*/
+    sscanf(line, " <r> %lf %*s </r> ", &(model->band_up[idx]));
 #if DEBUG_BAND
-fprintf(stdout,"#DBG: spin=  up kpt=%i band=%i eval=%lf\n",ik,ib,model->band_up[idx]);
+    fprintf(stdout, "#DBG: spin=  up kpt=%i band=%i eval=%lf\n", ik, ib, model->band_up[idx]);
 #endif
-		ib++;
-		g_free(line);
-		line = file_read_line(vf);
-	}
-	if(line == NULL) return -1;/*incomplete set*/
-	if(!model->spin_polarized) return 0;/*only one component*/
-/*spin down*/
-        if(fetch_in_file(vf,"kpoint 1")==0) {
-                fseek(vf,vfpos,SEEK_SET);/* rewind to flag */
-                return -1;/*no values*/
-        }
-        if(model->band_down != NULL) g_free(model->band_down);
-        model->band_down=g_malloc((model->nkpoints*model->nbands)*sizeof(gdouble));
-        ik=0;ib=0;
-        /*FIX: 88b202*/
-        line = file_read_line(vf);
-        while(line){
-                if(ib>(model->nbands-1)) {
-                        ik++;
-                        ib=0;
-                }
-                if(ik>(model->nkpoints-1)) break;
-                if(find_in_string("</set>",line) != NULL) {
-                        g_free(line);
-                        line = file_read_line(vf);
-			g_free(line);
-			line = file_read_line(vf);
-                }
-                if(find_in_string("set comment",line) != NULL) break;/*next (very unexpected) component*/
-                if(find_in_string("</array>",line) != NULL) break;/*end of array*/
-                idx=ik*(model->nbands)+ib;/*current index*/
-                sscanf(line," <r> %lf %*s </r> ",&(model->band_down[idx]));
+    ib++;
+    g_free(line);
+    line = file_read_line(vf);
+  }
+  if (line == NULL)
+    return -1; /*incomplete set*/
+  if (!model->spin_polarized)
+    return 0; /*only one component*/
+              /*spin down*/
+  if (fetch_in_file(vf, "kpoint 1") == 0)
+  {
+    fseek(vf, vfpos, SEEK_SET); /* rewind to flag */
+    return -1;                  /*no values*/
+  }
+  if (model->band_down != NULL)
+    g_free(model->band_down);
+  model->band_down = g_malloc((model->nkpoints * model->nbands) * sizeof(gdouble));
+  ik = 0;
+  ib = 0;
+  /*FIX: 88b202*/
+  line = file_read_line(vf);
+  while (line)
+  {
+    if (ib > (model->nbands - 1))
+    {
+      ik++;
+      ib = 0;
+    }
+    if (ik > (model->nkpoints - 1))
+      break;
+    if (find_in_string("</set>", line) != NULL)
+    {
+      g_free(line);
+      line = file_read_line(vf);
+      g_free(line);
+      line = file_read_line(vf);
+    }
+    if (find_in_string("set comment", line) != NULL)
+      break; /*next (very unexpected) component*/
+    if (find_in_string("</array>", line) != NULL)
+      break;                         /*end of array*/
+    idx = ik * (model->nbands) + ib; /*current index*/
+    sscanf(line, " <r> %lf %*s </r> ", &(model->band_down[idx]));
 #if DEBUG_BAND
-fprintf(stdout,"#DBG: spin=down kpt=%i band=%i eval=%lf\n",ik,ib,model->band_up[idx]);
+    fprintf(stdout, "#DBG: spin=down kpt=%i band=%i eval=%lf\n", ik, ib, model->band_up[idx]);
 #endif
-                ib++;
-                g_free(line);
-                line = file_read_line(vf);
-        }
-        if(line == NULL) return -1;/*incomplete set*/
-	return 0;
+    ib++;
+    g_free(line);
+    line = file_read_line(vf);
+  }
+  if (line == NULL)
+    return -1; /*incomplete set*/
+  return 0;
 }
 
-int vasp_xml_read_dos(FILE *vf, struct model_pak *model){
-	/* get the final density of states (total dos only) */
-	gchar *line;
-	gint idx;
-	gdouble init;
-	/*start*/
-	if(fetch_in_file(vf,"<dos>")==0) return -1;/* no dos information */
-	line = file_read_line(vf);
-	sscanf(line," <i name=\"efermi\"> %lf </i> ",&(model->efermi));
+int vasp_xml_read_dos(FILE *vf, struct model_pak *model)
+{
+  /* get the final density of states (total dos only) */
+  gchar *line;
+  gint idx;
+  gdouble init;
+  /*start*/
+  if (fetch_in_file(vf, "<dos>") == 0)
+    return -1; /* no dos information */
+  line = file_read_line(vf);
+  sscanf(line, " <i name=\"efermi\"> %lf </i> ", &(model->efermi));
 #define DEBUG_DOS 0
 #if DEBUG_DOS
-fprintf(stdout,"#DBG: FERMI ENERGY: %lf\n",model->efermi);
+  fprintf(stdout, "#DBG: FERMI ENERGY: %lf\n", model->efermi);
 #endif
-	/* the next line should contain <total> */
-	line = file_read_line(vf);
-	if(find_in_string("</set>",line) == NULL) {
-		/*there is a pb: we have a dos, but not a total one*/
-		/*solution: rewind and look for <total> keyword*/
-		rewind(vf);
-		if(fetch_in_file(vf,"<total>")==0) return -1;/*no total dos info?*/
-	}
-	/*go to first spin component*/
-	if(fetch_in_file(vf,"spin 1")==0) return -1;/*no component*/
-	if(model->dos_eval!=NULL) g_free(model->dos_eval);
-	if(model->dos_spin_up!=NULL) g_free(model->dos_spin_up);
-	model->dos_eval=g_malloc(model->ndos*sizeof(gdouble));
-	model->dos_spin_up=g_malloc(model->ndos*sizeof(gdouble));
-	line = file_read_line(vf);
-	idx=0;
-	/*The first line is special: when integration is not 0, it contain a huge value:
- * 	  while this value makes intergration of DOS (ie. nb of electron) correct, it is
- * 	  not a correct representation of DOS at that point... (FIXED by setting to 0)*/
-	sscanf(line," <r> %lf %lf %lf %*s",&(model->dos_eval[idx]),&(model->dos_spin_up[idx]),&init);
-	if(init > 0.0) model->dos_spin_up[0]=0.0;
-	line = file_read_line(vf);
-	idx++;
-	while(line){
-		if(idx>(model->ndos-1)) break;
-		if(find_in_string("</set>",line) != NULL) break;
-		sscanf(line," <r> %lf %lf %*s",&(model->dos_eval[idx]),&(model->dos_spin_up[idx]));
+  /* the next line should contain <total> */
+  line = file_read_line(vf);
+  if (find_in_string("</set>", line) == NULL)
+  {
+    /*there is a pb: we have a dos, but not a total one*/
+    /*solution: rewind and look for <total> keyword*/
+    rewind(vf);
+    if (fetch_in_file(vf, "<total>") == 0)
+      return -1; /*no total dos info?*/
+  }
+  /*go to first spin component*/
+  if (fetch_in_file(vf, "spin 1") == 0)
+    return -1; /*no component*/
+  if (model->dos_eval != NULL)
+    g_free(model->dos_eval);
+  if (model->dos_spin_up != NULL)
+    g_free(model->dos_spin_up);
+  model->dos_eval = g_malloc(model->ndos * sizeof(gdouble));
+  model->dos_spin_up = g_malloc(model->ndos * sizeof(gdouble));
+  line = file_read_line(vf);
+  idx = 0;
+  /*The first line is special: when integration is not 0, it contain a huge value:
+   * 	  while this value makes intergration of DOS (ie. nb of electron) correct, it is
+   * 	  not a correct representation of DOS at that point... (FIXED by setting to 0)*/
+  sscanf(line, " <r> %lf %lf %lf %*s", &(model->dos_eval[idx]), &(model->dos_spin_up[idx]), &init);
+  if (init > 0.0)
+    model->dos_spin_up[0] = 0.0;
+  line = file_read_line(vf);
+  idx++;
+  while (line)
+  {
+    if (idx > (model->ndos - 1))
+      break;
+    if (find_in_string("</set>", line) != NULL)
+      break;
+    sscanf(line, " <r> %lf %lf %*s", &(model->dos_eval[idx]), &(model->dos_spin_up[idx]));
 #if DEBUG_DOS
-fprintf(stdout,"#DBG: CATCH SPIN UP: %i %lf \t %lf\n",idx,model->dos_eval[idx],model->dos_spin_up[idx]);
+    fprintf(stdout, "#DBG: CATCH SPIN UP: %i %lf \t %lf\n", idx, model->dos_eval[idx], model->dos_spin_up[idx]);
 #endif
-		idx++;
-		g_free(line);
-		line = file_read_line(vf);
-	}
-	if(!model->spin_polarized) return 0;/*only one component*/
-	if(model->dos_spin_down!=NULL) g_free(model->dos_spin_down);
-	model->dos_spin_down=g_malloc(model->ndos*sizeof(gdouble));
-	line = file_read_line(vf);
-	idx=0;
-/*same as above*/
-	sscanf(line," <r> %lf %lf %lf %*s",&(model->dos_eval[idx]),&(model->dos_spin_down[idx]),&init);
-	if(init > 0.0) model->dos_spin_up[0]=0.0;
-	line = file_read_line(vf);
-	idx++;
-	while(line){
-		if(idx>(model->ndos-1)) break;
-		if(find_in_string("</set>",line) != NULL) break;
-		sscanf(line," <r> %*f %lf %*s",&(model->dos_spin_down[idx]));
+    idx++;
+    g_free(line);
+    line = file_read_line(vf);
+  }
+  if (!model->spin_polarized)
+    return 0; /*only one component*/
+  if (model->dos_spin_down != NULL)
+    g_free(model->dos_spin_down);
+  model->dos_spin_down = g_malloc(model->ndos * sizeof(gdouble));
+  line = file_read_line(vf);
+  idx = 0;
+  /*same as above*/
+  sscanf(line, " <r> %lf %lf %lf %*s", &(model->dos_eval[idx]), &(model->dos_spin_down[idx]), &init);
+  if (init > 0.0)
+    model->dos_spin_up[0] = 0.0;
+  line = file_read_line(vf);
+  idx++;
+  while (line)
+  {
+    if (idx > (model->ndos - 1))
+      break;
+    if (find_in_string("</set>", line) != NULL)
+      break;
+    sscanf(line, " <r> %*f %lf %*s", &(model->dos_spin_down[idx]));
 #if DEBUG_DOS
-fprintf(stdout,"#DBG: CATCH SPIN DOWN: %i %lf \t %lf\n",idx,model->dos_eval[idx],model->dos_spin_down[idx]);
+    fprintf(stdout, "#DBG: CATCH SPIN DOWN: %i %lf \t %lf\n", idx, model->dos_eval[idx], model->dos_spin_down[idx]);
 #endif
-		idx++;
-		g_free(line);
-		line = file_read_line(vf);
-	}
-	return 0;
+    idx++;
+    g_free(line);
+    line = file_read_line(vf);
+  }
+  return 0;
 }
 /******************************/
 /* free vasp_output_structure */
 /******************************/
-void vasp_out_reset(vasp_output_struct * vo){
-	if(vo==NULL) return;
-	if(vo->name!=NULL) g_free(vo->name);
-	vo->name=NULL;
-	if(vo->E!=NULL) g_free(vo->E);
-	vo->E=NULL;
-	if(vo->V!=NULL) g_free(vo->V);
-	vo->V=NULL;
-	if(vo->F!=NULL) g_free(vo->F);
-	vo->F=NULL;
-	if(vo->P!=NULL) g_free(vo->P);
-	vo->P=NULL;
-#ifdef   WITH_GUI
-	/*use graph_free?*/
-	if(vo->graph_energy!=NULL) graph_reset(vo->graph_energy);
-	if(vo->graph_volume!=NULL) graph_reset(vo->graph_volume);
-	if(vo->graph_forces!=NULL) graph_reset(vo->graph_forces);
-	if(vo->graph_stress!=NULL) graph_reset(vo->graph_stress);
-#endif //WITH_GUI
-	vo->graph_energy=NULL;
-	vo->graph_volume=NULL;
-	vo->graph_forces=NULL;
-	vo->graph_stress=NULL;
+void vasp_out_reset(vasp_output_struct *vo)
+{
+  if (vo == NULL)
+    return;
+  if (vo->name != NULL)
+    g_free(vo->name);
+  vo->name = NULL;
+  if (vo->E != NULL)
+    g_free(vo->E);
+  vo->E = NULL;
+  if (vo->V != NULL)
+    g_free(vo->V);
+  vo->V = NULL;
+  if (vo->F != NULL)
+    g_free(vo->F);
+  vo->F = NULL;
+  if (vo->P != NULL)
+    g_free(vo->P);
+  vo->P = NULL;
+#ifdef WITH_GUI
+  /*use graph_free?*/
+  if (vo->graph_energy != NULL)
+    graph_reset(vo->graph_energy);
+  if (vo->graph_volume != NULL)
+    graph_reset(vo->graph_volume);
+  if (vo->graph_forces != NULL)
+    graph_reset(vo->graph_forces);
+  if (vo->graph_stress != NULL)
+    graph_reset(vo->graph_stress);
+#endif // WITH_GUI
+  vo->graph_energy = NULL;
+  vo->graph_volume = NULL;
+  vo->graph_forces = NULL;
+  vo->graph_stress = NULL;
 }
 /*******************************************/
 /* free vasp_output_structure from outside */
 /*******************************************/
-void free_vasp_out(gpointer data){
-	vasp_out_reset((vasp_output_struct *)data);
-
-}
+void free_vasp_out(gpointer data) { vasp_out_reset((vasp_output_struct *) data); }
 /* here will be some more features */
 /* general parser / writter */
-gint read_xml_vasp(gchar *filename, struct model_pak *model){
-/* READER init for VASP XML
- * check the current status:
- * vaspxml =>
- * 	singlepoint calculation -> display finalpos (no frame)
- * 	partial calculation w/ nframe=1 -> display the 1st frame (no frame)
- * 	partial calculation w/ nframe>1 -> display the last frame (w/ frame)
- * 	normal calculation -> display finalpos (w/ frame)
-*/
-	int isok=0;
-	int num_frames=1;
-	FILE *vf;
-	long int vfpos;
-	long int p1,p2;
-	gchar *line;
-	vasp_output_struct *vasp_out;
-	/*START*/
-	g_return_val_if_fail(model != NULL, 1);
-	g_return_val_if_fail(filename != NULL, 2);
-	vf = fopen(filename, "rt");
-	if (!vf) return 1;
-	error_table_clear();
-	/* some defaults */
-	sysenv.render.show_energy = TRUE;
-	model->animation=FALSE;
-	model->num_frames=-1;
-	if(model->vasp!=NULL) {
-		vasp_out_reset((vasp_output_struct *)model->vasp);
-		g_free(model->vasp);
-		model->vasp=NULL;
-	}
-	vasp_out=g_malloc(sizeof(vasp_output_struct));
-	model->vasp=(gpointer)vasp_out;
-	vasp_out->name=NULL;
-	vasp_out->n_scf=0;vasp_out->calc_type=VASP_SINGLE;/*FIX valgrind _BUG_ 0x4B41D1 0x4B41F3*/
-	vasp_out->E=NULL;
-	vasp_out->V=NULL;
-	vasp_out->F=NULL;
-	vasp_out->P=NULL;
-	vasp_out->graph_energy=NULL;
-	vasp_out->graph_volume=NULL;
-	vasp_out->graph_forces=NULL;
-	vasp_out->graph_stress=NULL;
-	/* start reading */
-	line = file_read_line(vf);
-	/* the first xml tag ie <?xml version="x.x" encoding="ISO-xxxx-x"?> */
-	if (find_in_string("xml",line) == NULL) {
-		g_free(vasp_out);model->vasp=NULL;
-		return 3;/* not even an xml file */
-	}
-	g_free(line);
-	/* <generator> tag */
-	if(fetch_in_file(vf,"<generator>")==0) {
-		g_free(vasp_out);model->vasp=NULL;
-		return 3;
-	}
-	isok=vasp_xml_read_header(vf);
-	if (isok == 10) {
-		if(!model->silent) gui_text_show(STANDARD,g_strdup_printf("VASP detected\n"));
-	} else {
-		if (isok == 1) if(!model->silent) gui_text_show(WARNING,g_strdup_printf("not generated by vasp, will try to read however.\n"));
-		if (isok == 0) {
-			g_free(vasp_out);model->vasp=NULL;
-			return 3;/* not a valid vaspxml */
-		}
-	}
-	model->id=VASP;/*from here we can say for sure this is a valid VASP model**/
-vfpos=ftell(vf);/*flag*/
-	/* <incar> tag - if none, rewind and ignore */
-	if(fetch_in_file(vf,"<incar>")==0) fseek(vf,vfpos,SEEK_SET);
-	else vasp_xml_read_org_incar(vf);
-/* Starting vasp 5.4.X with X>1 primitive_cell and primitive_index are provided here. */
-/* For now this information is discarded. */
-	/* <kpoints> tag - if none, rewind and ignore */	
-	if(fetch_in_file(vf,"<kpoints>")==0) fseek(vf,vfpos,SEEK_SET);
-	else vasp_xml_read_kpoints(vf,model);
-	/* <parameters> tag - if none, rewind and ignore */
-	if(fetch_in_file(vf,"<parameters>")==0) fseek(vf,vfpos,SEEK_SET);
-	else vasp_xml_read_incar(vf,model);
-	/* <atominfo> tag - mandatory */
-	if(fetch_in_file(vf,"<atominfo>")==0) {
-		g_free(vasp_out);model->vasp=NULL;
-		return 3;
-	}
-	if(vasp_xml_read_atominfo(vf,model)<0) {
-		g_free(vasp_out);model->vasp=NULL;
-		return 3;
-	}
-	/* <structure name="initialpos" > tag */
-vfpos=ftell(vf);/*flag*/
-	/* Counting the # of frames */
-	if(fetch_in_file(vf,"initialpos")==0) {
-		g_free(vasp_out);model->vasp=NULL;
-		return 3;
-	}
-	line = file_read_line(vf);p1=0;
-	while (line){/*NEW: ensure that each frame is complete*/
-		if (find_in_string("</calculation>",line) != NULL) {
-			if(p1!=0){
-				p2=ftell(vf);/*flag*/
-				fseek(vf,p1,SEEK_SET);/* rewind to flag */
-				add_frame_offset(vf, model);
-				num_frames++;
-				fseek(vf,p2,SEEK_SET);/* forward to flag */
-			}
-		}
-		if (find_in_string("<calculation>",line) != NULL) {
-			p1=ftell(vf);/*flag*/
-		}
-		if (find_in_string("/modeling",line) != NULL) break;
-		g_free(line);
-		line = file_read_line(vf);
-	}
-	g_free(line);
-	fseek(vf,vfpos,SEEK_SET);/* rewind to flag */
-	vasp_xml_read_frequency(vf,model);/* Read Frequency */
-	fseek(vf,vfpos,SEEK_SET);/* rewind to flag */
-	if(vasp_xml_read_dos(vf,model)){;/* Read DOS */
-		model->ndos=0;/*didn't work*/
-	}
-	vasp_xml_read_bands(vf,model);/* Read bands */
-	fseek(vf,vfpos,SEEK_SET);/* rewind to flag */
-	if (num_frames == 1) {
-		/*we never catch "calculation" BUT we have "initialpos"*/
-if(!model->silent){
-		line = g_strdup_printf("WARNING: incomplete calculation!\n");
-		gui_text_show(ERROR, line);
-		g_free(line);
-}
-		/*we can display only that as an info ;)*/
-	} else {
-		/* we have num_frames-1 frames */
-		/*set the current frame to origin*/
-//		num_frames--;/*this is to cope with the above "initialpos only case"*/
-		if (num_frames <= 2){
-			if(fetch_in_file(vf,"finalpos")==0) {
-				/*this is simply the first 2 steps of an incomplete calculation*/
-				vasp_out->calc_type=VASP_RUN+VASP_OPT;
-				model->animation=TRUE;
-if(!model->silent){
-				line = g_strdup_printf("WARNING: incomplete calculation!\n");
-				gui_text_show(ERROR, line);
-				g_free(line);
-}
-			}else{
-				/*this is a special single point calculation:
-				 * 1- 1st SCF <calculation>
-				 * 2- finalpos summary  */
-				num_frames--;
-				if(num_frames==0) {
-					g_free(vasp_out);model->vasp=NULL;
-					return 3;/*there should be no case where finalpos is the only frame*/
-				}
-				vasp_out->calc_type=VASP_SINGLE;
-				model->animation=FALSE;/* get rid of frame display */
-				/*TODO: add don't track information*/
-				/*removing finalpos -- NOT NEEDED
-				list=g_list_last(model->frame_list);
-				model->frame_list=g_list_remove(model->frame_list,list->data);
-				*/
-			}
-		} else {
-			model->animation=TRUE;
-			if(fetch_in_file(vf,"finalpos")==0) {
-				/*this is simply n first steps of an incomplete calculation*/
-				num_frames--;
-				vasp_out->calc_type=VASP_RUN+VASP_OPT;
-if(!model->silent){
-				line = g_strdup_printf("WARNING: incomplete calculation!\n");
-				gui_text_show(ERROR, line);
-				g_free(line);
-}
-			}else{
-				/*this is simply n+1 steps of a complete calculation*/
-				num_frames--;
-				vasp_out->calc_type=VASP_RUN+VASP_OPT;
-				/*removing finalpos -- NOT NEEDED
-				list=g_list_last(model->frame_list);
-				model->frame_list=g_list_remove(model->frame_list,list->data);
-				*/
-			}
-		}
-	}
-	/*read/display the last position!*/
-	model->cur_frame = num_frames-1;
-	rewind(vf);
-	while(fetch_in_file(vf,"<structure")!=0) vfpos=ftell(vf);/*flag*/
-	fseek(vf,vfpos,SEEK_SET);/* rewind to flag */
-	if(vasp_xml_read_pos(vf,model)<0) {
-		g_free(vasp_out);model->vasp=NULL;
-		return 3;
-	}
-	/* at the end of file, or </modeling> tag */
-	model->num_frames = num_frames;
-	model->redraw = TRUE;
-	/* always show this information */
-if(!model->silent){
-	gui_text_show(ITALIC,g_strdup_printf("-> %i frames detected.\n",num_frames));
-}
-	strcpy(model->filename, filename);/* strcpy is ok? */
-	fflush(stdout);
-	model_prep(model);
-	error_table_print_all();
-	fclose(vf);
-/*now plot graphs*/
-	vasp_xml_plot_energy(model);
-	return(0);
+gint read_xml_vasp(gchar *filename, struct model_pak *model)
+{
+  /* READER init for VASP XML
+   * check the current status:
+   * vaspxml =>
+   * 	singlepoint calculation -> display finalpos (no frame)
+   * 	partial calculation w/ nframe=1 -> display the 1st frame (no frame)
+   * 	partial calculation w/ nframe>1 -> display the last frame (w/ frame)
+   * 	normal calculation -> display finalpos (w/ frame)
+   */
+  int isok = 0;
+  int num_frames = 1;
+  FILE *vf;
+  long int vfpos;
+  long int p1, p2;
+  gchar *line;
+  vasp_output_struct *vasp_out;
+  /*START*/
+  g_return_val_if_fail(model != NULL, 1);
+  g_return_val_if_fail(filename != NULL, 2);
+  vf = fopen(filename, "rt");
+  if (!vf)
+    return 1;
+  error_table_clear();
+  /* some defaults */
+  sysenv.render.show_energy = TRUE;
+  model->animation = FALSE;
+  model->num_frames = -1;
+  if (model->vasp != NULL)
+  {
+    vasp_out_reset((vasp_output_struct *) model->vasp);
+    g_free(model->vasp);
+    model->vasp = NULL;
+  }
+  vasp_out = g_malloc(sizeof(vasp_output_struct));
+  model->vasp = (gpointer) vasp_out;
+  vasp_out->name = NULL;
+  vasp_out->n_scf = 0;
+  vasp_out->calc_type = VASP_SINGLE; /*FIX valgrind _BUG_ 0x4B41D1 0x4B41F3*/
+  vasp_out->E = NULL;
+  vasp_out->V = NULL;
+  vasp_out->F = NULL;
+  vasp_out->P = NULL;
+  vasp_out->graph_energy = NULL;
+  vasp_out->graph_volume = NULL;
+  vasp_out->graph_forces = NULL;
+  vasp_out->graph_stress = NULL;
+  /* start reading */
+  line = file_read_line(vf);
+  /* the first xml tag ie <?xml version="x.x" encoding="ISO-xxxx-x"?> */
+  if (find_in_string("xml", line) == NULL)
+  {
+    g_free(vasp_out);
+    model->vasp = NULL;
+    return 3; /* not even an xml file */
+  }
+  g_free(line);
+  /* <generator> tag */
+  if (fetch_in_file(vf, "<generator>") == 0)
+  {
+    g_free(vasp_out);
+    model->vasp = NULL;
+    return 3;
+  }
+  isok = vasp_xml_read_header(vf);
+  if (isok == 10)
+  {
+    if (!model->silent)
+      gui_text_show(STANDARD, g_strdup_printf("VASP detected\n"));
+  } else
+  {
+    if (isok == 1)
+      if (!model->silent)
+        gui_text_show(WARNING, g_strdup_printf("not generated by vasp, will try to read however.\n"));
+    if (isok == 0)
+    {
+      g_free(vasp_out);
+      model->vasp = NULL;
+      return 3; /* not a valid vaspxml */
+    }
+  }
+  model->id = VASP;  /*from here we can say for sure this is a valid VASP model**/
+  vfpos = ftell(vf); /*flag*/
+  /* <incar> tag - if none, rewind and ignore */
+  if (fetch_in_file(vf, "<incar>") == 0)
+    fseek(vf, vfpos, SEEK_SET);
+  else
+    vasp_xml_read_org_incar(vf);
+  /* Starting vasp 5.4.X with X>1 primitive_cell and primitive_index are provided here. */
+  /* For now this information is discarded. */
+  /* <kpoints> tag - if none, rewind and ignore */
+  if (fetch_in_file(vf, "<kpoints>") == 0)
+    fseek(vf, vfpos, SEEK_SET);
+  else
+    vasp_xml_read_kpoints(vf, model);
+  /* <parameters> tag - if none, rewind and ignore */
+  if (fetch_in_file(vf, "<parameters>") == 0)
+    fseek(vf, vfpos, SEEK_SET);
+  else
+    vasp_xml_read_incar(vf, model);
+  /* <atominfo> tag - mandatory */
+  if (fetch_in_file(vf, "<atominfo>") == 0)
+  {
+    g_free(vasp_out);
+    model->vasp = NULL;
+    return 3;
+  }
+  if (vasp_xml_read_atominfo(vf, model) < 0)
+  {
+    g_free(vasp_out);
+    model->vasp = NULL;
+    return 3;
+  }
+  /* <structure name="initialpos" > tag */
+  vfpos = ftell(vf); /*flag*/
+  /* Counting the # of frames */
+  if (fetch_in_file(vf, "initialpos") == 0)
+  {
+    g_free(vasp_out);
+    model->vasp = NULL;
+    return 3;
+  }
+  line = file_read_line(vf);
+  p1 = 0;
+  while (line)
+  { /*NEW: ensure that each frame is complete*/
+    if (find_in_string("</calculation>", line) != NULL)
+    {
+      if (p1 != 0)
+      {
+        p2 = ftell(vf);          /*flag*/
+        fseek(vf, p1, SEEK_SET); /* rewind to flag */
+        add_frame_offset(vf, model);
+        num_frames++;
+        fseek(vf, p2, SEEK_SET); /* forward to flag */
+      }
+    }
+    if (find_in_string("<calculation>", line) != NULL)
+    {
+      p1 = ftell(vf); /*flag*/
+    }
+    if (find_in_string("/modeling", line) != NULL)
+      break;
+    g_free(line);
+    line = file_read_line(vf);
+  }
+  g_free(line);
+  fseek(vf, vfpos, SEEK_SET);         /* rewind to flag */
+  vasp_xml_read_frequency(vf, model); /* Read Frequency */
+  fseek(vf, vfpos, SEEK_SET);         /* rewind to flag */
+  if (vasp_xml_read_dos(vf, model))
+  {
+    ;                /* Read DOS */
+    model->ndos = 0; /*didn't work*/
+  }
+  vasp_xml_read_bands(vf, model); /* Read bands */
+  fseek(vf, vfpos, SEEK_SET);     /* rewind to flag */
+  if (num_frames == 1)
+  {
+    /*we never catch "calculation" BUT we have "initialpos"*/
+    if (!model->silent)
+    {
+      line = g_strdup_printf("WARNING: incomplete calculation!\n");
+      gui_text_show(ERROR, line);
+      g_free(line);
+    }
+    /*we can display only that as an info ;)*/
+  } else
+  {
+    /* we have num_frames-1 frames */
+    /*set the current frame to origin*/
+    //		num_frames--;/*this is to cope with the above "initialpos only case"*/
+    if (num_frames <= 2)
+    {
+      if (fetch_in_file(vf, "finalpos") == 0)
+      {
+        /*this is simply the first 2 steps of an incomplete calculation*/
+        vasp_out->calc_type = VASP_RUN + VASP_OPT;
+        model->animation = TRUE;
+        if (!model->silent)
+        {
+          line = g_strdup_printf("WARNING: incomplete calculation!\n");
+          gui_text_show(ERROR, line);
+          g_free(line);
+        }
+      } else
+      {
+        /*this is a special single point calculation:
+         * 1- 1st SCF <calculation>
+         * 2- finalpos summary  */
+        num_frames--;
+        if (num_frames == 0)
+        {
+          g_free(vasp_out);
+          model->vasp = NULL;
+          return 3; /*there should be no case where finalpos is the only frame*/
+        }
+        vasp_out->calc_type = VASP_SINGLE;
+        model->animation = FALSE; /* get rid of frame display */
+                                  /*TODO: add don't track information*/
+                                  /*removing finalpos -- NOT NEEDED
+                                  list=g_list_last(model->frame_list);
+                                  model->frame_list=g_list_remove(model->frame_list,list->data);
+                                  */
+      }
+    } else
+    {
+      model->animation = TRUE;
+      if (fetch_in_file(vf, "finalpos") == 0)
+      {
+        /*this is simply n first steps of an incomplete calculation*/
+        num_frames--;
+        vasp_out->calc_type = VASP_RUN + VASP_OPT;
+        if (!model->silent)
+        {
+          line = g_strdup_printf("WARNING: incomplete calculation!\n");
+          gui_text_show(ERROR, line);
+          g_free(line);
+        }
+      } else
+      {
+        /*this is simply n+1 steps of a complete calculation*/
+        num_frames--;
+        vasp_out->calc_type = VASP_RUN + VASP_OPT;
+        /*removing finalpos -- NOT NEEDED
+        list=g_list_last(model->frame_list);
+        model->frame_list=g_list_remove(model->frame_list,list->data);
+        */
+      }
+    }
+  }
+  /*read/display the last position!*/
+  model->cur_frame = num_frames - 1;
+  rewind(vf);
+  while (fetch_in_file(vf, "<structure") != 0)
+    vfpos = ftell(vf);        /*flag*/
+  fseek(vf, vfpos, SEEK_SET); /* rewind to flag */
+  if (vasp_xml_read_pos(vf, model) < 0)
+  {
+    g_free(vasp_out);
+    model->vasp = NULL;
+    return 3;
+  }
+  /* at the end of file, or </modeling> tag */
+  model->num_frames = num_frames;
+  model->redraw = TRUE;
+  /* always show this information */
+  if (!model->silent)
+  {
+    gui_text_show(ITALIC, g_strdup_printf("-> %i frames detected.\n", num_frames));
+  }
+  strcpy(model->filename, filename); /* strcpy is ok? */
+  fflush(stdout);
+  model_prep(model);
+  error_table_print_all();
+  fclose(vf);
+  /*now plot graphs*/
+  vasp_xml_plot_energy(model);
+  return (0);
 }
 /* simplified frame reading */
-gint read_xml_vasp_frame(FILE *vf, struct model_pak *model){
-	g_assert(vf != NULL);
-	if(fetch_in_file(vf,"structure")==0) return 3;
-	if(vasp_xml_read_pos(vf,model)<0) return 3;
-	return 0;
+gint read_xml_vasp_frame(FILE *vf, struct model_pak *model)
+{
+  g_assert(vf != NULL);
+  if (fetch_in_file(vf, "structure") == 0)
+    return 3;
+  if (vasp_xml_read_pos(vf, model) < 0)
+    return 3;
+  return 0;
 }
 /******************************/
 /* NEW: track running vasp xml*/
 /******************************/
-gboolean track_vasp(void *data){
-	gpointer camera;
-	fpos_t *vffpos=NULL;
-	long int p1,p2;
-	FILE *vf;
-	GList *list;
-	gchar *line;
-	gint add_frames;
-	struct model_pak *model=(struct model_pak *)data;
-	struct model_pak *new_model;
-	vasp_output_struct *vasp_out;
-	/*is being called every TRACKING_TIMEOUT; every "return FALSE" will stop the timer!*/
-	if(model==NULL) return FALSE;
-	if(model->track_me==FALSE) return FALSE;/*FIX valgrind _BUG_ 0x4B75FF*/
-	model->track_nb=(model->track_nb+1)%3;
-	vasp_out=(vasp_output_struct *)model->vasp;
-	if((model->num_frames<0)||(vasp_out==NULL)){
+gboolean track_vasp(void *data)
+{
+  gpointer camera;
+  fpos_t *vffpos = NULL;
+  long int p1, p2;
+  FILE *vf;
+  GList *list;
+  gchar *line;
+  gint add_frames;
+  struct model_pak *model = (struct model_pak *) data;
+  struct model_pak *new_model;
+  vasp_output_struct *vasp_out;
+  /*is being called every TRACKING_TIMEOUT; every "return FALSE" will stop the timer!*/
+  if (model == NULL)
+    return FALSE;
+  if (model->track_me == FALSE)
+    return FALSE; /*FIX valgrind _BUG_ 0x4B75FF*/
+  model->track_nb = (model->track_nb + 1) % 3;
+  vasp_out = (vasp_output_struct *) model->vasp;
+  if ((model->num_frames < 0) || (vasp_out == NULL))
+  {
 #if DEBUG_TRACK_VASP
-fprintf(stdout,"TRACK: NO-VALID-MODEL\n");
+    fprintf(stdout, "TRACK: NO-VALID-MODEL\n");
 #endif
-		/*this means that we need to try to reload model*/
-		line=g_strdup(model->filename);
-		new_model=model_new();
-		model_init(new_model);
-		new_model->silent=TRUE;
-		if(read_xml_vasp(line,new_model)==0){
+    /*this means that we need to try to reload model*/
+    line = g_strdup(model->filename);
+    new_model = model_new();
+    model_init(new_model);
+    new_model->silent = TRUE;
+    if (read_xml_vasp(line, new_model) == 0)
+    {
 #if DEBUG_TRACK_VASP
-fprintf(stdout,"TRACK: READ SUCCESS\n");
+      fprintf(stdout, "TRACK: READ SUCCESS\n");
 #endif
-			strcpy(new_model->filename,line);/* strcpy is ok? <- necessary?*/
-			/*refresh*/
-			model->t_next=new_model;
-			g_free(line);
-			return FALSE;/*we don't need to continue tracking on old model*/
-		}else{
+      strcpy(new_model->filename, line); /* strcpy is ok? <- necessary?*/
+      /*refresh*/
+      model->t_next = new_model;
+      g_free(line);
+      return FALSE; /*we don't need to continue tracking on old model*/
+    } else
+    {
 #if DEBUG_TRACK_VASP
-fprintf(stdout,"TRACK: READ FAIL\n");
+      fprintf(stdout, "TRACK: READ FAIL\n");
 #endif
-		/*Can't open, but don't GIVE UP*/
-		model_delete(new_model);
-		g_free(line);
-		return TRUE;
-		}
-	}
-	if(model->frame_list==NULL) {
+      /*Can't open, but don't GIVE UP*/
+      model_delete(new_model);
+      g_free(line);
+      return TRUE;
+    }
+  }
+  if (model->frame_list == NULL)
+  {
 #if DEBUG_TRACK_VASP
-fprintf(stdout,"TRACK: NO-FRAME-LIST\n");
+    fprintf(stdout, "TRACK: NO-FRAME-LIST\n");
 #endif
-		/*if there is no frame list and model->num_frames>0 -> num_frames=1*/
-		if(model->num_frames!=1){
-			/*problem with data! -> reset (next time)*/
+    /*if there is no frame list and model->num_frames>0 -> num_frames=1*/
+    if (model->num_frames != 1)
+    {
+      /*problem with data! -> reset (next time)*/
 #if DEBUG_TRACK_VASP
-fprintf(stdout,"TRACK: NO-FRAME INVALID-NUM %i\n",model->num_frames);
+      fprintf(stdout, "TRACK: NO-FRAME INVALID-NUM %i\n", model->num_frames);
 #endif
-			model->num_frames=-1;
-			return TRUE;
-		}
-		vf=fopen(model->filename, "r");
-		if(vf==NULL) {
+      model->num_frames = -1;
+      return TRUE;
+    }
+    vf = fopen(model->filename, "r");
+    if (vf == NULL)
+    {
 #if DEBUG_TRACK_VASP
-fprintf(stdout,"TRACK: NO-FRAME NO-FILE?\n");
+      fprintf(stdout, "TRACK: NO-FRAME NO-FILE?\n");
 #endif
-			/*no file, but num_frame=1 -> reset*/
-			return FALSE;/*GIVE UP*/
-		}
-		if(fetch_in_file(vf,"initialpos")==0) {
+      /*no file, but num_frame=1 -> reset*/
+      return FALSE; /*GIVE UP*/
+    }
+    if (fetch_in_file(vf, "initialpos") == 0)
+    {
 #if DEBUG_TRACK_VASP
-fprintf(stdout,"TRACK: NO-FRAME INVALID-INITIALPOS?\n");
+      fprintf(stdout, "TRACK: NO-FRAME INVALID-INITIALPOS?\n");
 #endif
-			/*no initial data but num_frame=1 -> reset*/
-			fclose(vf);
-			return FALSE;/*GIVE UP*/
-		}
-		add_frames=0;
-		line = file_read_line(vf);
-		p1=0;
-		while (line){
-			if (find_in_string("</calculation>",line) != NULL) {
-				if(p1!=0){
-					p2=ftell(vf);/*flag*/
-					fseek(vf,p1,SEEK_SET);/* rewind to flag */
-					add_frame_offset(vf, model);
-					add_frames++;
-					fseek(vf,p2,SEEK_SET);/* forward to flag */
-				}
-			}
-			if (find_in_string("<calculation>",line) != NULL) {
-				p1=ftell(vf);/*flag*/
-			}
-			g_free(line);
-			line = file_read_line(vf);
-		}
-		if(add_frames==0){
-#if DEBUG_TRACK_VASP
-fprintf(stdout,"TRACK: NO-FRAME NO-FRAME\n");
-#endif
-			/*first step is not finished? be patient*/
-			fclose(vf);
-			return TRUE;
-		}
-#if DEBUG_TRACK_VASP
-fprintf(stdout,"TRACK: NO-FRAME %i-FRAME\n",add_frames);
-#endif
-		model->num_frames=add_frames;/*initialpos no longer counts*/
-		fclose(vf);
-		if(add_frames>=1) {
-			vasp_out->calc_type=VASP_RUN+VASP_OPT;
-			vasp_xml_plot_energy(model);
-			model->animation=TRUE;
-		}
-		return TRUE;/*do tracking later*/
-	}
-	vf=fopen(model->filename, "r");
-	if(vf==NULL) {
-#if DEBUG_TRACK_VASP
-fprintf(stdout,"TRACK: NO-FILE\n");
-#endif
-		/*vasprun.xml was deleted!*/
-		line=g_strdup_printf("vasprun.xml was deleted, stop tracking...\n");
-		gui_text_show(ITALIC,line);
-		g_free(line);
-		return FALSE;/*GIVE UP*/
-	}
-	list=g_list_last(model->frame_list);
-	vffpos=(fpos_t *)list->data;
-	if(fsetpos(vf,vffpos)!=0){/*go to last pos*/
-#if DEBUG_TRACK_VASP
-fprintf(stdout,"TRACK: NO-POS -- vasprun.xml reset!\n");
-#endif
-		/*vasprun.xml was deleted!*/
-		line=g_strdup_printf("vasprun.xml was deleted, stop tracking...\n");
-		gui_text_show(ITALIC,line);
-		g_free(line);
-		fclose(vf);
-		return FALSE;/*GIVE UP*/
-	}
-	line = file_read_line(vf);
-	if(line==NULL) {
-#if DEBUG_TRACK_VASP
-fprintf(stdout,"TRACK: NO-LINE\n");
-#endif
-		/*vasprun.xml was overwritten.*/
-		line=g_strdup_printf("vasprun.xml was overwritten, restart tracking...\n");
-		gui_text_show(ITALIC,line);
-		g_free(line);
-		fclose(vf);
-		line=g_strdup(model->filename);
-		new_model=model_new();
-		model_init(new_model);
-		if(read_xml_vasp(line,new_model)==0){
-#if DEBUG_TRACK_VASP
-fprintf(stdout,"TRACK: NEW-READ SUCCESS\n");
-#endif
-			strcpy(new_model->filename,line);/* strcpy is ok? <- necessary?*/
-			/*refresh*/
-			model->t_next=new_model;
-			g_free(line);
-			return FALSE;/*we don't need to continue tracking on old model*/
-		}else{
-#if DEBUG_TRACK_VASP
-fprintf(stdout,"TRACK: NEW-READ FAIL\n");
-#endif
-			/*Can't open, keep trying*/
-			model_delete(new_model);
-			g_free(line);
-			return TRUE;
-		}
-	}
-#if DEBUG_TRACK_VASP
-fprintf(stdout,"TRACK: LINE-%s\n",line);
-#endif
-	if(find_in_string("finalpos",line)!=NULL) {
-#if DEBUG_TRACK_VASP
-fprintf(stdout,"TRACK: FINALPOS\n");
-#endif
-		g_free(line);
-		fclose(vf);
-		return FALSE;/*GIVE UP <- can stop multiple tracking*/
-	}
-	add_frames=0;
-	if(fetch_in_file(vf,"<calculation>")==0) {
-#if DEBUG_TRACK_VASP
-fprintf(stdout,"TRACK: NO-FRAME\n");
-#endif
-		/*we don't need to update model display here*/
-		fclose(vf);
-		return TRUE;//we didn't get anything this time
-	}
-	p1=ftell(vf);/*flag*/
-        while (line){
-		/*there can be more that ONE frame*/
-		if (find_in_string("</calculation>",line) != NULL) {
-			p2=ftell(vf);/*flag*/
-			fseek(vf,p1,SEEK_SET);/* rewind to flag */
-			add_frame_offset(vf, model);
-			add_frames++;
-			fseek(vf,p2,SEEK_SET);/* forward to flag */
-		}
-                if (find_in_string("<calculation>",line) != NULL) {
-			p1=ftell(vf);/*flag*/
-                }
-                g_free(line);
-                line = file_read_line(vf);
+      /*no initial data but num_frame=1 -> reset*/
+      fclose(vf);
+      return FALSE; /*GIVE UP*/
+    }
+    add_frames = 0;
+    line = file_read_line(vf);
+    p1 = 0;
+    while (line)
+    {
+      if (find_in_string("</calculation>", line) != NULL)
+      {
+        if (p1 != 0)
+        {
+          p2 = ftell(vf);          /*flag*/
+          fseek(vf, p1, SEEK_SET); /* rewind to flag */
+          add_frame_offset(vf, model);
+          add_frames++;
+          fseek(vf, p2, SEEK_SET); /* forward to flag */
         }
-	if(add_frames==0) {
+      }
+      if (find_in_string("<calculation>", line) != NULL)
+      {
+        p1 = ftell(vf); /*flag*/
+      }
+      g_free(line);
+      line = file_read_line(vf);
+    }
+    if (add_frames == 0)
+    {
 #if DEBUG_TRACK_VASP
-fprintf(stdout,"TRACK: NO-ADD-FRAME\n");
+      fprintf(stdout, "TRACK: NO-FRAME NO-FRAME\n");
 #endif
-		vasp_xml_update_plot_energy(vf,model);/*update now*/
-		fclose(vf);
-		if(model->animation){
-			sysenv.refresh_dialog=TRUE;
-			tree_model_refresh(model);
-			redraw_canvas(ALL);
-		}
-		return TRUE;//we didn't get anything this time
-	}
+      /*first step is not finished? be patient*/
+      fclose(vf);
+      return TRUE;
+    }
 #if DEBUG_TRACK_VASP
-fprintf(stdout,"TRACK: ADD-%i-FRAME(S)\n",add_frames);
+    fprintf(stdout, "TRACK: NO-FRAME %i-FRAME\n", add_frames);
 #endif
-	if((!model->animation)&&((model->num_frames+add_frames)>1)){
-		/*we need to set animation*/
-		model->animation=TRUE;
-		model->num_frames+=add_frames;
-		vasp_out->calc_type=VASP_RUN+VASP_OPT;/*_BUG_*/
-		fclose(vf);
-		/*we need to plot the new graph*/
-		vasp_xml_plot_energy(model);
-		return TRUE;/*That's enough for now!*/
-	}
-/*_BUG_ triggered 06/03/2019*/
-	vasp_xml_update_plot_energy(vf,model);/*update now*/
-	/*if there is no plot update will fail*/
-	model->num_frames+=add_frames;
-	if(model->num_frames>1) {
-		model->cur_frame = model->num_frames-1;
-		list=g_list_last(model->frame_list);
-		vffpos=(fpos_t *)list->data;
-//		vffpos=(fpos_t *)g_list_nth_data (model->frame_list,model->cur_frame);
-		fsetpos(vf,vffpos);
+    model->num_frames = add_frames; /*initialpos no longer counts*/
+    fclose(vf);
+    if (add_frames >= 1)
+    {
+      vasp_out->calc_type = VASP_RUN + VASP_OPT;
+      vasp_xml_plot_energy(model);
+      model->animation = TRUE;
+    }
+    return TRUE; /*do tracking later*/
+  }
+  vf = fopen(model->filename, "r");
+  if (vf == NULL)
+  {
 #if DEBUG_TRACK_VASP
-fprintf(stdout,"TRACK: READ FRAME %i -- %p\n",model->cur_frame,vffpos);
+    fprintf(stdout, "TRACK: NO-FILE\n");
 #endif
-		read_xml_vasp_frame(vf,model);
+    /*vasprun.xml was deleted!*/
+    line = g_strdup_printf("vasprun.xml was deleted, stop tracking...\n");
+    gui_text_show(ITALIC, line);
+    g_free(line);
+    return FALSE; /*GIVE UP*/
+  }
+  list = g_list_last(model->frame_list);
+  vffpos = (fpos_t *) list->data;
+  if (fsetpos(vf, vffpos) != 0)
+  { /*go to last pos*/
+#if DEBUG_TRACK_VASP
+    fprintf(stdout, "TRACK: NO-POS -- vasprun.xml reset!\n");
+#endif
+    /*vasprun.xml was deleted!*/
+    line = g_strdup_printf("vasprun.xml was deleted, stop tracking...\n");
+    gui_text_show(ITALIC, line);
+    g_free(line);
+    fclose(vf);
+    return FALSE; /*GIVE UP*/
+  }
+  line = file_read_line(vf);
+  if (line == NULL)
+  {
+#if DEBUG_TRACK_VASP
+    fprintf(stdout, "TRACK: NO-LINE\n");
+#endif
+    /*vasprun.xml was overwritten.*/
+    line = g_strdup_printf("vasprun.xml was overwritten, restart tracking...\n");
+    gui_text_show(ITALIC, line);
+    g_free(line);
+    fclose(vf);
+    line = g_strdup(model->filename);
+    new_model = model_new();
+    model_init(new_model);
+    if (read_xml_vasp(line, new_model) == 0)
+    {
+#if DEBUG_TRACK_VASP
+      fprintf(stdout, "TRACK: NEW-READ SUCCESS\n");
+#endif
+      strcpy(new_model->filename, line); /* strcpy is ok? <- necessary?*/
+      /*refresh*/
+      model->t_next = new_model;
+      g_free(line);
+      return FALSE; /*we don't need to continue tracking on old model*/
+    } else
+    {
+#if DEBUG_TRACK_VASP
+      fprintf(stdout, "TRACK: NEW-READ FAIL\n");
+#endif
+      /*Can't open, keep trying*/
+      model_delete(new_model);
+      g_free(line);
+      return TRUE;
+    }
+  }
+#if DEBUG_TRACK_VASP
+  fprintf(stdout, "TRACK: LINE-%s\n", line);
+#endif
+  if (find_in_string("finalpos", line) != NULL)
+  {
+#if DEBUG_TRACK_VASP
+    fprintf(stdout, "TRACK: FINALPOS\n");
+#endif
+    g_free(line);
+    fclose(vf);
+    return FALSE; /*GIVE UP <- can stop multiple tracking*/
+  }
+  add_frames = 0;
+  if (fetch_in_file(vf, "<calculation>") == 0)
+  {
+#if DEBUG_TRACK_VASP
+    fprintf(stdout, "TRACK: NO-FRAME\n");
+#endif
+    /*we don't need to update model display here*/
+    fclose(vf);
+    return TRUE; // we didn't get anything this time
+  }
+  p1 = ftell(vf); /*flag*/
+  while (line)
+  {
+    /*there can be more that ONE frame*/
+    if (find_in_string("</calculation>", line) != NULL)
+    {
+      p2 = ftell(vf);          /*flag*/
+      fseek(vf, p1, SEEK_SET); /* rewind to flag */
+      add_frame_offset(vf, model);
+      add_frames++;
+      fseek(vf, p2, SEEK_SET); /* forward to flag */
+    }
+    if (find_in_string("<calculation>", line) != NULL)
+    {
+      p1 = ftell(vf); /*flag*/
+    }
+    g_free(line);
+    line = file_read_line(vf);
+  }
+  if (add_frames == 0)
+  {
+#if DEBUG_TRACK_VASP
+    fprintf(stdout, "TRACK: NO-ADD-FRAME\n");
+#endif
+    vasp_xml_update_plot_energy(vf, model); /*update now*/
+    fclose(vf);
+    if (model->animation)
+    {
+      sysenv.refresh_dialog = TRUE;
+      redraw_canvas(ALL);
+    }
+    return TRUE; // we didn't get anything this time
+  }
+#if DEBUG_TRACK_VASP
+  fprintf(stdout, "TRACK: ADD-%i-FRAME(S)\n", add_frames);
+#endif
+  if ((!model->animation) && ((model->num_frames + add_frames) > 1))
+  {
+    /*we need to set animation*/
+    model->animation = TRUE;
+    model->num_frames += add_frames;
+    vasp_out->calc_type = VASP_RUN + VASP_OPT; /*_BUG_*/
+    fclose(vf);
+    /*we need to plot the new graph*/
+    vasp_xml_plot_energy(model);
+    return TRUE; /*That's enough for now!*/
+  }
+  /*_BUG_ triggered 06/03/2019*/
+  vasp_xml_update_plot_energy(vf, model); /*update now*/
+  /*if there is no plot update will fail*/
+  model->num_frames += add_frames;
+  if (model->num_frames > 1)
+  {
+    model->cur_frame = model->num_frames - 1;
+    list = g_list_last(model->frame_list);
+    vffpos = (fpos_t *) list->data;
+    //		vffpos=(fpos_t *)g_list_nth_data (model->frame_list,model->cur_frame);
+    fsetpos(vf, vffpos);
+#if DEBUG_TRACK_VASP
+    fprintf(stdout, "TRACK: READ FRAME %i -- %p\n", model->cur_frame, vffpos);
+#endif
+    read_xml_vasp_frame(vf, model);
 
-		camera = camera_dup(model->camera);
-		model_prep(model);
-		model->camera = camera;
-		g_free(model->camera_default);
-		model->camera_default = camera;
-		
-/*
-		model->cur_frame = model->num_frames-1;
-		rewind(vf);vfpos=ftell(vf);//flag
-		while(fetch_in_file(vf,"<structure")!=0) vfpos=ftell(vf);//flag
-		fseek(vf,vfpos,SEEK_SET);// rewind to flag 
+    camera = camera_dup(model->camera);
+    model_prep(model);
+    model->camera = camera;
+    /* Invalidate GL cache — new camera */
+    model->gl_cache.dirty = TRUE;
+    g_free(model->camera_default);
+    model->camera_default = camera;
 
-		vasp_xml_read_pos(vf,model);
-		fseek(vf,vfpos,SEEK_SET);
-		read_frame(vf,model->cur_frame,model);//will almost always fail on cur_frame!
-*/
-	}
-	model->redraw = TRUE;
-	tree_model_refresh(model);
-	canvas_shuffle();
-	redraw_canvas(ALL);
-	/*if we didn't detect "/modeling" means this is not over*/
-	fclose(vf);
-	return TRUE;
+    /*
+                    model->cur_frame = model->num_frames-1;
+                    rewind(vf);vfpos=ftell(vf);//flag
+                    while(fetch_in_file(vf,"<structure")!=0) vfpos=ftell(vf);//flag
+                    fseek(vf,vfpos,SEEK_SET);// rewind to flag
+
+                    vasp_xml_read_pos(vf,model);
+                    fseek(vf,vfpos,SEEK_SET);
+                    read_frame(vf,model->cur_frame,model);//will almost always fail on cur_frame!
+    */
+  }
+  model->redraw = TRUE;
+  canvas_shuffle();
+  redraw_canvas(ALL);
+  /*if we didn't detect "/modeling" means this is not over*/
+  fclose(vf);
+  return TRUE;
 }
-void track_vasp_cleanup(void *data){
-	gchar *ptr;
-	struct model_pak *model=(struct model_pak *)data;
-	struct model_pak *other_model;
-	if(model==NULL) return;/*why should this happen?*/
-	ptr=g_strdup_printf("VASP TRACKING: STOP.\n");gui_text_show(ITALIC,ptr);g_free(ptr);
-	model->track_me=FALSE;
-	tree_model_refresh(model);/*reset model pixmap*/
-	/*check if another active model need tracking?*/
-	if(model->t_next!=NULL){
+void track_vasp_cleanup(void *data)
+{
+  gchar *ptr;
+  struct model_pak *model = (struct model_pak *) data;
+  struct model_pak *other_model;
+  if (model == NULL)
+    return; /*why should this happen?*/
+  ptr = g_strdup_printf("VASP TRACKING: STOP.\n");
+  gui_text_show(ITALIC, ptr);
+  g_free(ptr);
+  model->track_me = FALSE;
+  /*check if another active model need tracking?*/
+  if (model->t_next != NULL)
+  {
 #if DEBUG_TRACK_VASP
-fprintf(stdout,"TRACK: CONTINUE TRACKING AT %p\n",model->t_next);
+    fprintf(stdout, "TRACK: CONTINUE TRACKING AT %p\n", model->t_next);
 #endif
-		other_model=model->t_next;
-		tree_model_add(other_model);
-		tree_select_model(model);
-		if(model->vasp!=NULL) {
-			vasp_out_reset((vasp_output_struct *)model->vasp);
-			/*optional (tree_select_delete should do that)*/
-			g_free(model->vasp);
-			model->vasp=NULL;
-		}
-		tree_select_delete();
-		tree_select_model(other_model);
-		model=NULL;/*_BUG_ spotted*/
-		other_model->track_me=TRUE;
-		g_timeout_add_full(G_PRIORITY_DEFAULT,TRACKING_TIMEOUT,track_vasp,other_model,track_vasp_cleanup);
-		ptr=g_strdup_printf("VASP TRACKING: (RE-)START.\n");
-		gui_text_show(ITALIC,ptr);
-		g_free(ptr);
-		canvas_shuffle();
-		sysenv.refresh_dialog=TRUE;
-		tree_model_refresh(other_model);
-		redraw_canvas(ALL);
-	}
+    other_model = model->t_next;
+    tree_model_add(other_model);
+    tree_select_model(model);
+    if (model->vasp != NULL)
+    {
+      vasp_out_reset((vasp_output_struct *) model->vasp);
+      g_free(model->vasp);
+      model->vasp = NULL;
+    }
+    if (!sysenv.tree_store)
+    {
+      sysenv.mal = g_slist_remove(sysenv.mal, model);
+      model_delete(model);
+      /* Refresh tree after removing tracking model */
+      extern void qt_tree_refresh(void);
+      extern void qt_refresh_qt_tree(void);
+      qt_tree_refresh();
+      qt_refresh_qt_tree();
+    } else
+    {
+    }
+    tree_select_model(other_model);
+    model = NULL; /*_BUG_ spotted*/
+    other_model->track_me = TRUE;
+    g_timeout_add_full(G_PRIORITY_DEFAULT, TRACKING_TIMEOUT, track_vasp, other_model, track_vasp_cleanup);
+    ptr = g_strdup_printf("VASP TRACKING: (RE-)START.\n");
+    gui_text_show(ITALIC, ptr);
+    g_free(ptr);
+    canvas_shuffle();
+    sysenv.refresh_dialog = TRUE;
+    redraw_canvas(ALL);
+  }
 }
-
 
 /*********************/
 /* helpers functions */
 /*********************/
-gint vasp_load_poscar5(FILE *vf,struct model_pak *model){
-	gint idx,ix;
-	gchar *line;
-	gchar *label;
-	gchar *spec;
-	gchar *name;
-	gdouble a0;
-	/*atom determination*/
-	gchar *ptr;
-	gchar *ptr2;
-	gchar *ptr3;
-	gchar sym[3];
-	struct core_pak *core;
-	gboolean is_direct;
-	/*read a vasp5 formated POSCAR*/
-	if(vf==NULL) return 1;
-	if(model==NULL) return 1;
-	if(feof(vf)) return 1;
-	/*we are good to go*/
-        line = file_read_line(vf);/*title*/
-	if(line==NULL) return 1;
-/*add local structure title to properties?*/
-	line = file_read_line(vf);/*lattice parameter*/
-	if(line==NULL) return 1;
-	sscanf(line,"%lf%*s",&(a0));
-	idx=0;
-	line = file_read_line(vf);/*basis*/
-        while (idx<3) {
-                sscanf(line," %lf %lf %lf%*s",&model->latmat[idx],&model->latmat[idx+3],&model->latmat[idx+6]);
-		/*multiply everything by lattice parameter so a0 -> 1*/
-		model->latmat[idx]*=a0;
-		model->latmat[idx+3]*=a0;
-		model->latmat[idx+6]*=a0;
-                idx+=1;
-                g_free(line);
-                line = file_read_line(vf);
-		if(line == NULL) return -1;/*incomplete basis*/
-        }
-	label=g_strdup(line);/*atomic symbols*/
-	g_free(line);
-	line = file_read_line(vf);/*number of each species*/
-	ptr2=&(line[0]);ptr3=label;/*FIX: 7faa32*/
-	sym[2]='\0';/*always*/
-	model->num_atoms=0;
-/*FIX _BUG_ core list grow!*/
-core_delete_all(model);
-	spec=NULL;
-	name=g_strdup_printf("%c",'\0');
-        do{
-		ptr=ptr2;
-		ix=(gint)g_ascii_strtod(ptr,&ptr2);
-		if(ptr2==ptr) break;
-		while(*ptr3==' ') ptr3++;
-		sym[0]=*ptr3;
-		ptr3++;
-		if((*ptr3==' ')||(*ptr3=='\0')||(*ptr3=='\n')) sym[1]='\0';
-		else sym[1]=*ptr3;
-		ptr3++;
-		for(idx=0;idx<ix;idx++){
-                        core=new_core(sym,model);
-                        core->charge=0.;/*no such information on POSCAR*/
-                        model->cores=g_slist_append(model->cores,core);
-		}
-		g_free(spec);
-		spec=g_strdup_printf("%s%s(%i)",name,sym,ix);
-		g_free(name);
-		name=g_strdup(spec);
-                model->num_atoms+=ix;
-        }while(1);
-	g_free(spec);/*FIX _VALGRIND_BUG_*/
-	g_free(label);/*FIX _VALGRIND_BUG_*/
-property_add_ranked(7, "Formula", name, model);
-	g_free(name);/*FIX _VALGRIND_BUG_*/
-	g_free(line);
-	/*Always true in VASP*/
-        model->fractional=TRUE;
-        model->coord_units=ANGSTROM;
-        model->construct_pbc = TRUE;
-        model->periodic = 3;
-	line = file_read_line(vf);/*direct/cartesian switch*/
-	if((line[0]=='d')||(line[0]=='D')) is_direct=TRUE;
-	else if((line[0]=='c')||(line[0]=='C')||(line[0]=='k')||(line[0]=='K')) is_direct=FALSE;
-	else {/*no info: bailout*/
-		core_delete_all(model);
-		return -2;
-	}
-        line = file_read_line(vf);
-	if((line[0]=='s')||(line[0]=='S')) {
-		/*Selective switch: skip*/
-		g_free(line);
-		line = file_read_line(vf);
-	}
-	/*now start registering atoms*/
-	for(idx=0;idx<(model->num_atoms-1);idx++){
-		core=g_slist_nth_data(model->cores,idx);
-                sscanf(line," %lf %lf %lf%*s",&core->x[0],&core->x[1],&core->x[2]);
-		if(!is_direct){
-			core->x[0]/=(model->latmat[0]+model->latmat[1]+model->latmat[2]);
-			core->x[1]/=(model->latmat[3]+model->latmat[4]+model->latmat[5]);
-			core->x[2]/=(model->latmat[6]+model->latmat[7]+model->latmat[8]);
-		}
-                g_free(line);
-                line = file_read_line(vf);
-		if(line==NULL){
-			/*problem reading atoms: bailout*/
-			core_delete_all(model);
-			return -2;
-		}
-        }
-	/*do the last one outside of loop to avoid file_read_linegoing too far */
-	core=g_slist_nth_data(model->cores,model->num_atoms-1);
-	sscanf(line," %lf %lf %lf%*s",&core->x[0],&core->x[1],&core->x[2]);
-	if(!is_direct){
-		core->x[0]/=(model->latmat[0]+model->latmat[1]+model->latmat[2]);
-		core->x[1]/=(model->latmat[3]+model->latmat[4]+model->latmat[5]);
-		core->x[2]/=(model->latmat[6]+model->latmat[7]+model->latmat[8]);
-	}
-	g_free(line);
-	/*should be all done*/
-	return 0;
+gint vasp_load_poscar5(FILE *vf, struct model_pak *model)
+{
+  gint idx, ix;
+  gchar *line;
+  gchar *label;
+  gchar *spec;
+  gchar *name;
+  gdouble a0;
+  /*atom determination*/
+  gchar *ptr;
+  gchar *ptr2;
+  gchar *ptr3;
+  gchar sym[3];
+  struct core_pak *core;
+  gboolean is_direct;
+  /*read a vasp5 formated POSCAR*/
+  if (vf == NULL)
+    return 1;
+  if (model == NULL)
+    return 1;
+  if (feof(vf))
+    return 1;
+  /*we are good to go*/
+  line = file_read_line(vf); /*title*/
+  if (line == NULL)
+    return 1;
+  /*add local structure title to properties?*/
+  line = file_read_line(vf); /*lattice parameter*/
+  if (line == NULL)
+    return 1;
+  sscanf(line, "%lf%*s", &(a0));
+  idx = 0;
+  line = file_read_line(vf); /*basis*/
+  while (idx < 3)
+  {
+    sscanf(line, " %lf %lf %lf%*s", &model->latmat[idx], &model->latmat[idx + 3], &model->latmat[idx + 6]);
+    /*multiply everything by lattice parameter so a0 -> 1*/
+    model->latmat[idx] *= a0;
+    model->latmat[idx + 3] *= a0;
+    model->latmat[idx + 6] *= a0;
+    idx += 1;
+    g_free(line);
+    line = file_read_line(vf);
+    if (line == NULL)
+      return -1; /*incomplete basis*/
+  }
+  label = g_strdup(line); /*atomic symbols*/
+  g_free(line);
+  line = file_read_line(vf); /*number of each species*/
+  ptr2 = &(line[0]);
+  ptr3 = label;  /*FIX: 7faa32*/
+  sym[2] = '\0'; /*always*/
+  model->num_atoms = 0;
+  /*FIX _BUG_ core list grow!*/
+  core_delete_all(model);
+  spec = NULL;
+  name = g_strdup_printf("%c", '\0');
+  do
+  {
+    ptr = ptr2;
+    ix = (gint) g_ascii_strtod(ptr, &ptr2);
+    if (ptr2 == ptr)
+      break;
+    while (*ptr3 == ' ')
+      ptr3++;
+    sym[0] = *ptr3;
+    ptr3++;
+    if ((*ptr3 == ' ') || (*ptr3 == '\0') || (*ptr3 == '\n'))
+      sym[1] = '\0';
+    else
+      sym[1] = *ptr3;
+    ptr3++;
+    for (idx = 0; idx < ix; idx++)
+    {
+      core = new_core(sym, model);
+      core->charge = 0.; /*no such information on POSCAR*/
+      model->cores = g_slist_append(model->cores, core);
+    }
+    g_free(spec);
+    spec = g_strdup_printf("%s%s(%i)", name, sym, ix);
+    g_free(name);
+    name = g_strdup(spec);
+    model->num_atoms += ix;
+  } while (1);
+  g_free(spec);  /*FIX _VALGRIND_BUG_*/
+  g_free(label); /*FIX _VALGRIND_BUG_*/
+  property_add_ranked(7, "Formula", name, model);
+  g_free(name); /*FIX _VALGRIND_BUG_*/
+  g_free(line);
+  /*Always true in VASP*/
+  model->fractional = TRUE;
+  model->coord_units = ANGSTROM;
+  model->construct_pbc = TRUE;
+  model->periodic = 3;
+  line = file_read_line(vf); /*direct/cartesian switch*/
+  if ((line[0] == 'd') || (line[0] == 'D'))
+    is_direct = TRUE;
+  else if ((line[0] == 'c') || (line[0] == 'C') || (line[0] == 'k') || (line[0] == 'K'))
+    is_direct = FALSE;
+  else
+  { /*no info: bailout*/
+    core_delete_all(model);
+    return -2;
+  }
+  line = file_read_line(vf);
+  if ((line[0] == 's') || (line[0] == 'S'))
+  {
+    /*Selective switch: skip*/
+    g_free(line);
+    line = file_read_line(vf);
+  }
+  /*now start registering atoms*/
+  for (idx = 0; idx < (model->num_atoms - 1); idx++)
+  {
+    core = g_slist_nth_data(model->cores, idx);
+    sscanf(line, " %lf %lf %lf%*s", &core->x[0], &core->x[1], &core->x[2]);
+    if (!is_direct)
+    {
+      core->x[0] /= (model->latmat[0] + model->latmat[1] + model->latmat[2]);
+      core->x[1] /= (model->latmat[3] + model->latmat[4] + model->latmat[5]);
+      core->x[2] /= (model->latmat[6] + model->latmat[7] + model->latmat[8]);
+    }
+    g_free(line);
+    line = file_read_line(vf);
+    if (line == NULL)
+    {
+      /*problem reading atoms: bailout*/
+      core_delete_all(model);
+      return -2;
+    }
+  }
+  /*do the last one outside of loop to avoid file_read_linegoing too far */
+  core = g_slist_nth_data(model->cores, model->num_atoms - 1);
+  sscanf(line, " %lf %lf %lf%*s", &core->x[0], &core->x[1], &core->x[2]);
+  if (!is_direct)
+  {
+    core->x[0] /= (model->latmat[0] + model->latmat[1] + model->latmat[2]);
+    core->x[1] /= (model->latmat[3] + model->latmat[4] + model->latmat[5]);
+    core->x[2] /= (model->latmat[6] + model->latmat[7] + model->latmat[8]);
+  }
+  g_free(line);
+  /*should be all done*/
+  return 0;
 }
 
 /***********************************************************/
@@ -2744,124 +3582,143 @@ property_add_ranked(7, "Formula", name, model);
 /* reading is identical to VASP5 except that lable must be */
 /* explicitely provided.                           --OVHPA */
 /***********************************************************/
-gint vasp_load_poscar4(FILE *vf,struct model_pak *model,char *label){
-	gint idx,ix;
-	gchar *line;
-	gchar *spec;
-	gchar *name;
-	gdouble  a0;
-	/*atom determination*/
-	gchar *ptr;
-	gchar *ptr2;
-	gchar *ptr3;
-	gchar sym[3];
-	struct core_pak *core;
-	gboolean is_direct;
-	/*read a vasp4 formated POSCAR*/
-	if(vf==NULL) return 1;
-	if(model==NULL) return 1;
-	if(feof(vf)) return 1;
-	/*we are good to go*/
-	line = file_read_line(vf);/*title*/
-	if(line==NULL) return 1;
-	/*add local structure title to properties?*/
-	line = file_read_line(vf);/*lattice parameter*/
-	if(line==NULL) return 1;
-	sscanf(line,"%lf%*s",&(a0));
-	idx=0;
-	line = file_read_line(vf);/*basis*/
-	while (idx<3) {
-		sscanf(line," %lf %lf %lf%*s",&model->latmat[idx],&model->latmat[idx+3],&model->latmat[idx+6]);
-		/*multiply everything by lattice parameter so a0 -> 1*/
-		model->latmat[idx]*=a0;
-		model->latmat[idx+3]*=a0;
-		model->latmat[idx+6]*=a0;
-		idx+=1;
-		g_free(line);
-		line = file_read_line(vf);
-		if(line == NULL) return -1;/*incomplete basis*/
-	}
-	ptr3=label;
-	ptr2=&(line[0]);
-	sym[2]='\0';/*always*/
-	model->num_atoms=0;
-	/*FIX _BUG_ core list grow!*/
-	core_delete_all(model);
-	spec=NULL;
-	name=g_strdup_printf("%c",'\0');
-	do{
-		ptr=ptr2;
-		ix=(gint)g_ascii_strtod(ptr,&ptr2);
-		if(ptr2==ptr) break;
-		while(*ptr3==' ') ptr3++;
-		sym[0]=*ptr3;
-		ptr3++;
-		if((*ptr3==' ')||(*ptr3=='\0')||(*ptr3=='\n')) sym[1]='\0';
-		else sym[1]=*ptr3;
-		ptr3++;
-		for(idx=0;idx<ix;idx++){
-			core=new_core(sym,model);
-			core->charge=0.;/*no such information on POSCAR*/
-			model->cores=g_slist_append(model->cores,core);
-		}
-		g_free(spec);
-		spec=g_strdup_printf("%s%s(%i)",name,sym,ix);
-		g_free(name);
-		name=g_strdup(spec);
-		model->num_atoms+=ix;
-	}while(1);
-	g_free(spec);/*FIX _VALGRIND_BUG_*/
-	g_free(label);/*FIX _VALGRIND_BUG_*/
-	property_add_ranked(7, "Formula", name, model);
-	g_free(name);/*FIX _VALGRIND_BUG_*/
-	g_free(line);
-	/*Always true in VASP*/
-	model->fractional=TRUE;
-	model->coord_units=ANGSTROM;
-	model->construct_pbc = TRUE;
-	model->periodic = 3;
-	line = file_read_line(vf);/*direct/cartesian switch*/
-	if((line[0]=='d')||(line[0]=='D')) is_direct=TRUE;
-	else if((line[0]=='c')||(line[0]=='C')||(line[0]=='k')||(line[0]=='K')) is_direct=FALSE;
-	else {/*no info: bailout*/
-		core_delete_all(model);
-		return -2;
-	}
-	line = file_read_line(vf);
-	if((line[0]=='s')||(line[0]=='S')) {
-		/*Selective switch: skip*/
-		g_free(line);
-		line = file_read_line(vf);
-	}
-	/*now start registering atoms*/
-	for(idx=0;idx<(model->num_atoms-1);idx++){
-		core=g_slist_nth_data(model->cores,idx);
-		sscanf(line," %lf %lf %lf%*s",&core->x[0],&core->x[1],&core->x[2]);
-		if(!is_direct){
-			core->x[0]/=(model->latmat[0]+model->latmat[1]+model->latmat[2]);
-			core->x[1]/=(model->latmat[3]+model->latmat[4]+model->latmat[5]);
-			core->x[2]/=(model->latmat[6]+model->latmat[7]+model->latmat[8]);
-		}
-		g_free(line);
-		line = file_read_line(vf);
-		if(line==NULL){
-			/*problem reading atoms: bailout*/
-			core_delete_all(model);
-			return -2;
-		}
-	}
-	/*do the last one outside of loop to avoid file_read_linegoing too far */
-	core=g_slist_nth_data(model->cores,model->num_atoms-1);
-	sscanf(line," %lf %lf %lf%*s",&core->x[0],&core->x[1],&core->x[2]);
-	if(!is_direct){
-		core->x[0]/=(model->latmat[0]+model->latmat[1]+model->latmat[2]);
-		core->x[1]/=(model->latmat[3]+model->latmat[4]+model->latmat[5]);
-		core->x[2]/=(model->latmat[6]+model->latmat[7]+model->latmat[8]);
-	}
-	g_free(line);
-	/*should be all done*/
-	return 0;
+gint vasp_load_poscar4(FILE *vf, struct model_pak *model, char *label)
+{
+  gint idx, ix;
+  gchar *line;
+  gchar *spec;
+  gchar *name;
+  gdouble a0;
+  /*atom determination*/
+  gchar *ptr;
+  gchar *ptr2;
+  gchar *ptr3;
+  gchar sym[3];
+  struct core_pak *core;
+  gboolean is_direct;
+  /*read a vasp4 formated POSCAR*/
+  if (vf == NULL)
+    return 1;
+  if (model == NULL)
+    return 1;
+  if (feof(vf))
+    return 1;
+  /*we are good to go*/
+  line = file_read_line(vf); /*title*/
+  if (line == NULL)
+    return 1;
+  /*add local structure title to properties?*/
+  line = file_read_line(vf); /*lattice parameter*/
+  if (line == NULL)
+    return 1;
+  sscanf(line, "%lf%*s", &(a0));
+  idx = 0;
+  line = file_read_line(vf); /*basis*/
+  while (idx < 3)
+  {
+    sscanf(line, " %lf %lf %lf%*s", &model->latmat[idx], &model->latmat[idx + 3], &model->latmat[idx + 6]);
+    /*multiply everything by lattice parameter so a0 -> 1*/
+    model->latmat[idx] *= a0;
+    model->latmat[idx + 3] *= a0;
+    model->latmat[idx + 6] *= a0;
+    idx += 1;
+    g_free(line);
+    line = file_read_line(vf);
+    if (line == NULL)
+      return -1; /*incomplete basis*/
+  }
+  ptr3 = label;
+  ptr2 = &(line[0]);
+  sym[2] = '\0'; /*always*/
+  model->num_atoms = 0;
+  /*FIX _BUG_ core list grow!*/
+  core_delete_all(model);
+  spec = NULL;
+  name = g_strdup_printf("%c", '\0');
+  do
+  {
+    ptr = ptr2;
+    ix = (gint) g_ascii_strtod(ptr, &ptr2);
+    if (ptr2 == ptr)
+      break;
+    while (*ptr3 == ' ')
+      ptr3++;
+    sym[0] = *ptr3;
+    ptr3++;
+    if ((*ptr3 == ' ') || (*ptr3 == '\0') || (*ptr3 == '\n'))
+      sym[1] = '\0';
+    else
+      sym[1] = *ptr3;
+    ptr3++;
+    for (idx = 0; idx < ix; idx++)
+    {
+      core = new_core(sym, model);
+      core->charge = 0.; /*no such information on POSCAR*/
+      model->cores = g_slist_append(model->cores, core);
+    }
+    g_free(spec);
+    spec = g_strdup_printf("%s%s(%i)", name, sym, ix);
+    g_free(name);
+    name = g_strdup(spec);
+    model->num_atoms += ix;
+  } while (1);
+  g_free(spec);  /*FIX _VALGRIND_BUG_*/
+  g_free(label); /*FIX _VALGRIND_BUG_*/
+  property_add_ranked(7, "Formula", name, model);
+  g_free(name); /*FIX _VALGRIND_BUG_*/
+  g_free(line);
+  /*Always true in VASP*/
+  model->fractional = TRUE;
+  model->coord_units = ANGSTROM;
+  model->construct_pbc = TRUE;
+  model->periodic = 3;
+  line = file_read_line(vf); /*direct/cartesian switch*/
+  if ((line[0] == 'd') || (line[0] == 'D'))
+    is_direct = TRUE;
+  else if ((line[0] == 'c') || (line[0] == 'C') || (line[0] == 'k') || (line[0] == 'K'))
+    is_direct = FALSE;
+  else
+  { /*no info: bailout*/
+    core_delete_all(model);
+    return -2;
+  }
+  line = file_read_line(vf);
+  if ((line[0] == 's') || (line[0] == 'S'))
+  {
+    /*Selective switch: skip*/
+    g_free(line);
+    line = file_read_line(vf);
+  }
+  /*now start registering atoms*/
+  for (idx = 0; idx < (model->num_atoms - 1); idx++)
+  {
+    core = g_slist_nth_data(model->cores, idx);
+    sscanf(line, " %lf %lf %lf%*s", &core->x[0], &core->x[1], &core->x[2]);
+    if (!is_direct)
+    {
+      core->x[0] /= (model->latmat[0] + model->latmat[1] + model->latmat[2]);
+      core->x[1] /= (model->latmat[3] + model->latmat[4] + model->latmat[5]);
+      core->x[2] /= (model->latmat[6] + model->latmat[7] + model->latmat[8]);
+    }
+    g_free(line);
+    line = file_read_line(vf);
+    if (line == NULL)
+    {
+      /*problem reading atoms: bailout*/
+      core_delete_all(model);
+      return -2;
+    }
+  }
+  /*do the last one outside of loop to avoid file_read_linegoing too far */
+  core = g_slist_nth_data(model->cores, model->num_atoms - 1);
+  sscanf(line, " %lf %lf %lf%*s", &core->x[0], &core->x[1], &core->x[2]);
+  if (!is_direct)
+  {
+    core->x[0] /= (model->latmat[0] + model->latmat[1] + model->latmat[2]);
+    core->x[1] /= (model->latmat[3] + model->latmat[4] + model->latmat[5]);
+    core->x[2] /= (model->latmat[6] + model->latmat[7] + model->latmat[8]);
+  }
+  g_free(line);
+  /*should be all done*/
+  return 0;
 }
-
-
-

@@ -1,7 +1,5 @@
 # --- gdis Makefile for linux
 
 CC = gcc
-CFLAGS = -g -Wall -O2
+CFLAGS = -g -ggdb -Wall -Werror -O0
 LDFLAGS = -lm
-#INCS = `pkg-config --cflags gtk+-2.0 gthread-2.0 gtkglext-1.0 gmodule-2.0`
-#LIBS = `pkg-config --libs gtk+-2.0 gthread-2.0 gtkglext-1.0 gmodule-2.0`

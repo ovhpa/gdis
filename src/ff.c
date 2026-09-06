@@ -38,42 +38,42 @@ extern struct sysenv_pak sysenv;
 /************/
 void ff_dump(gpointer data)
 {
-gint i;
-struct forcefield_pak *ff = data;
+  gint i;
+  struct forcefield_pak *ff = data;
 
-printf("[%d] ", ff->type);
+  printf("[%d] ", ff->type);
 
-for (i=0 ; i<ff->atoms_current ; i++)
-  printf("[%s] ", ff->atom[i]);
+  for (i = 0; i < ff->atoms_current; i++)
+    printf("[%s] ", ff->atom[i]);
 
-if (ff->bond_expected)
-  printf("{%f} ", ff->bond_value);
+  if (ff->bond_expected)
+    printf("{%f} ", ff->bond_value);
 
-for (i=0 ; i<ff->data_current ; i++)
-  printf("[%f] ", ff->data[i]);
+  for (i = 0; i < ff->data_current; i++)
+    printf("[%f] ", ff->data[i]);
 
-printf("\n");
+  printf("\n");
 }
 
 void ff_dump_type(gint type, GSList *ff_list)
 {
-GSList *list;
-struct forcefield_pak *ff;
+  GSList *list;
+  struct forcefield_pak *ff;
 
-for (list=ff_list ; list ; list=g_slist_next(list))
+  for (list = ff_list; list; list = g_slist_next(list))
   {
-  ff = list->data;
-  if (ff->type == type)
-    ff_dump(ff);
+    ff = list->data;
+    if (ff->type == type)
+      ff_dump(ff);
   }
 }
 
 void ff_dump_all(GSList *ff_list)
 {
-GSList *list;
+  GSList *list;
 
-for (list=ff_list ; list ; list=g_slist_next(list))
-  ff_dump(list->data);
+  for (list = ff_list; list; list = g_slist_next(list))
+    ff_dump(list->data);
 }
 
 /***********************************/
@@ -81,27 +81,27 @@ for (list=ff_list ; list ; list=g_slist_next(list))
 /***********************************/
 void ff_swap_atoms(struct forcefield_pak *ff, gint i, gint j)
 {
-gint n;
-gchar tmp;
+  gint n;
+  gchar tmp;
 
-/*
-for (n=0 ; n<FF_MAX_ATOMS ; n++)
-   printf("[%s]", ff->atom[n]);
-*/
+  /*
+  for (n=0 ; n<FF_MAX_ATOMS ; n++)
+     printf("[%s]", ff->atom[n]);
+  */
 
-for (n=0 ; n<FF_MAX_SYMBOL ; n++)
+  for (n = 0; n < FF_MAX_SYMBOL; n++)
   {
-  tmp = ff->atom[i][n];
-  ff->atom[i][n] = ff->atom[j][n];
-  ff->atom[j][n] = tmp;
+    tmp = ff->atom[i][n];
+    ff->atom[i][n] = ff->atom[j][n];
+    ff->atom[j][n] = tmp;
   }
 
-/*
-printf(" -> ");
-for (n=0 ; n<FF_MAX_ATOMS ; n++)
-   printf("[%s]", ff->atom[n]);
-printf("\n");
-*/
+  /*
+  printf(" -> ");
+  for (n=0 ; n<FF_MAX_ATOMS ; n++)
+     printf("[%s]", ff->atom[n]);
+  printf("\n");
+  */
 }
 
 /************************************/
@@ -109,47 +109,47 @@ printf("\n");
 /************************************/
 gint ff_match_code(struct forcefield_pak *ff, gint *atoms, gint n)
 {
-gint i, match;
+  gint i, match;
 
-g_assert(ff != NULL);
-g_assert(n <= FF_MAX_ATOMS);
+  g_assert(ff != NULL);
+  g_assert(n <= FF_MAX_ATOMS);
 
-/* number of atoms match forcefield? */
-if (n != ff->atoms_current)
-  return(FALSE);
+  /* number of atoms match forcefield? */
+  if (n != ff->atoms_current)
+    return (FALSE);
 
-/* forward test */
-match = TRUE;
-for (i=0 ; i<ff->atoms_current ; i++)
+  /* forward test */
+  match = TRUE;
+  for (i = 0; i < ff->atoms_current; i++)
   {
-  if (ff->atom[i][0] == 'x' || ff->atom[i][0] == 'X')
-    continue;
+    if (ff->atom[i][0] == 'x' || ff->atom[i][0] == 'X')
+      continue;
 
-  if (atoms[i] != elem_symbol_test(ff->atom[i]))
+    if (atoms[i] != elem_symbol_test(ff->atom[i]))
     {
-    match = FALSE;
-    break;
+      match = FALSE;
+      break;
     }
   }
 
-if (match)
-  return(TRUE);
+  if (match)
+    return (TRUE);
 
-/* backward test */
-match = TRUE;
-for (i=0 ; i<ff->atoms_current ; i++)
+  /* backward test */
+  match = TRUE;
+  for (i = 0; i < ff->atoms_current; i++)
   {
-  if (ff->atom[i][0] == 'x' || ff->atom[i][0] == 'X')
-    continue;
+    if (ff->atom[i][0] == 'x' || ff->atom[i][0] == 'X')
+      continue;
 
-  if (atoms[n-i-1] != elem_symbol_test(ff->atom[i]))
+    if (atoms[n - i - 1] != elem_symbol_test(ff->atom[i]))
     {
-    match = FALSE;
-    break;
+      match = FALSE;
+      break;
     }
   }
 
-return(match);
+  return (match);
 }
 
 /***********************************/
@@ -160,71 +160,71 @@ return(match);
 #define DEBUG_FF_MATCH_LABEL 0
 gint ff_match_label(struct forcefield_pak *ff, gchar **atoms, gint n)
 {
-gint i;
-GString *label, *test;
+  gint i;
+  GString *label, *test;
 
-g_assert(ff != NULL);
+  g_assert(ff != NULL);
 
-/* number of atoms match forcefield? */
-if (n != ff->atoms_current)
-  return(FALSE);
+  /* number of atoms match forcefield? */
+  if (n != ff->atoms_current)
+    return (FALSE);
 
-/* create the atom label string */
-label = g_string_new(NULL);
-for (i=0 ; i<n ; i++)
+  /* create the atom label string */
+  label = g_string_new(NULL);
+  for (i = 0; i < n; i++)
   {
-  g_assert(atoms[i] != NULL);
-  g_string_append(label, atoms[i]);
+    g_assert(atoms[i] != NULL);
+    g_string_append(label, atoms[i]);
   }
 
-/* create forward match string */
-test = g_string_new(NULL);
-for (i=0 ; i<ff->atoms_current ; i++)
+  /* create forward match string */
+  test = g_string_new(NULL);
+  for (i = 0; i < ff->atoms_current; i++)
   {
-  if (ff->atom[i][0] == 'x' || ff->atom[i][0] == 'X')
-    g_string_append(test, atoms[i]);
-  else
-    g_string_append(test, ff->atom[i]);
+    if (ff->atom[i][0] == 'x' || ff->atom[i][0] == 'X')
+      g_string_append(test, atoms[i]);
+    else
+      g_string_append(test, ff->atom[i]);
   }
 
 #if DEBUG_FF_MATCH_LABEL
-printf("[%s] : [%s]\n", label->str, test->str);
+  printf("[%s] : [%s]\n", label->str, test->str);
 #endif
 
-/* forward match */
-if (label->len == test->len)
-  if (g_ascii_strncasecmp(label->str, test->str, label->len) == 0)
+  /* forward match */
+  if (label->len == test->len)
+    if (g_ascii_strncasecmp(label->str, test->str, label->len) == 0)
     {
-    g_string_free(label, TRUE);
-    g_string_free(test, TRUE);
-    return(TRUE);
+      g_string_free(label, TRUE);
+      g_string_free(test, TRUE);
+      return (TRUE);
     }
 
-/* truncate */
-g_string_set_size(test, 0);
+  /* truncate */
+  g_string_set_size(test, 0);
 
-/* create backward match string */
-test = g_string_new(NULL);
-for (i=0 ; i<ff->atoms_current ; i++)
+  /* create backward match string */
+  test = g_string_new(NULL);
+  for (i = 0; i < ff->atoms_current; i++)
   {
-  if (ff->atom[i][0] == 'x' || ff->atom[i][0] == 'X')
-    g_string_prepend(test, atoms[i]);
-  else
-    g_string_prepend(test, ff->atom[i]);
+    if (ff->atom[i][0] == 'x' || ff->atom[i][0] == 'X')
+      g_string_prepend(test, atoms[i]);
+    else
+      g_string_prepend(test, ff->atom[i]);
   }
 
-/* backward match */
-if (label->len == test->len)
-  if (g_ascii_strncasecmp(label->str, test->str, label->len) == 0)
+  /* backward match */
+  if (label->len == test->len)
+    if (g_ascii_strncasecmp(label->str, test->str, label->len) == 0)
     {
-    g_string_free(label, TRUE);
-    g_string_free(test, TRUE);
-    return(TRUE);
+      g_string_free(label, TRUE);
+      g_string_free(test, TRUE);
+      return (TRUE);
     }
 
-g_string_free(label, TRUE);
-g_string_free(test, TRUE);
-return(FALSE);
+  g_string_free(label, TRUE);
+  g_string_free(test, TRUE);
+  return (FALSE);
 }
 
 /*********************************/
@@ -232,17 +232,17 @@ return(FALSE);
 /*********************************/
 gpointer ff_dup(gpointer data)
 {
-struct forcefield_pak *ff_copy, *ff_orig=data;
+  struct forcefield_pak *ff_copy, *ff_orig = data;
 
-g_assert(ff_orig != NULL);
+  g_assert(ff_orig != NULL);
 
-ff_copy = g_malloc(sizeof(struct forcefield_pak));
+  ff_copy = g_malloc(sizeof(struct forcefield_pak));
 
-g_assert(ff_copy != NULL);
+  g_assert(ff_copy != NULL);
 
-memcpy(ff_copy, ff_orig, sizeof(struct forcefield_pak));
+  memcpy(ff_copy, ff_orig, sizeof(struct forcefield_pak));
 
-return(ff_copy);
+  return (ff_copy);
 }
 
 /**********************************/
@@ -250,31 +250,31 @@ return(ff_copy);
 /**********************************/
 gpointer ff_type_new(gint type)
 {
-gint i;
-struct forcefield_pak *ff=NULL;
+  gint i;
+  struct forcefield_pak *ff = NULL;
 
-ff = g_malloc(sizeof(struct forcefield_pak));
+  ff = g_malloc(sizeof(struct forcefield_pak));
 
-/*
-printf("Creating new ff of type: %d\n", type);
-*/
+  /*
+  printf("Creating new ff of type: %d\n", type);
+  */
 
-ff->type = type;
-ff->atoms_current = 0;
-ff->data_current = 0;
+  ff->type = type;
+  ff->atoms_current = 0;
+  ff->data_current = 0;
 
-ff->data_units = FF_UNKNOWN;
-ff->bond_units = FF_UNKNOWN;
-ff->bond_index = -1;
-ff->bond_value = 0.0;
+  ff->data_units = FF_UNKNOWN;
+  ff->bond_units = FF_UNKNOWN;
+  ff->bond_index = -1;
+  ff->bond_value = 0.0;
 
-for (i=FF_MAX_ATOMS ; i-- ; )
-  ff->atom[i][0] = '\0';
+  for (i = FF_MAX_ATOMS; i--;)
+    ff->atom[i][0] = '\0';
 
-for (i=FF_MAX_DATA ; i-- ; )
-  ff->data[i] = 0.0;
+  for (i = FF_MAX_DATA; i--;)
+    ff->data[i] = 0.0;
 
-switch (type)
+  switch (type)
   {
   case FF_HARMONIC:
     ff->atoms_expected = 2;
@@ -315,13 +315,13 @@ switch (type)
     break;
 
   default:
-/* print warning? */
+    /* print warning? */
     ff->atoms_expected = 0;
     ff->data_expected = 0;
     ff->bond_expected = 0;
   }
 
-return(ff);
+  return (ff);
 }
 
 /****************************************/
@@ -330,69 +330,67 @@ return(ff);
 /* return true if complete? */
 gint ff_data_add(gpointer forcefield, gchar *text)
 {
-gint n=0, /*len,*/ num_tokens;/*FIX 8372c5*/
-gchar **buff;
-gdouble x;
-struct forcefield_pak *ff = forcefield;
+  gint n = 0, /*len,*/ num_tokens; /*FIX 8372c5*/
+  gchar **buff;
+  gdouble x;
+  struct forcefield_pak *ff = forcefield;
 
-/* checks */
-if (!ff)
-  return(FALSE);
-if (!text)
-  return(FALSE);
+  /* checks */
+  if (!ff)
+    return (FALSE);
+  if (!text)
+    return (FALSE);
 
-buff = tokenize(text, &num_tokens);
+  buff = tokenize(text, &num_tokens);
 
-/* while atoms still expected ... */
-while (n<num_tokens && ff->atoms_current < ff->atoms_expected)
+  /* while atoms still expected ... */
+  while (n < num_tokens && ff->atoms_current < ff->atoms_expected)
   {
-  if (elem_symbol_test(*(buff+n)))
+    if (elem_symbol_test(*(buff + n)))
     {
-    g_assert(ff->atoms_current < FF_MAX_ATOMS);
+      g_assert(ff->atoms_current < FF_MAX_ATOMS);
 
-//  len = strlen(*(buff+n));/*FIX 8372c5*/
-//  if (len > FF_MAX_SYMBOL-1)
-//    len = FF_MAX_SYMBOL-1;
+      //  len = strlen(*(buff+n));/*FIX 8372c5*/
+      //  if (len > FF_MAX_SYMBOL-1)
+      //    len = FF_MAX_SYMBOL-1;
 
-    g_snprintf(ff->atom[ff->atoms_current++], FF_MAX_SYMBOL, "%s", *(buff+n));
-    }
-  else
+      g_snprintf(ff->atom[ff->atoms_current++], FF_MAX_SYMBOL, "%s", *(buff + n));
+    } else
     {
-/* wildcard */
-    if (g_ascii_strncasecmp(*(buff+n), "x", 1) == 0)
+      /* wildcard */
+      if (g_ascii_strncasecmp(*(buff + n), "x", 1) == 0)
       {
-      g_snprintf(ff->atom[ff->atoms_current++], FF_MAX_SYMBOL, "%s", *(buff+n));
+        g_snprintf(ff->atom[ff->atoms_current++], FF_MAX_SYMBOL, "%s", *(buff + n));
       }
     }
 
-  n++;
+    n++;
   }
 
-/* while data still expected ... */
-while (n<num_tokens)
+  /* while data still expected ... */
+  while (n < num_tokens)
   {
-  if (str_is_float(*(buff+n)))
+    if (str_is_float(*(buff + n)))
     {
-    x = str_to_float(*(buff+n));
+      x = str_to_float(*(buff + n));
 
-    if (ff->data_current == ff->bond_index)
+      if (ff->data_current == ff->bond_index)
       {
-      ff->bond_value = x;
-/* prevent further matches */
-      ff->bond_index = -1;
-      }
-    else
+        ff->bond_value = x;
+        /* prevent further matches */
+        ff->bond_index = -1;
+      } else
       {
-      if (ff->data_current < FF_MAX_DATA)
-        ff->data[ff->data_current++] = x; 
+        if (ff->data_current < FF_MAX_DATA)
+          ff->data[ff->data_current++] = x;
       }
     }
-  n++;
+    n++;
   }
 
-g_strfreev(buff);
+  g_strfreev(buff);
 
-return(FALSE);
+  return (FALSE);
 }
 
 /*****************************/
@@ -402,56 +400,56 @@ return(FALSE);
 #define DEBUG_FF_GET 0
 gpointer ff_search(struct core_pak **c, gint n, GSList *ff_list)
 {
-gint i, code[FF_MAX_ATOMS];
-gchar *label[FF_MAX_ATOMS];
-GSList *list;
-struct forcefield_pak *ff, *ff_match=NULL;
+  gint i, code[FF_MAX_ATOMS];
+  gchar *label[FF_MAX_ATOMS];
+  GSList *list;
+  struct forcefield_pak *ff, *ff_match = NULL;
 
 #if DEBUG_FF_GET
-printf("searching for interaction term, order %d\n", n);
+  printf("searching for interaction term, order %d\n", n);
 #endif
 
-g_assert(c != NULL);
-g_assert(n > 0 && n < FF_MAX_ATOMS+1);
+  g_assert(c != NULL);
+  g_assert(n > 0 && n < FF_MAX_ATOMS + 1);
 
-/* init */
-for (i=0 ; i<n ; i++)
+  /* init */
+  for (i = 0; i < n; i++)
   {
-/* level 1 - search via atom_type if exists, otherwise atom_label */
-  if (c[i]->atom_type)
-    label[i] = c[i]->atom_type;
-  else
-    label[i] = c[i]->atom_label;
+    /* level 1 - search via atom_type if exists, otherwise atom_label */
+    if (c[i]->atom_type)
+      label[i] = c[i]->atom_type;
+    else
+      label[i] = c[i]->atom_label;
 
 #if DEBUG_FF_GET
-printf(" [%s]", label[i]);
+    printf(" [%s]", label[i]);
 #endif
 
-/* level 2 - search via atomic number */
-  code[i] = c[i]->atom_code;
+    /* level 2 - search via atomic number */
+    code[i] = c[i]->atom_code;
   }
 
 #if DEBUG_FF_GET
-printf("\n");
+  printf("\n");
 #endif
 
-for (list=ff_list ; list ; list=g_slist_next(list))
+  for (list = ff_list; list; list = g_slist_next(list))
   {
-  ff = list->data;
+    ff = list->data;
 
-/* exact atom label match test */
-  if (ff_match_label(ff, label, n))
+    /* exact atom label match test */
+    if (ff_match_label(ff, label, n))
     {
-    ff_match = ff;
-    break;
+      ff_match = ff;
+      break;
     }
 
-/* element match */
-  if (ff_match_code(ff, code, n))
-    ff_match = ff;
+    /* element match */
+    if (ff_match_code(ff, code, n))
+      ff_match = ff;
   }
 
-return(ff_match);
+  return (ff_match);
 }
 
 /*****************************************/
@@ -460,18 +458,14 @@ return(ff_match);
 /* NB: FF objs are not duplicated */
 GSList *ff_filter_list(gint type, GSList *ff_list)
 {
-GSList *flist=NULL, *list;
-struct forcefield_pak *ff;
+  GSList *flist = NULL, *list;
+  struct forcefield_pak *ff;
 
-for (list=ff_list ; list ; list=g_slist_next(list))
+  for (list = ff_list; list; list = g_slist_next(list))
   {
-  ff = list->data;
-  if (ff->type == type)
-    flist = g_slist_prepend(flist, ff);
+    ff = list->data;
+    if (ff->type == type)
+      flist = g_slist_prepend(flist, ff);
   }
-return(flist);
+  return (flist);
 }
-
-
-
-

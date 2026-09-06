@@ -43,7 +43,7 @@ The GNU GPL can also be found at http://www.gnu.org
 
 #include "gdis.h"
 #include "file.h"
-//#include "parse.h"
+// #include "parse.h"
 #include "keywords.h"
 #include "interface.h"
 
@@ -57,25 +57,21 @@ extern struct elem_pak elements[];
 #define FRAC_PREC 1e-4
 void parse_decimal_fraction(gdouble *x)
 {
-gint i, n;
-gdouble frac;
-/* common fractions with repeating decimals as numerator, denominator */
-gdouble fractions[][3] = {{1.0, 3.0}, {2.0, 3.0}, {1.0, 6.0},
-                          {5.0, 6.0}, {1.0, 12.0}, {5.0, 12.0},
-                          {7.0, 12.0}, {11.0, 12.0}, {1.0, 9.0},
-                          {2.0, 9.0}, {4.0, 9.0}, {5.0, 9.0},
-                          {7.0, 9.0}, {8.0, 9.0}, {1.0, 11.0},
-                          {2.0, 11.0}, {3.0, 11.0}, {4.0, 11.0},
-                          {5.0, 11.0}, {6.0, 11.0}, {7.0, 11.0},
-                          {8.0, 11.0}, {9.0, 11.0}, {10.0, 11.0}};
-gint max = sizeof(fractions)/(3*sizeof(gdouble));
+  gint i, n;
+  gdouble frac;
+  /* common fractions with repeating decimals as numerator, denominator */
+  gdouble fractions[][3] = {{1.0, 3.0},  {2.0, 3.0},   {1.0, 6.0},  {5.0, 6.0},  {1.0, 12.0}, {5.0, 12.0},
+                            {7.0, 12.0}, {11.0, 12.0}, {1.0, 9.0},  {2.0, 9.0},  {4.0, 9.0},  {5.0, 9.0},
+                            {7.0, 9.0},  {8.0, 9.0},   {1.0, 11.0}, {2.0, 11.0}, {3.0, 11.0}, {4.0, 11.0},
+                            {5.0, 11.0}, {6.0, 11.0},  {7.0, 11.0}, {8.0, 11.0}, {9.0, 11.0}, {10.0, 11.0}};
+  gint max = sizeof(fractions) / (3 * sizeof(gdouble));
 
-for (n = 0; n < max; n++)
-  for (i = 3; i--;)
+  for (n = 0; n < max; n++)
+    for (i = 3; i--;)
     {
-    frac = fractions[n][0]/fractions[n][1];
-    if ( fabs(fabs(x[i]) - frac) <= FRAC_PREC )
-      x[i] = frac*(x[i]<0.0?-1.0:1.0);
+      frac = fractions[n][0] / fractions[n][1];
+      if (fabs(fabs(x[i]) - frac) <= FRAC_PREC)
+        x[i] = frac * (x[i] < 0.0 ? -1.0 : 1.0);
     }
 }
 /*************************************************************/
@@ -84,13 +80,13 @@ for (n = 0; n < max; n++)
 /*************************************************************/
 void parse_char_replace(gchar *text, gchar a, gchar b)
 {
-gchar *t = text;
+  gchar *t = text;
 
-do
+  do
   {
-  switch (*t)
+    switch (*t)
     {
-/* exceptions */
+      /* exceptions */
     case EOF:
       return;
     case '\r':
@@ -109,22 +105,22 @@ do
 /***********************/
 gchar *parse_strip_extension(const gchar *name)
 {
-size_t i;
-gchar *base, *temp;
+  size_t i;
+  gchar *base, *temp;
 
-temp = g_strdup(name);
+  temp = g_strdup(name);
 
-/* get the rightmost '.' */
-for (i=strlen(temp) ; i-- ; )
-  if (*(temp+i) == '.')
+  /* get the rightmost '.' */
+  for (i = strlen(temp); i--;)
+    if (*(temp + i) == '.')
     {
-    base = g_strndup(temp, i);
-    g_free(temp);
-    return(base);
+      base = g_strndup(temp, i);
+      g_free(temp);
+      return (base);
     }
 
-/* not found - return the whole thing */
-return(temp);
+  /* not found - return the whole thing */
+  return (temp);
 }
 
 /***************************/
@@ -132,18 +128,18 @@ return(temp);
 /***************************/
 gchar *parse_strip_newline(const gchar *text)
 {
-gint i;
+  gint i;
 
-for (i=0 ; i<strlen(text) ; i++)
+  for (i = 0; i < strlen(text); i++)
   {
-  switch (text[i])
+    switch (text[i])
     {
     case '\n':
       break;
     }
   }
 
-return(g_strndup(text, i-1));
+  return (g_strndup(text, i - 1));
 }
 
 /*****************************************/
@@ -151,22 +147,22 @@ return(g_strndup(text, i-1));
 /*****************************************/
 gchar *parse_strip(const gchar *name)
 {
-gint i;
-gchar *base, *temp;
+  gint i;
+  gchar *base, *temp;
 
-temp = g_path_get_basename(name);
+  temp = g_path_get_basename(name);
 
-/* get the rightmost '.' */
-for (i=strlen(temp) ; i-- ; )
-  if (*(temp+i) == '.')
+  /* get the rightmost '.' */
+  for (i = strlen(temp); i--;)
+    if (*(temp + i) == '.')
     {
-    base = g_strndup(temp, i);
-    g_free(temp);
-    return(base);
+      base = g_strndup(temp, i);
+      g_free(temp);
+      return (base);
     }
 
-/* not found - return the whole thing */
-return(temp);
+  /* not found - return the whole thing */
+  return (temp);
 }
 
 /**********************************************/
@@ -174,23 +170,23 @@ return(temp);
 /**********************************************/
 gchar *parse_extension_set(const gchar *text, const gchar *ext)
 {
-gint i;
-gchar *base, *name;
+  gint i;
+  gchar *base, *name;
 
-/* get the rightmost '.' */
-for (i=strlen(text) ; i-- ; )
-  if (*(text+i) == '.')
+  /* get the rightmost '.' */
+  for (i = strlen(text); i--;)
+    if (*(text + i) == '.')
     {
-/* replace extension */
-    base = g_strndup(text, i);
-    name = g_strdup_printf("%s.%s", base, ext);
-    g_free(base);
-    return(name);
+      /* replace extension */
+      base = g_strndup(text, i);
+      name = g_strdup_printf("%s.%s", base, ext);
+      g_free(base);
+      return (name);
     }
 
-/* no extension found - add the extension and return */
-name = g_strdup_printf("%s.%s", text, ext);
-return(name);
+  /* no extension found - add the extension and return */
+  name = g_strdup_printf("%s.%s", text, ext);
+  return (name);
 }
 
 /**************************************/
@@ -198,19 +194,19 @@ return(name);
 /**************************************/
 gchar *find_char(const gchar *text, gint target, gint search_type)
 {
-gint i;
+  gint i;
 
-switch(search_type)
+  switch (search_type)
   {
   case LAST:
-    for (i=strlen(text) ; i-- ; )
+    for (i = strlen(text); i--;)
       if (text[i] == target)
-        return((gchar *) text+i);
+        return ((gchar *) text + i);
     break;
   default:
     g_assert_not_reached();
   }
-return(NULL);
+  return (NULL);
 }
 
 /******************************/
@@ -218,12 +214,12 @@ return(NULL);
 /******************************/
 gint char_count(const gchar *text, gchar c)
 {
-gint i, n=0;
+  gint i, n = 0;
 
-for (i=strlen(text) ; i-- ; )
-  if (text[i] == c)
-    n++;
-return(n);
+  for (i = strlen(text); i--;)
+    if (text[i] == c)
+      n++;
+  return (n);
 }
 
 /*************************************************************/
@@ -231,13 +227,13 @@ return(n);
 /*************************************************************/
 void parse_space_replace(gchar *text, gchar c)
 {
-gchar *t = text;
+  gchar *t = text;
 
-while (*t++)
+  while (*t++)
   {
-  switch (*t)
+    switch (*t)
     {
-/* exceptions */
+      /* exceptions */
     case EOF:
       return;
     case '\r':
@@ -256,27 +252,27 @@ while (*t++)
 /******************************************************************************/
 void strip_extra(gchar *text)
 {
-gint i, n;
+  gint i, n;
 
-n = strlen(text);
+  n = strlen(text);
 
-/* white out preceding */
-for (i=0 ; i<n ; i++)
+  /* white out preceding */
+  for (i = 0; i < n; i++)
   {
-  if (g_ascii_isalnum(text[i]))
-    break;
-  else
-    text[i] = ' ';
+    if (g_ascii_isalnum(text[i]))
+      break;
+    else
+      text[i] = ' ';
   }
-/* white out trailing */
-for (i=n ; i-- ; )
+  /* white out trailing */
+  for (i = n; i--;)
   {
-  if (g_ascii_isalnum(text[i]))
-    break;
-  else
-    text[i] = ' ';
+    if (g_ascii_isalnum(text[i]))
+      break;
+    else
+      text[i] = ' ';
   }
-g_strstrip(text);
+  g_strstrip(text);
 }
 
 /********************************************/
@@ -285,24 +281,24 @@ g_strstrip(text);
 #define DEBUG_STR_IS_FLOAT 0
 gint str_is_float(const gchar *text)
 {
-gint i, n;
+  gint i, n;
 
 #if DEBUG_STR_IS_FLOAT
-printf("testing [%s] ", text);
+  printf("testing [%s] ", text);
 #endif
 
-n=0;
-for (i=0 ; i<strlen(text) ; i++)
+  n = 0;
+  for (i = 0; i < strlen(text); i++)
   {
-  switch(text[i])
+    switch (text[i])
     {
-/* exceptions */
+      /* exceptions */
     case '+':
     case '-':
     case '.':
       break;
 
-/* cope with exp notation chars */
+      /* cope with exp notation chars */
     case 'D':
     case 'E':
       n++;
@@ -312,23 +308,23 @@ for (i=0 ; i<strlen(text) ; i++)
       if (g_ascii_isdigit(text[i]))
         break;
 #if DEBUG_STR_IS_FLOAT
-printf(" = not a number (contains %c)\n", text[i]);
+      printf(" = not a number (contains %c)\n", text[i]);
 #endif
-      return(FALSE);
+      return (FALSE);
     }
 
-  if (n > 1)
+    if (n > 1)
     {
 #if DEBUG_STR_IS_FLOAT
-printf(" = not a number (contains more than one exponential character)\n");
+      printf(" = not a number (contains more than one exponential character)\n");
 #endif
-    return(FALSE);
+      return (FALSE);
     }
   }
 #if DEBUG_STR_IS_FLOAT
-printf(" = a number.\n");
+  printf(" = a number.\n");
 #endif
-return(TRUE);
+  return (TRUE);
 }
 
 /*******************************************************/
@@ -339,59 +335,59 @@ return(TRUE);
 #define DEBUG_STR_TO_FLOAT 0
 gdouble str_to_float(const gchar *txt)
 {
-gint i, j=0;
-gchar *str;
-gdouble den, val;
+  gint i, j = 0;
+  gchar *str;
+  gdouble den, val;
 
-/* return 0.0 for NULL string */
-if (txt == NULL)
-  return(0.0);
+  /* return 0.0 for NULL string */
+  if (txt == NULL)
+    return (0.0);
 
-/* if we have a backslash, process number as a fraction */
-str = g_strdup(txt);
+  /* if we have a backslash, process number as a fraction */
+  str = g_strdup(txt);
 
 #if DEBUG_STR_TO_FLOAT
-printf("[%s] : ", str);
+  printf("[%s] : ", str);
 #endif
 
-/* scan string and do any substitutions */
-for (i=strlen(str) ; i-- ; )
+  /* scan string and do any substitutions */
+  for (i = strlen(str); i--;)
   {
-  switch (*(str+i))
+    switch (*(str + i))
     {
-/* process as fraction? */
+      /* process as fraction? */
     case '/':
-      if (i < strlen(str)-1)
-        j = i+1;
+      if (i < strlen(str) - 1)
+        j = i + 1;
       break;
-/* remove any equal signs */
+      /* remove any equal signs */
     case '=':
-      *(str+i) = ' ';
+      *(str + i) = ' ';
       break;
-/* Gaussian uses D instead of E in scientific notation - convert back */
+      /* Gaussian uses D instead of E in scientific notation - convert back */
     case 'd':
     case 'D':
-      *(str+i) = 'E';
+      *(str + i) = 'E';
       break;
-      }
     }
-/* main conversion */
-val = g_ascii_strtod(str, NULL);
+  }
+  /* main conversion */
+  val = g_ascii_strtod(str, NULL);
 
-/* fraction processing */
-if (j)
+  /* fraction processing */
+  if (j)
   {
-  den = g_ascii_strtod(str+j, NULL);
-  if (den != 0.0)
-    val /= den;
+    den = g_ascii_strtod(str + j, NULL);
+    if (den != 0.0)
+      val /= den;
   }
 
 #if DEBUG_STR_TO_FLOAT
-printf(" (%f)\n", val);
+  printf(" (%f)\n", val);
 #endif
 
-g_free(str);
-return(val);
+  g_free(str);
+  return (val);
 }
 
 /*********************/
@@ -402,142 +398,142 @@ return(val);
 #define DEBUG_TOKENIZE 0
 gchar **tokenize(const gchar *src, gint *num)
 {
-gint i, j, n, len;
-gchar *tmp, *ptr;
-gchar **dest;
-GSList *list=NULL, *item=NULL;
+  gint i, j, n, len;
+  gchar *tmp, *ptr;
+  gchar **dest;
+  GSList *list = NULL, *item = NULL;
 
-/* checks */
-if (!src)
+  /* checks */
+  if (!src)
   {
-  *num=0;
-  return(NULL);
+    *num = 0;
+    return (NULL);
   }
 
-/* duplicate & replace all whitespace with a space */
-tmp = g_strdup(src);
-for (i=0 ; i<strlen(tmp) ; i++)
-  if (isspace((int) *(tmp+i)))
-    *(tmp+i) = ' ';
+  /* duplicate & replace all whitespace with a space */
+  tmp = g_strdup(src);
+  for (i = 0; i < strlen(tmp); i++)
+    if (isspace((int) *(tmp + i)))
+      *(tmp + i) = ' ';
 
-/* strange errors can be avoided if a strstrip is done */
-g_strstrip(tmp);
+  /* strange errors can be avoided if a strstrip is done */
+  g_strstrip(tmp);
 
 #if DEBUG_TOKENIZE
-printf("tokenizing [%s]\n", tmp);
+  printf("tokenizing [%s]\n", tmp);
 #endif
 
-len = strlen(tmp);
-i=n=0;
-while(i<len)
+  len = strlen(tmp);
+  i = n = 0;
+  while (i < len)
   {
-/* find end of current token */
-  j=i;
-  while(!isspace((int) *(tmp+j)) && j<len)
-    j++;
+    /* find end of current token */
+    j = i;
+    while (!isspace((int) *(tmp + j)) && j < len)
+      j++;
 
-/* assign token */
-  ptr = g_strndup(tmp+i, j-i);
+    /* assign token */
+    ptr = g_strndup(tmp + i, j - i);
 
-  list = g_slist_prepend(list, ptr);
-  n++;
+    list = g_slist_prepend(list, ptr);
+    n++;
 
-/* find start of new token */
-  i=j;
+    /* find start of new token */
+    i = j;
 
-  while(isspace((int) *(tmp+i)) && i<len)
+    while (isspace((int) *(tmp + i)) && i < len)
+      i++;
+  }
+  list = g_slist_reverse(list);
+
+  /* return a NULL if no tokens were found */
+  if (!n)
+  {
+    *num = 0;
+    g_free(tmp);
+    free_slist(list);
+    return (NULL);
+  }
+
+  /* num+1 -> last ptr is NULL, so g_strfreev works */
+  dest = g_malloc((n + 1) * sizeof(gchar *));
+
+  i = 0;
+  /* fill in the non empty tokens */
+  item = list;
+  while (i < n)
+  {
+    if (item != NULL)
+    {
+      /* comment character - ignore all subsequent tokens */
+      ptr = item->data;
+      if (*ptr == '#')
+        break;
+
+      *(dest + i) = g_strdup(ptr);
+#if DEBUG_TOKENIZE
+      printf(" (%s)", ptr);
+#endif
+      item = g_slist_next(item);
+    } else
+    {
+      /* fake item */
+      *(dest + i) = g_strdup(" ");
+      ;
+#if DEBUG_TOKENIZE
+      printf(" (empty token)");
+#endif
+    }
     i++;
   }
-list = g_slist_reverse(list);
 
-/* return a NULL if no tokens were found */
-if (!n)
-  {
-  *num = 0;
+  /* terminate */
+  *(dest + i) = NULL;
+  *num = i;
+
+#if DEBUG_TOKENIZE
+  printf(" %p", *(dest + i));
+  printf(": found %d tokens\n", *num);
+#endif
+
+  /* done */
   g_free(tmp);
   free_slist(list);
-  return(NULL);
-  }
 
-/* num+1 -> last ptr is NULL, so g_strfreev works */
-dest = g_malloc((n+1)*sizeof(gchar *));
-
-i=0;
-/* fill in the non empty tokens */
-item = list;
-while (i<n)
-  {
-  if (item != NULL)
-    {
-/* comment character - ignore all subsequent tokens */
-    ptr = item->data;
-    if (*ptr == '#')
-      break;
-
-    *(dest+i) = g_strdup(ptr);
-#if DEBUG_TOKENIZE
-printf(" (%s)", ptr);
-#endif
-    item = g_slist_next(item);
-    }
-  else
-    {
-/* fake item */
-    *(dest+i) = g_strdup(" ");;
-#if DEBUG_TOKENIZE
-printf(" (empty token)");
-#endif
-    }
-  i++;
-  }
-
-/* terminate */
-*(dest+i) = NULL;
-*num = i;
-
-#if DEBUG_TOKENIZE
-printf(" %p",*(dest+i));
-printf(": found %d tokens\n", *num);
-#endif
-
-/* done */
-g_free(tmp);
-free_slist(list);
-
-return(dest);
+  return (dest);
 }
 /* Return a list of keywords found */
 /* NEW - match all keywords, not just space separated ones */
 #define DEBUG_GET_KEYWORDS_ANYWHERE 0
 GSList *get_keywords_anywhere(gchar *str)
 {
-gint i, j=0;
-GSList *list=NULL;
+  gint i, j = 0;
+  GSList *list = NULL;
 
 #if DEBUG_GET_KEYWORD_ANYWHERE
-printf("extracted: ");
+  printf("extracted: ");
 #endif
 
-i = 0;
-while (keywords[i].code != -1)
+  i = 0;
+  while (keywords[i].code != -1)
   {
-  if (strstr(str, keywords[i].label) != NULL)
+    if (strstr(str, keywords[i].label) != NULL)
     {
 #if DEBUG_GET_KEYWORD_ANYWHERE
-printf(" %d", keywords[i].code);
+      printf(" %d", keywords[i].code);
 #endif
-    list = g_slist_prepend(list, GINT_TO_POINTER(keywords[i].code));
-    j++;
+      list = g_slist_prepend(list, GINT_TO_POINTER(keywords[i].code));
+      j++;
     }
-  i++;
+    i++;
   }
-list = g_slist_reverse(list);
+  list = g_slist_reverse(list);
 
 #if DEBUG_GET_KEYWORD_ANYWHERE
-printf("\nKeywords found: %d\n", j);
+  printf("\nKeywords found: %d\n", j);
 #endif
 
-return(list);
+  return (list);
 }
 
 /* Return a list of keywords found (iff space separated!) */
@@ -545,46 +541,46 @@ return(list);
 #define DEBUG_GET_KEYWORDS 0
 GSList *get_keywords(gchar *str)
 {
-gint i, j, len, num_tokens;
-gchar **buff;
-GSList *list=NULL;
+  gint i, j, len, num_tokens;
+  gchar **buff;
+  GSList *list = NULL;
 
 #if DEBUG_GET_KEYWORDS
-printf("extracting from: %s\n", str);
+  printf("extracting from: %s\n", str);
 #endif
 
-buff = tokenize(str, &num_tokens);
+  buff = tokenize(str, &num_tokens);
 
-i=0;
-while(i < num_tokens)
+  i = 0;
+  while (i < num_tokens)
   {
-  if (*(buff+i) == NULL)
-    break; 
+    if (*(buff + i) == NULL)
+      break;
 
-/* default keyword code - nothing */
-  j=0;
-  while(keywords[j].code != -1)
+    /* default keyword code - nothing */
+    j = 0;
+    while (keywords[j].code != -1)
     {
-    len = strlen(keywords[j].label);
-    if (g_ascii_strncasecmp(*(buff+i), keywords[j].label, len) == 0)
+      len = strlen(keywords[j].label);
+      if (g_ascii_strncasecmp(*(buff + i), keywords[j].label, len) == 0)
       {
 #if DEBUG_GET_KEYWORDS
-printf(" %d %s (%s %d)", keywords[j].code, keywords[j].label, *(buff+i), len);
+        printf(" %d %s (%s %d)", keywords[j].code, keywords[j].label, *(buff + i), len);
 #endif
-      list = g_slist_prepend(list, GINT_TO_POINTER(keywords[j].code));
+        list = g_slist_prepend(list, GINT_TO_POINTER(keywords[j].code));
       }
-    j++;
+      j++;
     }
-  i++;
+    i++;
   }
-list = g_slist_reverse(list);
+  list = g_slist_reverse(list);
 
-g_strfreev(buff);
+  g_strfreev(buff);
 #if DEBUG_GET_KEYWORDS
-printf("\nKeywords found: %d\n", g_slist_length(list));
+  printf("\nKeywords found: %d\n", g_slist_length(list));
 #endif
 
-return(list);
+  return (list);
 }
 
 /***********************************************************/
@@ -592,9 +588,9 @@ return(list);
 /***********************************************************/
 gint hash_strcmp(gconstpointer a, gconstpointer b)
 {
-if (g_ascii_strcasecmp(a, b) == 0)
-  return(TRUE);
-return(FALSE);
+  if (g_ascii_strcasecmp(a, b) == 0)
+    return (TRUE);
+  return (FALSE);
 }
 
 /**************************************************************/
@@ -604,61 +600,61 @@ return(FALSE);
 #define DEBUG_GET_KEYWORD 0
 gint *get_keyword(gchar *str, gint max)
 {
-gint i, j, n, len, num_tokens;
-gchar **buff;
-gint *list;
+  gint i, j, n, len, num_tokens;
+  gchar **buff;
+  gint *list;
 
 #if DEBUG_GET_KEYWORD
-printf("extracted: ");
+  printf("extracted: ");
 #endif
 
-list = g_malloc((max+1) * sizeof(gint));
-buff = tokenize(str, &num_tokens);
+  list = g_malloc((max + 1) * sizeof(gint));
+  buff = tokenize(str, &num_tokens);
 
-n=1;
-i=0;
-while(i < num_tokens)
+  n = 1;
+  i = 0;
+  while (i < num_tokens)
   {
-/* default keyword code - nothing */
-  *(list+n) = -1;
-  j=0;
-  while(keywords[j].code != -1)
+    /* default keyword code - nothing */
+    *(list + n) = -1;
+    j = 0;
+    while (keywords[j].code != -1)
     {
-    len = strlen(keywords[j].label);
-    if (g_ascii_strncasecmp(*(buff+i), keywords[j].label, len) == 0)
+      len = strlen(keywords[j].label);
+      if (g_ascii_strncasecmp(*(buff + i), keywords[j].label, len) == 0)
       {
 #if DEBUG_GET_KEYWORD
-printf(" %d",keywords[j].code);
+        printf(" %d", keywords[j].code);
 #endif
-      *(list+n) = keywords[j].code;
-      if (++n == max+1)
-        goto get_keyword_done;
+        *(list + n) = keywords[j].code;
+        if (++n == max + 1)
+          goto get_keyword_done;
       }
-    j++;
+      j++;
     }
-  i++;
+    i++;
   }
 get_keyword_done:;
-g_strfreev(buff);
-*list = n-1;
+  g_strfreev(buff);
+  *list = n - 1;
 #if DEBUG_GET_KEYWORD
-printf("\n");
+  printf("\n");
 #endif
 
-return(list);
+  return (list);
 }
 
 gint num_keys(void)
 {
-gint n;
+  gint n;
 
-n=0;
-while (keywords[n].code != -1)
-  n++;
-/*
-printf("Found %d keywords\n",n);
-*/
-return(n);
+  n = 0;
+  while (keywords[n].code != -1)
+    n++;
+  /*
+  printf("Found %d keywords\n",n);
+  */
+  return (n);
 }
 
 /*****************************************/
@@ -666,19 +662,18 @@ return(n);
 /*****************************************/
 gint get_keyword_code(const gchar *token)
 {
-gint j, len;
+  gint j, len;
 
-j=0;
-while(keywords[j].code != -1)
+  j = 0;
+  while (keywords[j].code != -1)
   {
-  len = strlen(keywords[j].label);
-  if (g_ascii_strncasecmp(token, keywords[j].label, len) == 0)
-    return(j);
-  j++;
+    len = strlen(keywords[j].label);
+    if (g_ascii_strncasecmp(token, keywords[j].label, len) == 0)
+      return (j);
+    j++;
   }
-return(-1);
+  return (-1);
 }
-
 
 /************************************************/
 /* get the next (non-trivial) line and tokenize */
@@ -686,20 +681,19 @@ return(-1);
 /* NULL is returned on EOF */
 gchar **get_tokenized_line(FILE *fp, gint *num_tokens)
 {
-gchar **buff, line[LINELEN];
+  gchar **buff, line[LINELEN];
 
-do
+  do
   {
-  if (fgetline(fp, line))
+    if (fgetline(fp, line))
     {
-    *num_tokens = 0;
-    return(NULL);
+      *num_tokens = 0;
+      return (NULL);
     }
-  buff = tokenize(line, num_tokens);
-  }
-while (!buff);
+    buff = tokenize(line, num_tokens);
+  } while (!buff);
 
-return(buff);
+  return (buff);
 }
 
 /*********************/
@@ -710,76 +704,76 @@ return(buff);
 #define DEBUG_GET_TOKENS 0
 gchar **get_tokens(gchar *src, gint num)
 {
-gint i, j;
-gchar **buff, **dest, *tmp;
+  gint i, j;
+  gchar **buff, **dest, *tmp;
 
-/* duplicate & replace all whitespace with a space */
-/* strange errors can be avoided if a strstrip is done */
-tmp = g_strdup(src);
-for (i=0 ; i<strlen(tmp) ; i++)
-  if (isspace((int) *(tmp+i)))
-    *(tmp+i) = ' ';
-g_strstrip(tmp);
+  /* duplicate & replace all whitespace with a space */
+  /* strange errors can be avoided if a strstrip is done */
+  tmp = g_strdup(src);
+  for (i = 0; i < strlen(tmp); i++)
+    if (isspace((int) *(tmp + i)))
+      *(tmp + i) = ' ';
+  g_strstrip(tmp);
 
-/* NB: most problems have occured by making MAX_TOKENS too small */
-/* for some reason it can need many more than it would apparently seem */
-buff = g_strsplit(tmp, " ", MAX_TOKENS);
+  /* NB: most problems have occured by making MAX_TOKENS too small */
+  /* for some reason it can need many more than it would apparently seem */
+  buff = g_strsplit(tmp, " ", MAX_TOKENS);
 
-/* num+1 -> last ptr is NULL, so g_strfreev works */
-dest = g_malloc((num+1)*sizeof(gchar *));
+  /* num+1 -> last ptr is NULL, so g_strfreev works */
+  dest = g_malloc((num + 1) * sizeof(gchar *));
 
-i=j=0;
-/* fill in the non empty tokens */
-while (*(buff+i) != NULL && j<num)
+  i = j = 0;
+  /* fill in the non empty tokens */
+  while (*(buff + i) != NULL && j < num)
   {
-  if (strlen(*(buff+i)))
-    *(dest+j++) = g_strdup(g_strstrip(*(buff+i)));
-  i++;
+    if (strlen(*(buff + i)))
+      *(dest + j++) = g_strdup(g_strstrip(*(buff + i)));
+    i++;
   }
 
-/* pad with empty strings */
-while (j<num)
-  *(dest+j++) = g_strdup("");
+  /* pad with empty strings */
+  while (j < num)
+    *(dest + j++) = g_strdup("");
 
-/* terminate */
-*(dest+num) = NULL;
+  /* terminate */
+  *(dest + num) = NULL;
 
 #if DEBUG_GET_TOKENS
-for (i=0 ; i<num ; i++)
-  printf("%s:",*(dest+i));
-printf("%p\n",*(dest+num));
+  for (i = 0; i < num; i++)
+    printf("%s:", *(dest + i));
+  printf("%p\n", *(dest + num));
 #endif
 
-/* done */
-g_strfreev(buff);
-g_free(tmp);
+  /* done */
+  g_strfreev(buff);
+  g_free(tmp);
 
-return(dest);
+  return (dest);
 }
 
 /* need another routine that gets everything in a line past */
 /* a specified point - this will replace copy_items(...ALL) */
 gchar *get_token_pos(gchar *src, gint num)
 {
-gint i,j,n,len;
+  gint i, j, n, len;
 
-/* flag the start(i) and end(j) */
-len = strlen(src);
-i = j = 0;
-for (n=0 ; n<=num ; n++)
+  /* flag the start(i) and end(j) */
+  len = strlen(src);
+  i = j = 0;
+  for (n = 0; n <= num; n++)
   {
-  i = j;
-/* FIXME - use the isspace function here */
-  while((*(src+i) == ' ' || *(src+i) == '\t') && i<len)
-    i++; 
+    i = j;
+    /* FIXME - use the isspace function here */
+    while ((*(src + i) == ' ' || *(src + i) == '\t') && i < len)
+      i++;
 
-  j = i;
-  while(*(src+j) != ' ' && *(src+j) != '\t' && j<len)
-    j++;
+    j = i;
+    while (*(src + j) != ' ' && *(src + j) != '\t' && j < len)
+      j++;
   }
- 
-/* return ptr to position */
-return(src+i);
+
+  /* return ptr to position */
+  return (src + i);
 }
 
 #ifndef __WIN32
@@ -789,32 +783,32 @@ return(src+i);
 /*****************************************************************/
 gint parse_getchar_hidden(void)
 {
-struct termios old;
-struct termios new;
-gint c;
+  struct termios old;
+  struct termios new;
+  gint c;
 
-/* get terminal stdin attributes */
-if (tcgetattr(0, &old) == -1)
-  return(-1);
+  /* get terminal stdin attributes */
+  if (tcgetattr(0, &old) == -1)
+    return (-1);
 
-/* turn off echo */
-new = old;
-new.c_lflag &= ~(ICANON | ECHO);
-new.c_cc[VMIN] = 1;
-/* don't timeout? */
-new.c_cc[VTIME] = 0;
+  /* turn off echo */
+  new = old;
+  new.c_lflag &= ~(ICANON | ECHO);
+  new.c_cc[VMIN] = 1;
+  /* don't timeout? */
+  new.c_cc[VTIME] = 0;
 
-/* change the terminal attributes immediately */
-if (tcsetattr(0, TCSANOW, &new) == -1)
-  return(-1);
+  /* change the terminal attributes immediately */
+  if (tcsetattr(0, TCSANOW, &new) == -1)
+    return (-1);
 
-/* read in a character */
-c = getchar();
+  /* read in a character */
+  c = getchar();
 
-/* restore terminal attributes */
-tcsetattr(0, TCSANOW, &old);
+  /* restore terminal attributes */
+  tcsetattr(0, TCSANOW, &old);
 
-return(c);
+  return (c);
 }
 
 /******************************************************************/
@@ -822,29 +816,27 @@ return(c);
 /******************************************************************/
 gchar *parse_getline_hidden(void)
 {
-gchar c;
-GString *line;
+  gchar c;
+  GString *line;
 
-line = g_string_new(NULL);
+  line = g_string_new(NULL);
 
-for (;;)
+  for (;;)
   {
-  c = parse_getchar_hidden(); 
+    c = parse_getchar_hidden();
 
-/* to display or not to display (more secure not to - but gives no feedback) */
-//  printf("*");
+    /* to display or not to display (more secure not to - but gives no feedback) */
+    //  printf("*");
 
-  if (c == '\n')
+    if (c == '\n')
     {
-    printf("\n");
-    break;
-    }
-  else
-    g_string_append_printf(line, "%c", c);//g_string_sprintfa is deprecated
+      printf("\n");
+      break;
+    } else
+      g_string_append_printf(line, "%c", c); // g_string_sprintfa is deprecated
   }
 
-return(g_string_free(line, FALSE));
+  return (g_string_free(line, FALSE));
 }
 
 #endif
-

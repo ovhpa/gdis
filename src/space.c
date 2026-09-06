@@ -43,20 +43,20 @@ The GNU GPL can also be found at http://www.gnu.org
 /**********/
 static int str_ibegin(const char *s1, const char *s2) /* string ignore-case */
 {                                                     /* begin              */
-char u1, u2;
+  char u1, u2;
 
-while (*s1 && *s2)
+  while (*s1 && *s2)
   {
-  u1 = toupper(*s1++);
-  u2 = toupper(*s2++);
-  if (u1 < u2)
-    return -1;
-  else if (u1 > u2)
-    return  1;
+    u1 = toupper(*s1++);
+    u2 = toupper(*s2++);
+    if (u1 < u2)
+      return -1;
+    else if (u1 > u2)
+      return 1;
   }
-if (*s2)
-  return -1;
-return 0;
+  if (*s2)
+    return -1;
+  return 0;
 }
 
 /********************************/
@@ -64,8 +64,8 @@ return 0;
 /********************************/
 void sginfo_free(T_SgInfo *SgInfo)
 {
-g_free(SgInfo->ListSeitzMx);
-g_free(SgInfo->ListRotMxInfo);
+  g_free(SgInfo->ListSeitzMx);
+  g_free(SgInfo->ListRotMxInfo);
 }
 
 /**********/
@@ -74,83 +74,80 @@ g_free(SgInfo->ListRotMxInfo);
 /* TODO - we know what the input will be - trim */
 gint BuildSgInfo(T_SgInfo *SgInfo, const gchar *SgName)
 {
-gint                VolLetter;
-const T_TabSgName  *tsgn;
+  gint VolLetter;
+  const T_TabSgName *tsgn;
 
+  /* look for "VolA", "VolI", or "Hall" */
 
-/* look for "VolA", "VolI", or "Hall" */
+  while (*SgName && isspace((int) *SgName))
+    SgName++;
 
-while (*SgName && isspace((int) *SgName)) SgName++;
+  VolLetter = -1;
 
-VolLetter = -1;
-
-if      (isdigit((int) *SgName))
-  VolLetter = 'A';
-else if (str_ibegin(SgName, "VolA") == 0)
+  if (isdigit((int) *SgName))
+    VolLetter = 'A';
+  else if (str_ibegin(SgName, "VolA") == 0)
   {
-  VolLetter = 'A';
-  SgName += 4;
-  }
-else if (str_ibegin(SgName, "VolI") == 0 || str_ibegin(SgName, "Vol1") == 0)
+    VolLetter = 'A';
+    SgName += 4;
+  } else if (str_ibegin(SgName, "VolI") == 0 || str_ibegin(SgName, "Vol1") == 0)
   {
-  VolLetter = 'I';
-  SgName += 4;
-  }
-else if (str_ibegin(SgName, "Hall") == 0)
+    VolLetter = 'I';
+    SgName += 4;
+  } else if (str_ibegin(SgName, "Hall") == 0)
   {
-  VolLetter = 0;
-  SgName += 4;
+    VolLetter = 0;
+    SgName += 4;
   }
 
-while (*SgName && isspace((int) *SgName)) 
-  SgName++;
+  while (*SgName && isspace((int) *SgName))
+    SgName++;
 
-/* default is "VolA" */
+  /* default is "VolA" */
 
-if (VolLetter == -1)
-  VolLetter = 'A';
+  if (VolLetter == -1)
+    VolLetter = 'A';
 
-/* if we don't have a Hall symbol do a table look-up */
+  /* if we don't have a Hall symbol do a table look-up */
 
-tsgn = NULL;
+  tsgn = NULL;
 
-if (VolLetter)
+  if (VolLetter)
   {
-  tsgn = FindTabSgNameEntry(SgName, VolLetter);
-  if (tsgn == NULL) return -1; /* no matching table entry */
-  SgName = tsgn->HallSymbol;
+    tsgn = FindTabSgNameEntry(SgName, VolLetter);
+    if (tsgn == NULL)
+      return -1; /* no matching table entry */
+    SgName = tsgn->HallSymbol;
   }
 
-/* Allocate memory for the list of Seitz matrices and
-   a supporting list which holds the characteristics of
-   the rotation parts of the Seitz matrices
-*/
+  /* Allocate memory for the list of Seitz matrices and
+     a supporting list which holds the characteristics of
+     the rotation parts of the Seitz matrices
+  */
 
-SgInfo->MaxList = 192; /* absolute maximum number of symops */
+  SgInfo->MaxList = 192; /* absolute maximum number of symops */
 
-SgInfo->ListSeitzMx
-    = g_malloc(SgInfo->MaxList * sizeof (*SgInfo->ListSeitzMx));
+  SgInfo->ListSeitzMx = g_malloc(SgInfo->MaxList * sizeof(*SgInfo->ListSeitzMx));
 
-SgInfo->ListRotMxInfo
-    = g_malloc(SgInfo->MaxList * sizeof (*SgInfo->ListRotMxInfo));
+  SgInfo->ListRotMxInfo = g_malloc(SgInfo->MaxList * sizeof(*SgInfo->ListRotMxInfo));
 
-/* Initialize the SgInfo structure */
+  /* Initialize the SgInfo structure */
 
-InitSgInfo(SgInfo);
-SgInfo->TabSgName = tsgn; /* in case we know the table entry */
+  InitSgInfo(SgInfo);
+  SgInfo->TabSgName = tsgn; /* in case we know the table entry */
 
-/* Translate the Hall symbol and generate the whole group */
+  /* Translate the Hall symbol and generate the whole group */
 
-ParseHallSymbol(SgName, SgInfo);
-if (SgError != NULL)
-  return -1;
+  ParseHallSymbol(SgName, SgInfo);
+  if (SgError != NULL)
+    return -1;
 
   /* Do some book-keeping and derive crystal system, point group,
      and - if not already set - find the entry in the internal
      table of space group symbols
    */
 
-return CompleteSgInfo(SgInfo);
+  return CompleteSgInfo(SgInfo);
 }
 
 /*****************************************/
@@ -158,66 +155,66 @@ return CompleteSgInfo(SgInfo);
 /*****************************************/
 void space_fill_cell(struct model_pak *model)
 {
-gint j, s, smin;
-GSList *cores=NULL, *list;
-struct core_pak *core, *sr_core;
-struct shel_pak *sr_shell;
+  gint j, s, smin;
+  GSList *cores = NULL, *list;
+  struct core_pak *core, *sr_core;
+  struct shel_pak *sr_shell;
 
-/* include an inversion (ie mult by -1) operation? */
-smin = 0;
-if (model->sginfo.inversion == -1)
-  smin = -2;
+  /* include an inversion (ie mult by -1) operation? */
+  smin = 0;
+  if (model->sginfo.inversion == -1)
+    smin = -2;
 
-/* s = +1 or -1 for inversion of matrix elements */
-for (s=1 ; s>smin ; s-=2)
+  /* s = +1 or -1 for inversion of matrix elements */
+  for (s = 1; s > smin; s -= 2)
   {
-/* loop over group operations */
-/* NB: include j=0 in case of inversion centre ie (-x,-y,-z) */
-  for (j=(s+1)/2 ; j<model->sginfo.order ; j++)
+    /* loop over group operations */
+    /* NB: include j=0 in case of inversion centre ie (-x,-y,-z) */
+    for (j = (s + 1) / 2; j < model->sginfo.order; j++)
     {
-/* loop over asymmetric cores */
-    for (list=model->cores ; list ; list=g_slist_next(list))
+      /* loop over asymmetric cores */
+      for (list = model->cores; list; list = g_slist_next(list))
       {
-      core = list->data;
-      if (!core->primary)
-        continue;
+        core = list->data;
+        if (!core->primary)
+          continue;
 
-/* add a symmetry related core */
-      sr_core = dup_core(core);
-      cores = g_slist_prepend(cores, sr_core);
-      sr_core->primary = FALSE;
-      sr_core->primary_core = core;
-      VEC3MUL(sr_core->x, s);
-      vecmat(*(model->sginfo.matrix+j), sr_core->x);
-      sr_core->x[0] += *(*(model->sginfo.offset+j)+0);
-      sr_core->x[1] += *(*(model->sginfo.offset+j)+1);
-      sr_core->x[2] += *(*(model->sginfo.offset+j)+2);
+        /* add a symmetry related core */
+        sr_core = dup_core(core);
+        cores = g_slist_prepend(cores, sr_core);
+        sr_core->primary = FALSE;
+        sr_core->primary_core = core;
+        VEC3MUL(sr_core->x, s);
+        vecmat(*(model->sginfo.matrix + j), sr_core->x);
+        sr_core->x[0] += *(*(model->sginfo.offset + j) + 0);
+        sr_core->x[1] += *(*(model->sginfo.offset + j) + 1);
+        sr_core->x[2] += *(*(model->sginfo.offset + j) + 2);
 
-/* add a symmetry related shell */
-      if (sr_core->shell)
+        /* add a symmetry related shell */
+        if (sr_core->shell)
         {
-        sr_shell = sr_core->shell;
-        model->shels = g_slist_prepend(model->shels, sr_shell);
-        sr_shell->primary = FALSE;
-        sr_shell->primary_shell = sr_shell;
-        VEC3MUL(sr_shell->x, s);
-        vecmat(*(model->sginfo.matrix+j), sr_shell->x);
-        sr_shell->x[0] += *(*(model->sginfo.offset+j)+0);
-        sr_shell->x[1] += *(*(model->sginfo.offset+j)+1);
-        sr_shell->x[2] += *(*(model->sginfo.offset+j)+2);
+          sr_shell = sr_core->shell;
+          model->shels = g_slist_prepend(model->shels, sr_shell);
+          sr_shell->primary = FALSE;
+          sr_shell->primary_shell = sr_shell;
+          VEC3MUL(sr_shell->x, s);
+          vecmat(*(model->sginfo.matrix + j), sr_shell->x);
+          sr_shell->x[0] += *(*(model->sginfo.offset + j) + 0);
+          sr_shell->x[1] += *(*(model->sginfo.offset + j) + 1);
+          sr_shell->x[2] += *(*(model->sginfo.offset + j) + 2);
         }
       }
     }
   }
 
-/* update lists */
-model->cores = g_slist_concat(model->cores, g_slist_reverse(cores));
+  /* update lists */
+  model->cores = g_slist_concat(model->cores, g_slist_reverse(cores));
 
-/* remove any duplicates */
-/* NB: do this before pbc constrain, as it updates core-shell linkages */
-zone_init(model);
-delete_duplicate_cores(model);
-shell_make_links(model);
+  /* remove any duplicates */
+  /* NB: do this before pbc constrain, as it updates core-shell linkages */
+  zone_init(model);
+  delete_duplicate_cores(model);
+  shell_make_links(model);
 }
 
 /****************************************/
@@ -225,22 +222,22 @@ shell_make_links(model);
 /****************************************/
 void space_init(gpointer data)
 {
-struct space_pak *space=data;
+  struct space_pak *space = data;
 
-g_assert(space != NULL);
+  g_assert(space != NULL);
 
-space->lookup=TRUE;
-space->spacenum=0;
-space->lattice=0;
-space->pointgroup=0;
-space->cellchoice=0;
-space->originchoice=0;
-space->inversion=FALSE;
-space->order=0;
-space->spacename=NULL;
-space->latticename=NULL;
-space->matrix=NULL;
-space->offset=NULL;
+  space->lookup = TRUE;
+  space->spacenum = 0;
+  space->lattice = 0;
+  space->pointgroup = 0;
+  space->cellchoice = 0;
+  space->originchoice = 0;
+  space->inversion = FALSE;
+  space->order = 0;
+  space->spacename = NULL;
+  space->latticename = NULL;
+  space->matrix = NULL;
+  space->offset = NULL;
 }
 
 /********************************/
@@ -248,24 +245,24 @@ space->offset=NULL;
 /********************************/
 void space_free(gpointer data)
 {
-gint i;
-struct space_pak *space=data;
+  gint i;
+  struct space_pak *space = data;
 
-g_assert(space != NULL);
+  g_assert(space != NULL);
 
-/* free data */
-g_free(space->spacename);
-g_free(space->latticename);
-for (i=space->order ; i-- ; )
+  /* free data */
+  g_free(space->spacename);
+  g_free(space->latticename);
+  for (i = space->order; i--;)
   {
-  g_free(*(space->matrix+i));
-  g_free(*(space->offset+i));
+    g_free(*(space->matrix + i));
+    g_free(*(space->offset + i));
   }
-g_free(space->matrix);
-g_free(space->offset);
+  g_free(space->matrix);
+  g_free(space->offset);
 
-/* enforce blankness */
-space_init(space);
+  /* enforce blankness */
+  space_init(space);
 }
 
 /********************************/
@@ -273,75 +270,75 @@ space_init(space);
 /********************************/
 gint space_primitive_cell(struct model_pak *model)
 {
-gdouble dx, x2;
+  gdouble dx, x2;
 
-dx = (model->pbc[0] - model->pbc[1]);
-x2 = dx*dx;
-dx = (model->pbc[0] - model->pbc[2]);
-x2 += dx*dx;
-dx = (model->pbc[1] - model->pbc[2]);
-x2 += dx*dx;
+  dx = (model->pbc[0] - model->pbc[1]);
+  x2 = dx * dx;
+  dx = (model->pbc[0] - model->pbc[2]);
+  x2 += dx * dx;
+  dx = (model->pbc[1] - model->pbc[2]);
+  x2 += dx * dx;
 
-/* better tolerances? */
-if (x2 < 0.001)
+  /* better tolerances? */
+  if (x2 < 0.001)
   {
-/*
-printf("Treating as rhombohedral.\n");
-*/
-  return(TRUE);
+    /*
+    printf("Treating as rhombohedral.\n");
+    */
+    return (TRUE);
   }
-/*
-printf("Treating as hexagonal.\n");
-*/
-return(FALSE);
+  /*
+  printf("Treating as hexagonal.\n");
+  */
+  return (FALSE);
 }
 
 #define DEBUG_CELLCHOICE 0
 gint find_cellchoice(T_SgInfo SgInfo)
 {
-gint n=0;
-const T_TabSgName  *tsgn;
+  gint n = 0;
+  const T_TabSgName *tsgn;
 
-if (SgInfo.TabSgName->Extension)
-  for (tsgn = SgInfo.TabSgName; tsgn->HallSymbol; tsgn++)
+  if (SgInfo.TabSgName->Extension)
+    for (tsgn = SgInfo.TabSgName; tsgn->HallSymbol; tsgn++)
     {
-    if (SgInfo.TabSgName->SgNumber == tsgn->SgNumber)
+      if (SgInfo.TabSgName->SgNumber == tsgn->SgNumber)
       {
-      n++;
+        n++;
 
-      if (!g_ascii_strcasecmp(SgInfo.TabSgName->HallSymbol, tsgn->HallSymbol))
+        if (!g_ascii_strcasecmp(SgInfo.TabSgName->HallSymbol, tsgn->HallSymbol))
         {
 #if DEBUG_CELLCHOICE
-printf("Cell choice: %d (%s:%s)\n", n, tsgn->SgLabels, SgInfo.TabSgName->Extension);
+          printf("Cell choice: %d (%s:%s)\n", n, tsgn->SgLabels, SgInfo.TabSgName->Extension);
 #endif
-        break;
+          break;
         }
       }
     }
-return n;
+  return n;
 }
 
 #define DEBUG_ORIGINCHOICE 0
 gint find_originchoice(T_SgInfo SgInfo)
 {
-gint n=0;
-gchar *ext;
-const T_TabSgName  *tsgn = SgInfo.TabSgName;
+  gint n = 0;
+  gchar *ext;
+  const T_TabSgName *tsgn = SgInfo.TabSgName;
 
-ext = g_strndup(tsgn->Extension,1);
+  ext = g_strndup(tsgn->Extension, 1);
 
-n = g_ascii_digit_value(ext[0]);
-if (n == -1)
-  n = 0;
+  n = g_ascii_digit_value(ext[0]);
+  if (n == -1)
+    n = 0;
 
 #if DEBUG_ORIGINCHOICE
-printf("Origin choice: %d (%s:%s)\n", n, tsgn->SgLabels, tsgn->Extension);
+  printf("Origin choice: %d (%s:%s)\n", n, tsgn->SgLabels, tsgn->Extension);
 #endif
 
-if (n >= 0 && n < 3)
-  return n;
-else
-  return -1; /* Incorrect space group extension */ /* Not really necessary? */
+  if (n >= 0 && n < 3)
+    return n;
+  else
+    return -1; /* Incorrect space group extension */ /* Not really necessary? */
 }
 
 /**************************/
@@ -350,149 +347,138 @@ else
 #define DEBUG_GEN_POS 0
 gint space_lookup(struct model_pak *data)
 {
-gint f, i, j, nt;
-gint m;
-gint iList, nTrV, iTrV, nLoopInv, iLoopInv;
+  gint f, i, j, nt;
+  gint m;
+  gint iList, nTrV, iTrV, nLoopInv, iLoopInv;
 #ifdef UNUSED_BUT_SET
-gint iMatrix;
+  gint iMatrix;
 #endif
-gchar *label;
-GString *name;
-const T_RTMx  *lsmx;
-const gint *r, *t, *TrV;
-T_RTMx SMx;
-T_SgInfo SgInfo;
+  gchar *label;
+  GString *name;
+  const T_RTMx *lsmx;
+  const gint *r, *t, *TrV;
+  T_RTMx SMx;
+  T_SgInfo SgInfo;
 
-g_return_val_if_fail(data != NULL, 1);
+  g_return_val_if_fail(data != NULL, 1);
 
-/* NEW - can flag to skip this eg GULP animation */
-/* where symmetry is broken in subsequent frames */
-if (!data->sginfo.lookup)
+  /* NEW - can flag to skip this eg GULP animation */
+  /* where symmetry is broken in subsequent frames */
+  if (!data->sginfo.lookup)
   {
-  return(0);
+    return (0);
   }
 
-/* request info via number or name */
-/* cell choice (TODO - neaten this ugly code) */
-name = g_string_new(NULL);
-if (data->sginfo.spacename)
-  g_string_printf(name, "%s", g_strstrip(data->sginfo.spacename));
-else
-  {
-  if (data->sginfo.spacenum > 0)
-    g_string_printf(name, "%d", data->sginfo.spacenum);
+  /* request info via number or name */
+  /* cell choice (TODO - neaten this ugly code) */
+  name = g_string_new(NULL);
+  if (data->sginfo.spacename)
+    g_string_printf(name, "%s", g_strstrip(data->sginfo.spacename));
   else
-    g_string_printf(name, "P 1");
+  {
+    if (data->sginfo.spacenum > 0)
+      g_string_printf(name, "%d", data->sginfo.spacenum);
+    else
+      g_string_printf(name, "P 1");
   }
 
-/* cell choice */
-if (data->sginfo.originchoice)
+  /* cell choice */
+  if (data->sginfo.originchoice)
   {
-  if ( !g_strrstr(name->str, ":"))
+    if (!g_strrstr(name->str, ":"))
     {
-    if ( g_strrstr(name->str, "R") || data->sginfo.spacenum == 146
-                                   || data->sginfo.spacenum == 148
-                                   || data->sginfo.spacenum == 155
-                                   || data->sginfo.spacenum == 160
-                                   || data->sginfo.spacenum == 161
-                                   || data->sginfo.spacenum == 166
-                                   || data->sginfo.spacenum == 167)
+      if (g_strrstr(name->str, "R") || data->sginfo.spacenum == 146 || data->sginfo.spacenum == 148 ||
+          data->sginfo.spacenum == 155 || data->sginfo.spacenum == 160 || data->sginfo.spacenum == 161 ||
+          data->sginfo.spacenum == 166 || data->sginfo.spacenum == 167)
       {
-      if (data->sginfo.originchoice == 2)
-        g_string_append_printf(name, ":R");
-      else
-        g_string_append_printf(name, ":H");
-      }
-    else if (data->sginfo.originchoice)
-      g_string_append_printf(name, ":%d", data->sginfo.originchoice);
+        if (data->sginfo.originchoice == 2)
+          g_string_append_printf(name, ":R");
+        else
+          g_string_append_printf(name, ":H");
+      } else if (data->sginfo.originchoice)
+        g_string_append_printf(name, ":%d", data->sginfo.originchoice);
     }
   }
 
-/* if trigonal lattice, determine if cell is in hex or rhombo format */
-if ( !g_strrstr(name->str, ":"))
+  /* if trigonal lattice, determine if cell is in hex or rhombo format */
+  if (!g_strrstr(name->str, ":"))
   {
-  if (g_strrstr(name->str, "R") || data->sginfo.spacenum == 146
-                                || data->sginfo.spacenum == 148
-                                || data->sginfo.spacenum == 155
-                                || data->sginfo.spacenum == 160
-                                || data->sginfo.spacenum == 161
-                                || data->sginfo.spacenum == 166
-                                || data->sginfo.spacenum == 167)
+    if (g_strrstr(name->str, "R") || data->sginfo.spacenum == 146 || data->sginfo.spacenum == 148 ||
+        data->sginfo.spacenum == 155 || data->sginfo.spacenum == 160 || data->sginfo.spacenum == 161 ||
+        data->sginfo.spacenum == 166 || data->sginfo.spacenum == 167)
     {
-    if (space_primitive_cell(data))
-      g_string_append_printf(name, ":R");
-    }
-  else if (data->sginfo.originchoice)
-    g_string_append_printf(name, ":%d", data->sginfo.originchoice);
+      if (space_primitive_cell(data))
+        g_string_append_printf(name, ":R");
+    } else if (data->sginfo.originchoice)
+      g_string_append_printf(name, ":%d", data->sginfo.originchoice);
   }
 
 #if DEBUG_GEN_POS
-printf("retrieving as [%s]\n", name->str);
+  printf("retrieving as [%s]\n", name->str);
 #endif
 
-/* main call */
-if (BuildSgInfo(&SgInfo, name->str) != 0)
+  /* main call */
+  if (BuildSgInfo(&SgInfo, name->str) != 0)
   {
-/* CURRENT - if order > 0 -> fill the cell */
-  if (data->sginfo.order)
+    /* CURRENT - if order > 0 -> fill the cell */
+    if (data->sginfo.order)
     {
-    gui_text_show(WARNING, "No space group: using explicit matrices.\n");
-    space_fill_cell(data);
-    return(0);
+      gui_text_show(WARNING, "No space group: using explicit matrices.\n");
+      space_fill_cell(data);
+      return (0);
     }
-  return(2);
+    return (2);
   }
-g_string_free(name, TRUE);
+  g_string_free(name, TRUE);
 
-/* process returned space group name */
-if( g_strrstr(g_strdup(SgInfo.TabSgName->SgLabels), "= ") == NULL )
+  /* process returned space group name */
+  if (g_strrstr(g_strdup(SgInfo.TabSgName->SgLabels), "= ") == NULL)
+    label = g_strdup(SgInfo.TabSgName->SgLabels);
+  else
+    label = g_strdup(g_strrstr(g_strdup(SgInfo.TabSgName->SgLabels), "= "));
+
+  parse_char_replace(label, '=', ' ');
+  parse_char_replace(label, '_', ' ');
+
+  if (label)
+  {
+    g_free(data->sginfo.spacename);
+    data->sginfo.spacename = g_strdup_printf("%s", g_strstrip(label));
+    g_free(label);
+  }
+
+  /* process returned space group name */
   label = g_strdup(SgInfo.TabSgName->SgLabels);
-else
-  label = g_strdup(g_strrstr(g_strdup(SgInfo.TabSgName->SgLabels), "= "));
+  for (i = 0; i < strlen(label); i++)
+    if (*(label + i) == '_')
+      *(label + i) = ' ';
 
-parse_char_replace(label, '=', ' ');
-parse_char_replace(label, '_', ' ');
-
-if (label)
+  /* copy label to avoid any funny GULP characters */
+  i = strlen(label);
+  while (i > 0)
   {
-  g_free(data->sginfo.spacename);
-  data->sginfo.spacename = g_strdup_printf("%s",g_strstrip(label));
-  g_free(label);
-  }
-
-/* process returned space group name */
-label = g_strdup(SgInfo.TabSgName->SgLabels);
-for (i=0 ; i<strlen(label) ; i++)
-  if (*(label+i) == '_')
-    *(label+i) = ' ';
-
-/* copy label to avoid any funny GULP characters */
-i=strlen(label);
-while(i>0)
-  {
-  if (*(label+i) == '=')
+    if (*(label + i) == '=')
     {
-    i++;
-    break;
+      i++;
+      break;
     }
-  i--;
+    i--;
   }
 
-/* fill in space group name */
-if (!data->sginfo.spacename)
-  data->sginfo.spacename = g_strdup_printf("%s", label+i);
-g_free(label);
+  /* fill in space group name */
+  if (!data->sginfo.spacename)
+    data->sginfo.spacename = g_strdup_printf("%s", label + i);
+  g_free(label);
 
-/* fill in number (if an invalid value was supplied) */
-if (data->sginfo.spacenum < 1)
-  data->sginfo.spacenum = SgInfo.TabSgName->SgNumber;
-else
-  if (data->sginfo.spacenum != SgInfo.TabSgName->SgNumber)
+  /* fill in number (if an invalid value was supplied) */
+  if (data->sginfo.spacenum < 1)
+    data->sginfo.spacenum = SgInfo.TabSgName->SgNumber;
+  else if (data->sginfo.spacenum != SgInfo.TabSgName->SgNumber)
     gui_text_show(WARNING, "Inconsistent space group name and number.\n");
 
-/* crystal lattice type */
-data->sginfo.lattice = SgInfo.XtalSystem;
-switch (SgInfo.XtalSystem)
+  /* crystal lattice type */
+  data->sginfo.lattice = SgInfo.XtalSystem;
+  switch (SgInfo.XtalSystem)
   {
   case XS_CUBIC:
     data->sginfo.latticename = g_strdup("Cubic");
@@ -519,162 +505,160 @@ switch (SgInfo.XtalSystem)
     data->sginfo.latticename = g_strdup("Unknown");
   }
 
-/* point group */
-data->sginfo.pointgroup = SgInfo.PointGroup;
-data->sginfo.inversion = SgInfo.Centric;
-data->sginfo.centering = SgInfo.LatticeInfo->Code;
+  /* point group */
+  data->sginfo.pointgroup = SgInfo.PointGroup;
+  data->sginfo.inversion = SgInfo.Centric;
+  data->sginfo.centering = SgInfo.LatticeInfo->Code;
 
-/* Cell choice is actually origin choice */
-data->sginfo.originchoice = find_originchoice(SgInfo);
-if (data->sginfo.originchoice < 0 ||
-    data->sginfo.originchoice > 2)
-   printf("Unknown origin choice in space_lookup()\n");
+  /* Cell choice is actually origin choice */
+  data->sginfo.originchoice = find_originchoice(SgInfo);
+  if (data->sginfo.originchoice < 0 || data->sginfo.originchoice > 2)
+    printf("Unknown origin choice in space_lookup()\n");
 
-if (!(data->sginfo.cellchoice = find_cellchoice(SgInfo)) )
-   printf("Unknown cell choice in space_lookup()\n");
+  if (!(data->sginfo.cellchoice = find_cellchoice(SgInfo)))
+    printf("Unknown cell choice in space_lookup()\n");
 
-if (SgInfo.InversionOffOrigin == 1 && data->sginfo.originchoice == 0)
-  data->sginfo.originchoice++;
+  if (SgInfo.InversionOffOrigin == 1 && data->sginfo.originchoice == 0)
+    data->sginfo.originchoice++;
 
 #if DEBUG_GEN_POS
-printf("   Space group name: %s\n", data->sginfo.spacename);
-printf("        Point group: %d\n", data->sginfo.pointgroup);
-printf(" Space group number: %d\n", data->sginfo.spacenum);
-printf("       Lattice type: %c\n", data->sginfo.centering);
-printf("              Order: %d\n", SgInfo.OrderL);
-printf("          Genoption: %d\n", SgInfo.GenOption);
-printf("            Centric: %d\n", SgInfo.Centric);
-printf("       InvOffOrigin: %d\n", SgInfo.InversionOffOrigin);
-printf("      Origin choice: %d\n", data->sginfo.originchoice);
-printf("        Cell choice: %d\n", data->sginfo.cellchoice);
-printf("   Inversion center: ");
-if (data->sginfo.inversion == -1)
-  printf("yes\n");
-else
-  printf("no\n");
+  printf("   Space group name: %s\n", data->sginfo.spacename);
+  printf("        Point group: %d\n", data->sginfo.pointgroup);
+  printf(" Space group number: %d\n", data->sginfo.spacenum);
+  printf("       Lattice type: %c\n", data->sginfo.centering);
+  printf("              Order: %d\n", SgInfo.OrderL);
+  printf("          Genoption: %d\n", SgInfo.GenOption);
+  printf("            Centric: %d\n", SgInfo.Centric);
+  printf("       InvOffOrigin: %d\n", SgInfo.InversionOffOrigin);
+  printf("      Origin choice: %d\n", data->sginfo.originchoice);
+  printf("        Cell choice: %d\n", data->sginfo.cellchoice);
+  printf("   Inversion center: ");
+  if (data->sginfo.inversion == -1)
+    printf("yes\n");
+  else
+    printf("no\n");
 #endif
 
-/* CURRENT */
-if (!data->sginfo.order)
+  /* CURRENT */
+  if (!data->sginfo.order)
   {
-/* allocate for order number of pointers (to matrices) */
-  data->sginfo.order = SgInfo.OrderL;
-  data->sginfo.matrix = (gdouble **) g_malloc(SgInfo.OrderL*sizeof(gdouble *));
-  data->sginfo.offset = (gdouble **) g_malloc(SgInfo.OrderL*sizeof(gdouble *));
+    /* allocate for order number of pointers (to matrices) */
+    data->sginfo.order = SgInfo.OrderL;
+    data->sginfo.matrix = (gdouble **) g_malloc(SgInfo.OrderL * sizeof(gdouble *));
+    data->sginfo.offset = (gdouble **) g_malloc(SgInfo.OrderL * sizeof(gdouble *));
 
 #ifdef UNUSED_BUT_SET
-iMatrix = 0;
+    iMatrix = 0;
 #endif
 
-  nLoopInv = Sg_nLoopInv(&SgInfo);
+    nLoopInv = Sg_nLoopInv(&SgInfo);
 
-  nTrV = SgInfo.LatticeInfo->nTrVector;
-  TrV = SgInfo.LatticeInfo->TrVector;
+    nTrV = SgInfo.LatticeInfo->nTrVector;
+    TrV = SgInfo.LatticeInfo->TrVector;
 
-/* check for ill-defined SgInfo */
-  if (SgInfo.nList < 1 || nTrV < 1)
+    /* check for ill-defined SgInfo */
+    if (SgInfo.nList < 1 || nTrV < 1)
     {
-    gui_text_show(ERROR, "Error in space group lookup.\n");
-    return 1;
+      gui_text_show(ERROR, "Error in space group lookup.\n");
+      return 1;
     }
 
-/* matrix counter */
-  m=0;
-  for (iTrV = 0; iTrV < nTrV; iTrV++, TrV += 3)
+    /* matrix counter */
+    m = 0;
+    for (iTrV = 0; iTrV < nTrV; iTrV++, TrV += 3)
     {
-    for (iLoopInv = 0; iLoopInv < nLoopInv; iLoopInv++)
+      for (iLoopInv = 0; iLoopInv < nLoopInv; iLoopInv++)
       {
-      if (iLoopInv == 0)
-        f =  1;
-      else
-        f = -1;
+        if (iLoopInv == 0)
+          f = 1;
+        else
+          f = -1;
 
-      lsmx = SgInfo.ListSeitzMx;
+        lsmx = SgInfo.ListSeitzMx;
 
-/* loop over all matrices (order of the group) */
-      for (iList = 0; iList < SgInfo.nList; iList++, lsmx++)
+        /* loop over all matrices (order of the group) */
+        for (iList = 0; iList < SgInfo.nList; iList++, lsmx++)
         {
-        for (i = 0; i < 9; i++)
-          SMx.s.R[i] = f * lsmx->s.R[i];
-        for (i = 0; i < 3; i++)
-          SMx.s.T[i] = iModPositive(f * lsmx->s.T[i] + TrV[i], STBF);
+          for (i = 0; i < 9; i++)
+            SMx.s.R[i] = f * lsmx->s.R[i];
+          for (i = 0; i < 3; i++)
+            SMx.s.T[i] = iModPositive(f * lsmx->s.T[i] + TrV[i], STBF);
 
-        r = SMx.s.R;
-        t = SMx.s.T;
+          r = SMx.s.R;
+          t = SMx.s.T;
 
-        *(data->sginfo.matrix+m) = (gdouble *) g_malloc(9*sizeof(gdouble));
-        *(data->sginfo.offset+m) = (gdouble *) g_malloc(3*sizeof(gdouble));
+          *(data->sginfo.matrix + m) = (gdouble *) g_malloc(9 * sizeof(gdouble));
+          *(data->sginfo.offset + m) = (gdouble *) g_malloc(3 * sizeof(gdouble));
 
-        for (i = 0; i < 3; i++, t++)
+          for (i = 0; i < 3; i++, t++)
           {
-          for (j = 0; j < 3; j++, r++)
+            for (j = 0; j < 3; j++, r++)
             {
-/* mth general position */
-            *(*(data->sginfo.matrix+m)+3*i+j) = (gdouble) *r;
+              /* mth general position */
+              *(*(data->sginfo.matrix + m) + 3 * i + j) = (gdouble) *r;
             }
-          nt = iModPositive(*t, STBF);
-          if (nt >  STBF / 2)
-            nt -= STBF;
-/* offset matrix (3x1) */
-          *(*(data->sginfo.offset+m)+i) = (gdouble) nt / (gdouble) STBF;
+            nt = iModPositive(*t, STBF);
+            if (nt > STBF / 2)
+              nt -= STBF;
+            /* offset matrix (3x1) */
+            *(*(data->sginfo.offset + m) + i) = (gdouble) nt / (gdouble) STBF;
           }
-        m++;
+          m++;
         }
       }
     }
 
-/* number of matrices matches the order? */
+    /* number of matrices matches the order? */
     if (m != data->sginfo.order)
       printf("Serious error in space_lookup()\n");
-  }
-else
+  } else
   {
 #if DEBUG_GEN_POS
-printf("Skipping symmetry matrix generation.\n");
-  m = data->sginfo.order;/*FIX 54e255*/
+    printf("Skipping symmetry matrix generation.\n");
+    m = data->sginfo.order; /*FIX 54e255*/
 #endif
   }
 
 #if DEBUG_GEN_POS
-printf("Symmetry matrices: %d\n", m);
-for (i=0 ; i<m ; i++)
+  printf("Symmetry matrices: %d\n", m);
+  for (i = 0; i < m; i++)
   {
-  printf("matrix %d",i);
+    printf("matrix %d", i);
 
-P3MAT(" : ", *(data->sginfo.matrix+i));
+    P3MAT(" : ", *(data->sginfo.matrix + i));
 
-/*
-  for (j=0 ; j<9 ; j++)
-    printf(" %4.1f",*(*(data->sginfo.matrix+i)+j));
-  printf("\n");
-*/
+    /*
+      for (j=0 ; j<9 ; j++)
+        printf(" %4.1f",*(*(data->sginfo.matrix+i)+j));
+      printf("\n");
+    */
 
-  printf("offset %d :",i);
-  for (j=0 ; j<3 ; j++)
-    printf(" %4.1f",*(*(data->sginfo.offset+i)+j));
-  printf("\n");
+    printf("offset %d :", i);
+    for (j = 0; j < 3; j++)
+      printf(" %4.1f", *(*(data->sginfo.offset + i) + j));
+    printf("\n");
   }
 #endif
 
-/* deprec - raw sginfo structure */
-/*
-if (data->sginfo.raw)
-  g_free(data->sginfo.raw);
-data->sginfo.raw = g_malloc(sizeof(SgInfo));
-memcpy(data->sginfo.raw, &SgInfo, sizeof(SgInfo));
-*/
-sginfo_free(&SgInfo);
+  /* deprec - raw sginfo structure */
+  /*
+  if (data->sginfo.raw)
+    g_free(data->sginfo.raw);
+  data->sginfo.raw = g_malloc(sizeof(SgInfo));
+  memcpy(data->sginfo.raw, &SgInfo, sizeof(SgInfo));
+  */
+  sginfo_free(&SgInfo);
 
-/* generate symmetry related cores */
-space_fill_cell(data);
+  /* generate symmetry related cores */
+  space_fill_cell(data);
 
 #if DEBUG_GEN_POS
-printf("[*] num atoms: %d\n", g_slist_length(data->cores));
-printf("[*] num shels: %d\n", g_slist_length(data->shels));
+  printf("[*] num atoms: %d\n", g_slist_length(data->cores));
+  printf("[*] num shels: %d\n", g_slist_length(data->shels));
 
 #endif
 
-return(0);
+  return (0);
 }
 
 /************************************/
@@ -682,32 +666,32 @@ return(0);
 /************************************/
 void space_make_p1(struct model_pak *model)
 {
-GSList *list;
-struct core_pak *core;
-struct shel_pak *shell;
+  GSList *list;
+  struct core_pak *core;
+  struct shel_pak *shell;
 
-/* checks */
-g_assert(model != NULL);
+  /* checks */
+  g_assert(model != NULL);
 
-/* initialize atoms */
-for (list=model->cores ; list ; list=g_slist_next(list))
+  /* initialize atoms */
+  for (list = model->cores; list; list = g_slist_next(list))
   {
-  core = list->data;
-  core->orig = TRUE;
-  core->primary = TRUE;
+    core = list->data;
+    core->orig = TRUE;
+    core->primary = TRUE;
   }
-for (list=model->shels ; list ; list=g_slist_next(list))
+  for (list = model->shels; list; list = g_slist_next(list))
   {
-  shell = list->data;
-  shell->orig = TRUE;
-  shell->primary = TRUE;
+    shell = list->data;
+    shell->orig = TRUE;
+    shell->primary = TRUE;
   }
 
-/* set space group */
-space_free(&model->sginfo);
-model->sginfo.spacenum = 1;
-model->sginfo.cellchoice = 0;
-space_lookup(model);
+  /* set space group */
+  space_free(&model->sginfo);
+  model->sginfo.spacenum = 1;
+  model->sginfo.cellchoice = 0;
+  space_lookup(model);
 }
 
 /***********************************************/
@@ -715,102 +699,102 @@ space_lookup(model);
 /***********************************************/
 void space_make_supercell(struct model_pak *model)
 {
-gint i;
-gdouble v[3], m[3];
-GSList *list, *ilist, *clist, *slist;
-struct core_pak *core, *copy;
-struct shel_pak *shell;
-struct image_pak *image;
+  gint i;
+  gdouble v[3], m[3];
+  GSList *list, *ilist, *clist, *slist;
+  struct core_pak *core, *copy;
+  struct shel_pak *shell;
+  struct image_pak *image;
 
-/* checks */
-if (!model)
-  return;
+  /* checks */
+  if (!model)
+    return;
 
-/* all (non-deleted) atoms are now primary & non fractional */
-delete_commit(model);
-clist = slist = NULL;
+  /* all (non-deleted) atoms are now primary & non fractional */
+  delete_commit(model);
+  clist = slist = NULL;
 
-/* loop over images 1st, so we preserve core ordering in cell images */
-for (ilist=model->images ; ilist ; ilist=g_slist_next(ilist))
+  /* loop over images 1st, so we preserve core ordering in cell images */
+  for (ilist = model->images; ilist; ilist = g_slist_next(ilist))
   {
-  image = ilist->data;
-  for (list=model->cores ; list ; list=g_slist_next(list))
+    image = ilist->data;
+    for (list = model->cores; list; list = g_slist_next(list))
     {
-    core = list->data;
-    copy = dup_core(core);
-    ARR3ADD(copy->x, image->pic);
-    clist = g_slist_prepend(clist, copy);
-    if (copy->shell)
+      core = list->data;
+      copy = dup_core(core);
+      ARR3ADD(copy->x, image->pic);
+      clist = g_slist_prepend(clist, copy);
+      if (copy->shell)
       {
-      shell = copy->shell;
-      ARR3ADD(shell->x, image->pic);
-      slist = g_slist_prepend(slist, shell);
+        shell = copy->shell;
+        ARR3ADD(shell->x, image->pic);
+        slist = g_slist_prepend(slist, shell);
       }
     }
   }
-free_slist(model->images);
-model->images = NULL;
+  free_slist(model->images);
+  model->images = NULL;
 
-/* order preserving core/shell additions */
-model->cores = g_slist_concat(model->cores, g_slist_reverse(clist));
-model->shels = g_slist_concat(model->shels, g_slist_reverse(slist));
+  /* order preserving core/shell additions */
+  model->cores = g_slist_concat(model->cores, g_slist_reverse(clist));
+  model->shels = g_slist_concat(model->shels, g_slist_reverse(slist));
 
-/* get multiple of lattice vectors desired */
-m[0] = fabs(model->image_limit[1] + model->image_limit[0]);
-m[1] = fabs(model->image_limit[3] + model->image_limit[2]);
-m[2] = fabs(model->image_limit[5] + model->image_limit[4]);
+  /* get multiple of lattice vectors desired */
+  m[0] = fabs(model->image_limit[1] + model->image_limit[0]);
+  m[1] = fabs(model->image_limit[3] + model->image_limit[2]);
+  m[2] = fabs(model->image_limit[5] + model->image_limit[4]);
 
-/* scale up the energies */
-model->gulp.energy *= m[0] * m[1] * m[2];
-model->gulp.sbulkenergy *= m[0] * m[1] * m[2];
+  /* scale up the energies */
+  model->gulp.energy *= m[0] * m[1] * m[2];
+  model->gulp.sbulkenergy *= m[0] * m[1] * m[2];
 
-/* scale the fractional coordinates down */
-model->fractional = TRUE;
-for (list=model->cores ; list ; list=g_slist_next(list))
+  /* scale the fractional coordinates down */
+  model->fractional = TRUE;
+  for (list = model->cores; list; list = g_slist_next(list))
   {
-  core = list->data;
-  core->x[0] /= m[0];
-  core->x[1] /= m[1];
-  core->x[2] /= m[2];
+    core = list->data;
+    core->x[0] /= m[0];
+    core->x[1] /= m[1];
+    core->x[2] /= m[2];
   }
-for (list=model->shels ; list ; list=g_slist_next(list))
+  for (list = model->shels; list; list = g_slist_next(list))
   {
-  shell = list->data;
-  shell->x[0] /= m[0];
-  shell->x[1] /= m[1];
-  shell->x[2] /= m[2];
-  }
-
-/* NB: need to scale the pbc so zone init works */
-ARR3MUL(model->pbc, m);
-
-/* get current lattice vectors and scale up */
-for (i=0 ; i<3 ; i++)
-  {
-  v[0] = model->latmat[i];
-  v[1] = model->latmat[i+3];
-  v[2] = model->latmat[i+6];
-  VEC3MUL(v, m[i]);
-  model->latmat[i] = v[0];
-  model->latmat[i+3] = v[1];
-  model->latmat[i+6] = v[2];
+    shell = list->data;
+    shell->x[0] /= m[0];
+    shell->x[1] /= m[1];
+    shell->x[2] /= m[2];
   }
 
-/* update cell param related data */
-model->construct_pbc = TRUE;
+  /* NB: need to scale the pbc so zone init works */
+  ARR3MUL(model->pbc, m);
 
-/* TODO - currently, tell gdis to completely redo pbond calc again */
-/* TODO - a more efficient way would be to recalc */
-model->done_pbonds = FALSE;
+  /* get current lattice vectors and scale up */
+  for (i = 0; i < 3; i++)
+  {
+    v[0] = model->latmat[i];
+    v[1] = model->latmat[i + 3];
+    v[2] = model->latmat[i + 6];
+    VEC3MUL(v, m[i]);
+    model->latmat[i] = v[0];
+    model->latmat[i + 3] = v[1];
+    model->latmat[i + 6] = v[2];
+  }
 
-model->image_limit[0] = 0.0;
-model->image_limit[1] = 1.0;
-model->image_limit[2] = 0.0;
-model->image_limit[3] = 1.0;
-model->image_limit[4] = 0.0;
-model->image_limit[5] = 1.0;
+  /* update cell param related data */
+  model->construct_pbc = TRUE;
 
-space_make_p1(model);
+  /* TODO - currently, tell gdis to completely redo pbond calc again */
+  /* TODO - a more efficient way would be to recalc */
+  model->done_pbonds = FALSE;
+
+  model->image_limit[0] = 0.0;
+  model->image_limit[1] = 1.0;
+  model->image_limit[2] = 0.0;
+  model->image_limit[3] = 1.0;
+  model->image_limit[4] = 0.0;
+  model->image_limit[5] = 1.0;
+
+  space_make_p1(model);
 }
 
 /***********************************/
@@ -819,87 +803,85 @@ space_make_p1(model);
 #define DEBUG_UPDATE_IMAGES 0
 void space_make_images(gint mode, struct model_pak *model)
 {
-gint a, b, c, i;
-gint num_cells;
+  gint a, b, c, i;
+  gint num_cells;
 #ifdef UNUSED_BUT_SET
-gint num_images;
+  gint num_images;
 #endif
-struct image_pak *image;
+  struct image_pak *image;
 
-/* checks */
-g_assert(model != NULL);
+  /* checks */
+  g_assert(model != NULL);
 
 #if DEBUG_UPDATE_IMAGES
-printf("---------------------------\n");
-printf("model : %s\n", model->basename);
-printf("a : %f - %f\n", model->image_limit[0], model->image_limit[1]);
-printf("b : %f - %f\n", model->image_limit[2], model->image_limit[3]);
-printf("c : %f - %f\n", model->image_limit[4], model->image_limit[5]);
-printf("---------------------------\n");
+  printf("---------------------------\n");
+  printf("model : %s\n", model->basename);
+  printf("a : %f - %f\n", model->image_limit[0], model->image_limit[1]);
+  printf("b : %f - %f\n", model->image_limit[2], model->image_limit[3]);
+  printf("c : %f - %f\n", model->image_limit[4], model->image_limit[5]);
+  printf("---------------------------\n");
 #endif
 
 #ifdef UNUSED_BUT_SET
-num_images = 0;
+  num_images = 0;
 #endif
-/* check mode */
-switch(mode)
+  /* check mode */
+  switch (mode)
   {
   case CREATE:
-/* update image list */
+    /* update image list */
     free_slist(model->images);
     model->images = NULL;
-    num_cells = (model->image_limit[0]+model->image_limit[1])
-              * (model->image_limit[2]+model->image_limit[3])
-              * (model->image_limit[4]+model->image_limit[5]);
+    num_cells = (model->image_limit[0] + model->image_limit[1]) * (model->image_limit[2] + model->image_limit[3]) *
+                (model->image_limit[4] + model->image_limit[5]);
 #ifdef UNUSED_BUT_SET
-    num_images = num_cells-1;
+    num_images = num_cells - 1;
 #endif
-/* setup for pic iteration */
+    /* setup for pic iteration */
     a = -model->image_limit[0];
     b = -model->image_limit[2];
     c = -model->image_limit[4];
-    for (i=num_cells ; i-- ; )
-      {
-/* image increment */
+    for (i = num_cells; i--;)
+    {
+      /* image increment */
       if (a == model->image_limit[1])
-        {
+      {
         a = -model->image_limit[0];
         b++;
         if (b == model->image_limit[3])
-          {
+        {
           b = -model->image_limit[2];
           c++;
           if (c == model->image_limit[5])
             break;
-          }
         }
-/* don't duplicate the primary cell */
+      }
+      /* don't duplicate the primary cell */
       if (a || b || c)
-        {
+      {
         image = g_malloc(sizeof(struct image_pak));
 
         VEC3SET(image->pic, a, b, c);
         model->images = g_slist_prepend(model->images, image);
-        }
-      a++;
       }
+      a++;
+    }
     break;
 
   case INITIAL:
-/* reset values to default */
-    for (i=0 ; i<model->periodic ; i++)
-      {
-      model->image_limit[2*i] = 0;
-      model->image_limit[2*i+1] = 1;
-      }
-/* delete all images */
+    /* reset values to default */
+    for (i = 0; i < model->periodic; i++)
+    {
+      model->image_limit[2 * i] = 0;
+      model->image_limit[2 * i + 1] = 1;
+    }
+    /* delete all images */
     free_slist(model->images);
     model->images = NULL;
     break;
   }
 
-/*
-gui_relation_update(model);
-*/
+  /*
+  gui_relation_update(model);
+  */
 }
-

@@ -1,3 +1,6 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
 /*
 Copyright (C) 2003 by Sean David Fleming
 
@@ -28,7 +31,6 @@ The GNU GPL can also be found at http://www.gnu.org
 
 #define KEYWORD_LEN 10
 
-
 #define BOHR_TO_ANGS 0.52917724928
 #define HARTREE_TO_EV 27.21162
 
@@ -38,25 +40,32 @@ The GNU GPL can also be found at http://www.gnu.org
 
 /* useful ADDONs --OVHPA*/
 #define __Q(a) #a
-#define __SKIP_BLANK(pointer) while(!g_ascii_isgraph(*pointer)&&(*(pointer)!='\0')) pointer++
-#define __SKIP_NUM(pointer) while(g_ascii_isdigit(*pointer)&&(*(pointer)!='\0')) pointer++
+#define __SKIP_BLANK(pointer)                                                                                          \
+  while (!g_ascii_isgraph(*pointer) && (*(pointer) != '\0'))                                                           \
+  pointer++
+#define __SKIP_NUM(pointer)                                                                                            \
+  while (g_ascii_isdigit(*pointer) && (*(pointer) != '\0'))                                                            \
+  pointer++
 /*WARN: it is still unsafe to mix fseek/ftell with fgetpos/fsetpos*/
-#define __GET_LAST_LINE(fp,buffer) do{\
-        fseek(fp,-2,SEEK_END);\
-        while(fgetc(fp)!='\n') fseek(fp,-2,SEEK_CUR);\
-        fseek(fp,+1,SEEK_CUR);\
-        buffer = file_read_line(fp);\
-}while(0)
+#define __GET_LAST_LINE(fp, buffer)                                                                                    \
+  do                                                                                                                   \
+  {                                                                                                                    \
+    fseek(fp, -2, SEEK_END);                                                                                           \
+    while (fgetc(fp) != '\n')                                                                                          \
+      fseek(fp, -2, SEEK_CUR);                                                                                         \
+    fseek(fp, +1, SEEK_CUR);                                                                                           \
+    buffer = file_read_line(fp);                                                                                       \
+  } while (0)
 
 /* enumerated types for POV-Ray colour-style selection */
-enum {HSV,	  			/*Colour-wheel style red-green-blue */
-	  REDWHITEBLUE		/* Red-fades to white-fades to blue */
+enum {
+  HSV,         /*Colour-wheel style red-green-blue */
+  REDWHITEBLUE /* Red-fades to white-fades to blue */
 };
 
-struct keyword_pak
-{
-gchar *label;
-gint code;
+struct keyword_pak {
+  gchar *label;
+  gint code;
 };
 
 extern struct keyword_pak keywords[];
@@ -83,12 +92,11 @@ gchar *file_extension_get(const gchar *);
 gint file_byte_size(const gchar *);
 gchar *file_find_program(const gchar *);
 
-gboolean dumb_file_copy(gchar *f_src,gchar *f_dest);
+gboolean dumb_file_copy(gchar *f_src, gchar *f_dest);
 gboolean dumb_dir_copy(gchar *src, gchar *dest);
 
 /* dialog control */
-void file_dialog(gchar *, gchar *, gint, 
-                 gpointer (gchar *,  struct model_pak *), gint);
+void file_dialog(gchar *, gchar *, gint, gpointer(gchar *, struct model_pak *), gint);
 void file_load_dialog(void);
 void file_save_dialog(void);
 
@@ -191,7 +199,7 @@ gint read_dlpoly_frame(FILE *, struct model_pak *);
 gint read_dmol_frame(FILE *, struct model_pak *);
 
 /*NEW: track/update frames (TODO)*/
-gint update_frame_uspex(gint idx,struct model_pak *model);
+gint update_frame_uspex(gint idx, struct model_pak *model);
 
 gint load_planes(gchar *, struct model_pak *);
 
@@ -208,8 +216,8 @@ void capitals(gchar *, gchar *);
 gchar **get_tokenized_line(FILE *, gint *);
 gint get_keyword_code(const gchar *);
 
-#define find_in_string(a,b) strstr(b,a)
-long int fetch_in_file(FILE *vf,const gchar *target);
+#define find_in_string(a, b) strstr(b, a)
+long int fetch_in_file(FILE *vf, const gchar *target);
 
 gint read_frame(FILE *, gint, struct model_pak *);
 gint read_raw_frame(FILE *, gint, struct model_pak *);
@@ -222,3 +230,6 @@ gint fdf_species_index(gchar *, GSList *);
 
 GSList *gromacs_read_ff(const gchar *);
 
+#ifdef __cplusplus
+}
+#endif

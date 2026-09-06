@@ -30,41 +30,37 @@ The GNU GPL can also be found at http://www.gnu.org
 
 extern struct sysenv_pak sysenv;
 
-struct undo_pak
-{
-gint (*function) (gpointer, gpointer);
-GSList *pointers;
+struct undo_pak {
+  gint (*function)(gpointer, gpointer);
+  GSList *pointers;
 };
 
 /********************************/
 /* initialize model's undo list */
 /********************************/
-void undo_init(struct model_pak *model)
-{
-model->undo_list = NULL;
-}
+void undo_init(struct model_pak *model) { model->undo_list = NULL; }
 
 /*************************************************/
 /* removes all registered undo items for a model */
 /*************************************************/
 void undo_free(struct model_pak *model)
 {
-GSList *list;
-struct undo_pak *undo;
+  GSList *list;
+  struct undo_pak *undo;
 
-g_assert(model != NULL);
+  g_assert(model != NULL);
 
-list = model->undo_list;
-while (list)
+  list = model->undo_list;
+  while (list)
   {
-  undo = list->data;
-  list = g_slist_next(list);
+    undo = list->data;
+    list = g_slist_next(list);
 
-  free_slist(undo->pointers);
-  g_free(undo);
+    free_slist(undo->pointers);
+    g_free(undo);
   }
 
-g_slist_free(model->undo_list);
+  g_slist_free(model->undo_list);
 }
 
 /***********************************/
@@ -72,15 +68,15 @@ g_slist_free(model->undo_list);
 /***********************************/
 void undo_register(struct model_pak *model, gpointer f, GSList *p)
 {
-struct undo_pak *undo;
+  struct undo_pak *undo;
 
-g_assert(model != NULL);
+  g_assert(model != NULL);
 
-undo = g_malloc(sizeof(struct undo_pak));
-undo->function = f;
-undo->pointers = p;
+  undo = g_malloc(sizeof(struct undo_pak));
+  undo->function = f;
+  undo->pointers = p;
 
-model->undo_list = g_slist_prepend(model->undo_list, undo);
+  model->undo_list = g_slist_prepend(model->undo_list, undo);
 }
 
 /********************************************/
@@ -88,23 +84,23 @@ model->undo_list = g_slist_prepend(model->undo_list, undo);
 /********************************************/
 void undo_single(struct model_pak *model)
 {
-GSList *list;
-struct undo_pak *undo;
+  GSList *list;
+  struct undo_pak *undo;
 
-if (!model)
-  return;
+  if (!model)
+    return;
 
-list = model->undo_list;
-if (list)
+  list = model->undo_list;
+  if (list)
   {
-  undo = list->data;
-  g_assert(undo != NULL);
+    undo = list->data;
+    g_assert(undo != NULL);
 
-  if (undo->function)
-    undo->function(model, undo->pointers);
+    if (undo->function)
+      undo->function(model, undo->pointers);
 
-  model->undo_list = g_slist_remove(model->undo_list, undo);
-  gui_refresh(GUI_MODEL_PROPERTIES);
+    model->undo_list = g_slist_remove(model->undo_list, undo);
+    gui_refresh(GUI_MODEL_PROPERTIES);
   }
 }
 
@@ -113,7 +109,6 @@ if (list)
 /*************************************************/
 void undo_active(void)
 {
-undo_single(sysenv.active_model);
-gui_refresh(GUI_CANVAS);
+  undo_single(sysenv.active_model);
+  gui_refresh(GUI_CANVAS);
 }
-

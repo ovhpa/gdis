@@ -2,16 +2,14 @@
 #define _LEGACY_H 1
 
 /* Frame data pak... */
-struct rdf_frame_pak
-{
+struct rdf_frame_pak {
   gint atom_count[2];
   struct cartesian *firstatom;
   struct cartesian *secondatom;
 };
 
 /* RDF data pak... */
-struct rdf_pak
-{
+struct rdf_pak {
   gint frames_count;
   gint frame_atoms[2];
   gint atom_element[2];
@@ -21,9 +19,9 @@ struct rdf_pak
 
 /* Interface functions... */
 void create_rdfwindow(void);
-void on_atom1select_toggled (GtkToggleButton *togglebutton, gpointer user_data);
-void on_atom2select_toggled (GtkToggleButton *togglebutton, gpointer user_data);
-void on_atom3select_toggled (GtkToggleButton *togglebutton, gpointer user_data);
+void on_atom1select_toggled(gpointer togglebutton, gpointer user_data);
+void on_atom2select_toggled(gpointer togglebutton, gpointer user_data);
+void on_atom3select_toggled(gpointer togglebutton, gpointer user_data);
 
 /* Queueing system interface function... */
 void init_rdf_task(void);
@@ -42,7 +40,9 @@ gint rdf_frame_atoms(struct model_pak *model, gint atom_select, gint atom_elemen
 gint get_rdf_data(struct rdf_pak *rdf, struct model_pak *model, gint atom_select);
 
 /* Calculation functions... */
-gint distances_atoms(struct rdf_pak *rdf, struct model_pak *model, gint *distances, gint hist_points, gdouble scale, gint count_method);
-gint distances_elements(struct rdf_pak *rdf, struct model_pak *model, gint *distances, gint hist_points, gdouble scale, gint count_method);
+gint distances_atoms(struct rdf_pak *rdf, struct model_pak *model, gint *distances, gint hist_points, gdouble scale,
+                     gint count_method);
+gint distances_elements(struct rdf_pak *rdf, struct model_pak *model, gint *distances, gint hist_points, gdouble scale,
+                        gint count_method);
 
 #endif

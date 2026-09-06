@@ -36,23 +36,22 @@ extern struct elem_pak elements[];
 /***************************/
 /* file scanning structure */
 /***************************/
-struct scan_pak 
-{
-FILE *fp;
+struct scan_pak {
+  FILE *fp;
 
-/* TODO - IF decide to do background reads - will need a mutex lock as well */
-gboolean background;
-gboolean eof;
+  /* TODO - IF decide to do background reads - will need a mutex lock as well */
+  gboolean background;
+  gboolean eof;
 
-off_t bytes_read;
-off_t bytes_total;
+  off_t bytes_read;
+  off_t bytes_total;
 
-/* stored lines */
-gint buffer_line;
-gint buffer_size;
-gint buffer_max;
-gchar **buffer;
-GSList *offset_list;
+  /* stored lines */
+  gint buffer_line;
+  gint buffer_size;
+  gint buffer_max;
+  gchar **buffer;
+  GSList *offset_list;
 };
 
 /***********************/
@@ -60,33 +59,33 @@ GSList *offset_list;
 /***********************/
 gpointer scan_new(gchar *filename)
 {
-gint i;
-struct scan_pak *scan;
-struct stat buff;
-FILE *fp;
+  gint i;
+  struct scan_pak *scan;
+  struct stat buff;
+  FILE *fp;
 
-fp = fopen(filename, "rt");
-if (!fp)
-  return(NULL);
+  fp = fopen(filename, "rt");
+  if (!fp)
+    return (NULL);
 
-if (stat(filename, &buff))
-  return(NULL);
+  if (stat(filename, &buff))
+    return (NULL);
 
-scan = g_malloc(sizeof(struct scan_pak));
-scan->fp = fp;
-scan->background = FALSE;
-scan->bytes_read = 0;
-scan->bytes_total = buff.st_size;
-scan->eof = FALSE;
-scan->buffer_line = -1;
-scan->buffer_size = 0;
-scan->buffer_max = 10;
-scan->buffer = g_malloc(scan->buffer_max * sizeof(gchar *));
-for (i=scan->buffer_max ; i-- ; )
-  scan->buffer[i] = NULL;
-scan->offset_list = NULL;
+  scan = g_malloc(sizeof(struct scan_pak));
+  scan->fp = fp;
+  scan->background = FALSE;
+  scan->bytes_read = 0;
+  scan->bytes_total = buff.st_size;
+  scan->eof = FALSE;
+  scan->buffer_line = -1;
+  scan->buffer_size = 0;
+  scan->buffer_max = 10;
+  scan->buffer = g_malloc(scan->buffer_max * sizeof(gchar *));
+  for (i = scan->buffer_max; i--;)
+    scan->buffer[i] = NULL;
+  scan->offset_list = NULL;
 
-return(scan);
+  return (scan);
 }
 
 /*********************/
@@ -94,21 +93,21 @@ return(scan);
 /*********************/
 void scan_free(gpointer ptr_scan)
 {
-gint i;
-struct scan_pak *scan = ptr_scan;
+  gint i;
+  struct scan_pak *scan = ptr_scan;
 
-/* checks */
-g_assert(scan != NULL);
+  /* checks */
+  g_assert(scan != NULL);
 
-/* cleanup */
-fclose(scan->fp);
-for (i=scan->buffer_size ; i-- ; )
-  g_free(scan->buffer[i]);
-g_free(scan->buffer);
+  /* cleanup */
+  fclose(scan->fp);
+  for (i = scan->buffer_size; i--;)
+    g_free(scan->buffer[i]);
+  g_free(scan->buffer);
 
-free_slist(scan->offset_list);
+  free_slist(scan->offset_list);
 
-g_free(scan);
+  g_free(scan);
 }
 
 /***************************/
@@ -116,16 +115,16 @@ g_free(scan);
 /***************************/
 gboolean scan_complete(gpointer ptr_scan)
 {
-struct scan_pak *scan = ptr_scan;
+  struct scan_pak *scan = ptr_scan;
 
-/* checks */
-if (!scan)
-  return(TRUE);
+  /* checks */
+  if (!scan)
+    return (TRUE);
 
-/* completed if we've got an EOF AND we've scanned to the end of the buffer */
-if (scan->eof && scan->buffer_line == scan->buffer_size-1)
-  return(TRUE);
-return(FALSE);
+  /* completed if we've got an EOF AND we've scanned to the end of the buffer */
+  if (scan->eof && scan->buffer_line == scan->buffer_size - 1)
+    return (TRUE);
+  return (FALSE);
 }
 
 /***************************************/
@@ -135,89 +134,87 @@ return(FALSE);
 #define DEBUG_SCAN_GET_LINE 0
 gchar *scan_get_line(gpointer ptr_scan)
 {
-gint i;
-gchar *line;
-fpos_t *offset;
-struct scan_pak *scan = ptr_scan;
+  gint i;
+  gchar *line;
+  fpos_t *offset;
+  struct scan_pak *scan = ptr_scan;
 
-/* checks */
-g_assert(scan != NULL);
+  /* checks */
+  g_assert(scan != NULL);
 
-/* TODO - progress bar (popup or part of main gdis win) for large files */
-/*
-printf("read %d/%d\n", scan->bytes_read, scan->bytes_total);
-*/
+  /* TODO - progress bar (popup or part of main gdis win) for large files */
+  /*
+  printf("read %d/%d\n", scan->bytes_read, scan->bytes_total);
+  */
 
-if (scan->buffer_line >= scan->buffer_size)
+  if (scan->buffer_line >= scan->buffer_size)
   {
-printf("premature EOF?\n");
-g_assert_not_reached();
+    printf("premature EOF?\n");
+    g_assert_not_reached();
   }
 
-g_assert(scan->buffer_line < scan->buffer_size);
+  g_assert(scan->buffer_line < scan->buffer_size);
 
-/* read new line, or can we do a buffered read? */
-if (scan->buffer_line < scan->buffer_size-1)
+  /* read new line, or can we do a buffered read? */
+  if (scan->buffer_line < scan->buffer_size - 1)
   {
-  g_assert(scan->buffer_line >= 0);
+    g_assert(scan->buffer_line >= 0);
 
-/* get next line in the buffer */
-  scan->buffer_line++;
-  line = scan->buffer[scan->buffer_line];
-  }
-else
-  {
-/* read new line */
-  if (scan->buffer_size == scan->buffer_max)
-    {
-/* max size reached; discard oldest line and shuffle the buffer */
-    g_free(scan->buffer[0]);
-    for (i=1 ; i<scan->buffer_max ; i++)
-      scan->buffer[i-1] = scan->buffer[i];
-
-/* remove first element (oldest item read in) */
-/*
-    offset = (scan->offset_list)->data;
-*/
-
-    offset = g_slist_nth_data(scan->offset_list, 0);
-
-    scan->offset_list = g_slist_remove(scan->offset_list, offset);
-    g_free(offset);
-    }
-  else
-    {
-/* keep filling buffer until max size reached */
+    /* get next line in the buffer */
     scan->buffer_line++;
-    scan->buffer_size++;
-    }
-
-/* store file pointer offset for the current line */
-  offset = g_malloc(sizeof(fpos_t));
-  if (!fgetpos(scan->fp, offset))
-    scan->offset_list = g_slist_append(scan->offset_list, offset);
-  else
+    line = scan->buffer[scan->buffer_line];
+  } else
+  {
+    /* read new line */
+    if (scan->buffer_size == scan->buffer_max)
     {
-    g_free(offset);
-    printf("WARNING: failed to save file pointer offset; animations won't work!\n");
+      /* max size reached; discard oldest line and shuffle the buffer */
+      g_free(scan->buffer[0]);
+      for (i = 1; i < scan->buffer_max; i++)
+        scan->buffer[i - 1] = scan->buffer[i];
+
+      /* remove first element (oldest item read in) */
+      /*
+          offset = (scan->offset_list)->data;
+      */
+
+      offset = g_slist_nth_data(scan->offset_list, 0);
+
+      scan->offset_list = g_slist_remove(scan->offset_list, offset);
+      g_free(offset);
+    } else
+    {
+      /* keep filling buffer until max size reached */
+      scan->buffer_line++;
+      scan->buffer_size++;
     }
 
-/* read a new line into the buffer */
-  line = file_read_line(scan->fp);
-  if (!line)
-    scan->eof = TRUE;
-  else
-    scan->bytes_read += strlen(line);
+    /* store file pointer offset for the current line */
+    offset = g_malloc(sizeof(fpos_t));
+    if (!fgetpos(scan->fp, offset))
+      scan->offset_list = g_slist_append(scan->offset_list, offset);
+    else
+    {
+      g_free(offset);
+      printf("WARNING: failed to save file pointer offset; animations won't work!\n");
+    }
 
-  g_assert(scan->buffer_line >= 0);
+    /* read a new line into the buffer */
+    line = file_read_line(scan->fp);
+    if (!line)
+      scan->eof = TRUE;
+    else
+      scan->bytes_read += strlen(line);
 
-  scan->buffer[scan->buffer_line] = line;
+    g_assert(scan->buffer_line >= 0);
+
+    scan->buffer[scan->buffer_line] = line;
   }
 
-#if DEBUG_SCAN_GET_LINE 
-printf("> %s", line);
+#if DEBUG_SCAN_GET_LINE
+  printf("> %s", line);
 #endif
-return(line);
+  return (line);
 }
 
 /*************************************/
@@ -225,20 +222,20 @@ return(line);
 /*************************************/
 gchar **scan_get_tokens(gpointer ptr_scan, gint *num_tokens)
 {
-gchar *line, **buff;
-struct scan_pak *scan = ptr_scan;
+  gchar *line, **buff;
+  struct scan_pak *scan = ptr_scan;
 
-g_assert(scan != NULL);
+  g_assert(scan != NULL);
 
-while (!scan_complete(scan))
+  while (!scan_complete(scan))
   {
-  line = scan_get_line(scan);
-  buff = tokenize(line, num_tokens);
-  if (buff)
-    return(buff);
+    line = scan_get_line(scan);
+    buff = tokenize(line, num_tokens);
+    if (buff)
+      return (buff);
   }
-*num_tokens = 0;
-return(NULL);
+  *num_tokens = 0;
+  return (NULL);
 }
 
 /*******************************/
@@ -246,11 +243,11 @@ return(NULL);
 /*******************************/
 gchar *scan_cur_line(gpointer ptr_scan)
 {
-struct scan_pak *scan = ptr_scan;
+  struct scan_pak *scan = ptr_scan;
 
-g_assert(scan != NULL);
+  g_assert(scan != NULL);
 
-return(scan->buffer[scan->buffer_line]);
+  return (scan->buffer[scan->buffer_line]);
 }
 
 /******************************************/
@@ -258,21 +255,21 @@ return(scan->buffer[scan->buffer_line]);
 /******************************************/
 void scan_frame_new(gpointer ptr_scan, struct model_pak *model)
 {
-gpointer offset, data;
-struct scan_pak *scan = ptr_scan;
+  gpointer offset, data;
+  struct scan_pak *scan = ptr_scan;
 
-g_assert(scan != NULL);
-g_assert(model != NULL);
+  g_assert(scan != NULL);
+  g_assert(model != NULL);
 
-data = g_slist_nth_data(scan->offset_list, scan->buffer_line);
+  data = g_slist_nth_data(scan->offset_list, scan->buffer_line);
 
-offset = g_memdup(data, sizeof(fpos_t));
+  offset = g_memdup(data, sizeof(fpos_t));
 
-model->frame_list = g_list_append(model->frame_list, offset); 
+  model->frame_list = g_list_append(model->frame_list, offset);
 
-/*
-printf("Add offset: %p [%d/%d]\n", offset, scan->buffer_line, g_slist_length(scan->offset_list));
-*/
+  /*
+  printf("Add offset: %p [%d/%d]\n", offset, scan->buffer_line, g_slist_length(scan->offset_list));
+  */
 }
 
 /*************************/
@@ -280,13 +277,13 @@ printf("Add offset: %p [%d/%d]\n", offset, scan->buffer_line, g_slist_length(sca
 /*************************/
 gpointer scan_offset_get(gpointer ptr_scan)
 {
-struct scan_pak *scan = ptr_scan;
+  struct scan_pak *scan = ptr_scan;
 
-printf("buffer line: %d\n", scan->buffer_line);
-printf("buffer length: %d\n", scan->buffer_size);
-printf("offset length: %d\n", g_slist_length(scan->offset_list));
+  printf("buffer line: %d\n", scan->buffer_line);
+  printf("buffer length: %d\n", scan->buffer_size);
+  printf("offset length: %d\n", g_slist_length(scan->offset_list));
 
-return(g_slist_nth_data(scan->offset_list, scan->buffer_line));
+  return (g_slist_nth_data(scan->offset_list, scan->buffer_line));
 }
 
 /*************************************/
@@ -294,15 +291,14 @@ return(g_slist_nth_data(scan->offset_list, scan->buffer_line));
 /*************************************/
 gboolean scan_put_line(gpointer ptr_scan)
 {
-struct scan_pak *scan = ptr_scan;
+  struct scan_pak *scan = ptr_scan;
 
-g_assert(scan != NULL);
+  g_assert(scan != NULL);
 
-if (scan->buffer_line > 0)
-  scan->buffer_line--;
-else
-  return(TRUE);
+  if (scan->buffer_line > 0)
+    scan->buffer_line--;
+  else
+    return (TRUE);
 
-return(FALSE);
+  return (FALSE);
 }
-

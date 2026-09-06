@@ -20,20 +20,26 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 The GNU GPL can also be found at http://www.gnu.org
 */
 
-enum {DHKL, EQUIL_UN, EQUIL_RE, GROWTH_UN, GROWTH_RE, MORPH_BBPA};
+#ifndef MORPH_H
+#define MORPH_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+enum { DHKL, EQUIL_UN, EQUIL_RE, GROWTH_UN, GROWTH_RE, MORPH_BBPA };
 
 /**************/
 /* structures */
 /**************/
 
-struct vertex_pak
-{
-/* coords */
-gdouble x[3];
-gdouble rx[3];
-gdouble n[3];
-/* adjacencies */
-GSList *adj;
+struct vertex_pak {
+  /* coords */
+  gdouble x[3];
+  gdouble rx[3];
+  gdouble n[3];
+  /* adjacencies */
+  GSList *adj;
 };
 
 /**************/
@@ -47,3 +53,8 @@ gint facet_equiv(struct model_pak *, gint *, gint *);
 
 gint calc_valid_shifts(struct model_pak *, struct plane_pak *);
 
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* MORPH_H */
