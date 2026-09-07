@@ -796,26 +796,26 @@ int gdis_main(int argc, char *argv[]) { return gdis_main_impl(argc, argv); }
 /* CURRENT */
 /* routines that are not cleanly separable when we build with no GUI */
 #ifndef WITH_GUI
-//void gui_text_show(gint type, const gchar *msg) { printf("%s", msg); }
+// void gui_text_show(gint type, const gchar *msg) { printf("%s", msg); }
 
-//void gui_refresh(gint dummy) {}
+// void gui_refresh(gint dummy) {}
 
-//void tree_select_active(void) {}
-//void tree_select_model(struct model_pak *m) {}
-//void tree_model_add(struct model_pak *m) {}
+// void tree_select_active(void) {}
+// void tree_select_model(struct model_pak *m) {}
+// void tree_model_add(struct model_pak *m) {}
 
-//void dialog_destroy_type(gint dummy) {}
+// void dialog_destroy_type(gint dummy) {}
 
-//gpointer graph_new(const gchar *dummy, struct model_pak *m) { return (NULL); }
+// gpointer graph_new(const gchar *dummy, struct model_pak *m) { return (NULL); }
 
-//void graph_add_data(gint a, gdouble *b, gdouble c, gdouble d, gpointer e) {}
+// void graph_add_data(gint a, gdouble *b, gdouble c, gdouble d, gpointer e) {}
 
-//void graph_set_yticks(gint a, gint b, gpointer c) {}
+// void graph_set_yticks(gint a, gint b, gpointer c) {}
 
-//void graph_free_list(struct model_pak *m) {}
+// void graph_free_list(struct model_pak *m) {}
 
-//void meas_graft_model(struct model_pak *m) {}
+// void meas_graft_model(struct model_pak *m) {}
 
 /* FIXME - this should actually be replaced by gui_refresh() */
-//void redraw_canvas(gint dummy) {}
+// void redraw_canvas(gint dummy) {}
 #endif

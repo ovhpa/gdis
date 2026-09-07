@@ -1765,21 +1765,26 @@ void graph_draw(struct canvas_pak *canvas, struct model_pak *model)
    Returns TRUE if the set uses idx < 0 to mark some entries as "not this type" */
 static gboolean y_set_has_mixed_types(g_data_y *dy)
 {
-  if (!dy || !dy->y || dy->y_size <= 0) return FALSE;
-  if (dy->symbol == NULL && dy->idx == NULL) return FALSE;
+  if (!dy || !dy->y || dy->y_size <= 0)
+    return FALSE;
+  if (dy->symbol == NULL && dy->idx == NULL)
+    return FALSE;
 
   gint has_cross = FALSE, has_diam = FALSE;
   for (gint i = 0; i < dy->y_size; i++)
   {
     if (dy->symbol)
     {
-      if (dy->symbol[i] == GRAPH_SYMB_CROSS)   has_cross = TRUE;
-      if (dy->symbol[i] == GRAPH_SYMB_DIAM)    has_diam = TRUE;
-    }
-    else if (dy->idx)
+      if (dy->symbol[i] == GRAPH_SYMB_CROSS)
+        has_cross = TRUE;
+      if (dy->symbol[i] == GRAPH_SYMB_DIAM)
+        has_diam = TRUE;
+    } else if (dy->idx)
     {
-      if (dy->idx[i] < 0)     has_cross = TRUE;  /* SCF-only marker */
-      if (dy->idx[i] > 0)     has_diam = TRUE;   /* ionic step marker */
+      if (dy->idx[i] < 0)
+        has_cross = TRUE; /* SCF-only marker */
+      if (dy->idx[i] > 0)
+        has_diam = TRUE; /* ionic step marker */
     }
   }
   return has_cross && has_diam;
@@ -1829,14 +1834,12 @@ void graph_write(gchar *name, gpointer ptr_graph)
       if (test_gx && test_gx->x != NULL && test_gx->x_size > 0)
       {
         gx = test_gx;
-      }
-      else
+      } else
       {
         /* First entry is not X data — treat as Y data */
         g_ptr_array_add(y_arrays, item);
       }
-    }
-    else
+    } else
     {
       /* Remaining entries: always treat as Y data. */
       g_ptr_array_add(y_arrays, item);
@@ -1854,8 +1857,7 @@ void graph_write(gchar *name, gpointer ptr_graph)
       for (gint i = 0; i < gx->x_size; i++)
         fprintf(fp, "%.16g\n", gx->x[i]);
     }
-  }
-  else
+  } else
   {
     /* Determine number of output columns.
        If the first Y set has mixed types (SCF vs ionic), split into y1+y2.
@@ -1897,7 +1899,7 @@ void graph_write(gchar *name, gpointer ptr_graph)
         /* No explicit X data — generate from indices mapped to [xmin, xmax] */
         gdouble xval;
         if (n_rows > 1)
-          xval = graph->xmin + ((gdouble) i / (gdouble)(n_rows - 1)) * (graph->xmax - graph->xmin);
+          xval = graph->xmin + ((gdouble) i / (gdouble) (n_rows - 1)) * (graph->xmax - graph->xmin);
         else
           xval = graph->xmin;
         fprintf(fp, "%.16g", xval);
@@ -1930,8 +1932,7 @@ void graph_write(gchar *name, gpointer ptr_graph)
                 fprintf(fp, ",%.16g", dy->y[i]);
               else
                 fprintf(fp, ",.");
-            }
-            else
+            } else
             {
               /* Normal: output value or "." for missing */
               if ((dy->idx && dy->idx[i] < 0) || isnan(dy->y[i]))
@@ -1939,11 +1940,9 @@ void graph_write(gchar *name, gpointer ptr_graph)
               else
                 fprintf(fp, ",%.16g", dy->y[i]);
             }
-          }
-          else
+          } else
             fprintf(fp, ",.");
-        }
-        else
+        } else
         {
           /* Raw gdouble* from old graph_add_data API */
           gdouble *raw_y = (gdouble *) item;
@@ -1969,7 +1968,8 @@ void graph_write(gchar *name, gpointer ptr_graph)
 /* Parse a single line: skip leading whitespace, return pointer to first non-space char. */
 static inline gchar *skip_whitespace(gchar *s)
 {
-  while (*s && g_ascii_isspace(*s)) s++;
+  while (*s && g_ascii_isspace(*s))
+    s++;
   return s;
 }
 
@@ -1983,7 +1983,7 @@ static gchar *strip_newline(gchar *s)
 }
 
 /* Parse a keyword=value or keyword value line. Returns TRUE if 'key' matched.
-   *out is set to the remainder after key (stripped of leading space). */
+ *out is set to the remainder after key (stripped of leading space). */
 static gboolean parse_keyword(gchar *line, const gchar *key, gchar **out)
 {
   line = skip_whitespace(line);
@@ -1992,7 +1992,8 @@ static gboolean parse_keyword(gchar *line, const gchar *key, gchar **out)
   line += strlen(key);
   /* Allow optional '=' or space between keyword and value */
   line = skip_whitespace(line);
-  if (*line == '=') line++;
+  if (*line == '=')
+    line++;
   *out = (gchar *) line;
   return TRUE;
 }
@@ -2000,13 +2001,15 @@ static gboolean parse_keyword(gchar *line, const gchar *key, gchar **out)
 /* Helper: dynamically grow a double array. */
 typedef struct {
   gdouble *data;
-  gint     len;
-  gint     cap;
+  gint len;
+  gint cap;
 } dyn_array_t;
 
 static void dyn_init(dyn_array_t *a)
 {
-  a->data = NULL; a->len = 0; a->cap = 0;
+  a->data = NULL;
+  a->len = 0;
+  a->cap = 0;
 }
 
 static void dyn_append(dyn_array_t *a, gdouble v)
@@ -2029,86 +2032,75 @@ static void dyn_append_nan(dyn_array_t *a)
   a->data[a->len++] = NAN;
 }
 
-static void dyn_free(dyn_array_t *a)
-{
-  g_free(a->data);
-}
+static void dyn_free(dyn_array_t *a) { g_free(a->data); }
 
 /* Try to parse a line as a number. Returns TRUE and sets *val on success.
    Handles: "123", "." (missing), "nan", "NaN", empty lines. */
 static gboolean try_parse_double(gchar *s, gdouble *val)
 {
-  while (*s && g_ascii_isspace(*s)) s++;
-  if (*s == '\0') return FALSE;
+  while (*s && g_ascii_isspace(*s))
+    s++;
+  if (*s == '\0')
+    return FALSE;
 
   /* Missing-value markers: "." or "nan" (case-insensitive) */
-  if ((strlen(s) == 1 && *s == '.') ||
-      g_ascii_strncasecmp(s, "nan", 3) == 0)
+  if ((strlen(s) == 1 && *s == '.') || g_ascii_strncasecmp(s, "nan", 3) == 0)
     return FALSE;
 
   gchar *end;
   gdouble v = g_ascii_strtod(s, &end);
-  if (end == s) return FALSE;
+  if (end == s)
+    return FALSE;
   *val = v;
   return TRUE;
 }
 
 /* Parse a CSV-style file with header row and data rows.
    First column is X; remaining columns are Y1, Y2, ... */
-  static void add_y_blocks(GPtrArray *y_arrays, struct graph_pak *graph)
+static void add_y_blocks(GPtrArray *y_arrays, struct graph_pak *graph)
+{
+  static const graph_color y_colors[] = {
+      GRAPH_COLOR_BLUE,  GRAPH_COLOR_RED,  GRAPH_COLOR_GREEN, GRAPH_COLOR_PURPLE,
+      GRAPH_COLOR_OLIVE, GRAPH_COLOR_TEAL, GRAPH_COLOR_NAVY,  GRAPH_COLOR_MAROON,
+  };
+  static const graph_symbol y_symbols[] = {
+      GRAPH_SYMB_CROSS, GRAPH_SYMB_SQUARE, GRAPH_SYMB_TRI_UP, GRAPH_SYMB_DIAM, GRAPH_SYMB_TRI_DN,
+  };
+
+  for (guint bi = 0; bi < y_arrays->len; bi++)
   {
-    static const graph_color y_colors[] = {
-      GRAPH_COLOR_BLUE,
-      GRAPH_COLOR_RED,
-      GRAPH_COLOR_GREEN,
-      GRAPH_COLOR_PURPLE,
-      GRAPH_COLOR_OLIVE,
-      GRAPH_COLOR_TEAL,
-      GRAPH_COLOR_NAVY,
-      GRAPH_COLOR_MAROON,
-    };
-    static const graph_symbol y_symbols[] = {
-      GRAPH_SYMB_CROSS,
-      GRAPH_SYMB_SQUARE,
-      GRAPH_SYMB_TRI_UP,
-      GRAPH_SYMB_DIAM,
-      GRAPH_SYMB_TRI_DN,
-    };
+    dyn_array_t *ya = (dyn_array_t *) g_ptr_array_index(y_arrays, bi);
 
-    for (guint bi = 0; bi < y_arrays->len; bi++)
+    gint valid_count = 0;
+    for (gint i = 0; i < ya->len; i++)
+      if (!isnan(ya->data[i]))
+        valid_count++;
+
+    g_data_y gy;
+    gy.y_size = ya->len;
+    gy.y = g_new(gdouble, ya->len);
+    memcpy(gy.y, ya->data, ya->len * sizeof(gdouble));
+    gy.idx = NULL;
+    gy.type = GRAPH_XY_TYPE;
+    gy.line = GRAPH_LINE_SINGLE;
+    gy.color = y_colors[bi % G_N_ELEMENTS(y_colors)];
+
+    if (valid_count > 0)
     {
-      dyn_array_t *ya = (dyn_array_t *) g_ptr_array_index(y_arrays, bi);
-
-      gint valid_count = 0;
+      gy.symbol = g_new(graph_symbol, ya->len);
+      gy.sym_color = NULL;
+      gy.mixed_symbol = FALSE;
       for (gint i = 0; i < ya->len; i++)
-        if (!isnan(ya->data[i])) valid_count++;
-
-      g_data_y gy;
-      gy.y_size = ya->len;
-      gy.y = g_new(gdouble, ya->len);
-      memcpy(gy.y, ya->data, ya->len * sizeof(gdouble));
-      gy.idx = NULL;
-      gy.type = GRAPH_XY_TYPE;
-      gy.line = GRAPH_LINE_SINGLE;
-      gy.color = y_colors[bi % G_N_ELEMENTS(y_colors)];
-
-      if (valid_count > 0)
-      {
-        gy.symbol = g_new(graph_symbol, ya->len);
-        gy.sym_color = NULL;
-        gy.mixed_symbol = FALSE;
-        for (gint i = 0; i < ya->len; i++)
-          gy.symbol[i] = isnan(ya->data[i]) ? GRAPH_SYMB_NONE : y_symbols[bi % G_N_ELEMENTS(y_symbols)];
-      }
-      else
-      {
-        gy.symbol = NULL;
-        gy.sym_color = NULL;
-        gy.mixed_symbol = FALSE;
-      }
-      dat_graph_add_y(gy, graph);
+        gy.symbol[i] = isnan(ya->data[i]) ? GRAPH_SYMB_NONE : y_symbols[bi % G_N_ELEMENTS(y_symbols)];
+    } else
+    {
+      gy.symbol = NULL;
+      gy.sym_color = NULL;
+      gy.mixed_symbol = FALSE;
     }
+    dat_graph_add_y(gy, graph);
   }
+}
 
 static gboolean graph_read_csv(gchar *filename, struct model_pak *model)
 {
@@ -2130,7 +2122,8 @@ static gboolean graph_read_csv(gchar *filename, struct model_pak *model)
   g_free(fullpath);
 
   /* --- Phase 1: read all lines --------------------------------------- */
-  dyn_array_t x_arr; dyn_init(&x_arr);
+  dyn_array_t x_arr;
+  dyn_init(&x_arr);
   GPtrArray *y_arrays = g_ptr_array_new_with_free_func(g_free); /* each: dyn_array_t* */
 
   gboolean header_seen = FALSE;
@@ -2141,13 +2134,15 @@ static gboolean graph_read_csv(gchar *filename, struct model_pak *model)
   {
     /* Strip trailing whitespace/newlines */
     gchar *p = line + strlen(line);
-    while (p > line && g_ascii_isspace(*(p - 1))) p--;
+    while (p > line && g_ascii_isspace(*(p - 1)))
+      p--;
     *p = '\0';
 
     /* Skip blank lines and comment-only lines */
     if (*line == '\0' || *line == '#')
     {
-      g_free(line); line = file_read_line(fp);
+      g_free(line);
+      line = file_read_line(fp);
       continue;
     }
 
@@ -2159,9 +2154,11 @@ static gboolean graph_read_csv(gchar *filename, struct model_pak *model)
       /* Count commas to determine column count */
       expected_cols = 1;
       for (gchar *c = line; *c; c++)
-        if (*c == ',') expected_cols++;
+        if (*c == ',')
+          expected_cols++;
 
-      g_free(line); line = file_read_line(fp);
+      g_free(line);
+      line = file_read_line(fp);
       continue;
     }
 
@@ -2173,7 +2170,8 @@ static gboolean graph_read_csv(gchar *filename, struct model_pak *model)
 
     while (*tok_start)
     {
-      if (col >= expected_cols) break; /* extra columns — ignore */
+      if (col >= expected_cols)
+        break; /* extra columns — ignore */
 
       gchar *comma = strchr(tok_start, ',');
       gchar *field;
@@ -2182,13 +2180,12 @@ static gboolean graph_read_csv(gchar *filename, struct model_pak *model)
       if (comma)
       {
         field = tok_start;
-        field_len = (gint)(comma - tok_start);
+        field_len = (gint) (comma - tok_start);
         tok_start = comma + 1;
-      }
-      else
+      } else
       {
         field = tok_start;
-        field_len = (gint)strlen(tok_start);
+        field_len = (gint) strlen(tok_start);
         tok_start += field_len; /* advance past last token */
       }
 
@@ -2200,7 +2197,7 @@ static gboolean graph_read_csv(gchar *filename, struct model_pak *model)
         else
         {
           /* Ensure y_arrays has enough entries for this column */
-          while ((gint)y_arrays->len < col)
+          while ((gint) y_arrays->len < col)
           {
             dyn_array_t *ya = g_new(dyn_array_t, 1);
             dyn_init(ya);
@@ -2208,15 +2205,14 @@ static gboolean graph_read_csv(gchar *filename, struct model_pak *model)
           }
           dyn_append((dyn_array_t *) g_ptr_array_index(y_arrays, col - 1), val);
         }
-      }
-      else
+      } else
       {
         /* Missing value ("." or "nan") — store NaN to preserve row alignment */
         if (col == 0)
           dyn_append_nan(&x_arr);
         else
         {
-          while ((gint)y_arrays->len < col)
+          while ((gint) y_arrays->len < col)
           {
             dyn_array_t *ya = g_new(dyn_array_t, 1);
             dyn_init(ya);
@@ -2226,11 +2222,13 @@ static gboolean graph_read_csv(gchar *filename, struct model_pak *model)
         }
       }
 
-      if (!comma) break;
+      if (!comma)
+        break;
       col++;
     }
 
-    g_free(line); line = file_read_line(fp);
+    g_free(line);
+    line = file_read_line(fp);
   }
   fclose(fp);
 
@@ -2255,8 +2253,10 @@ static gboolean graph_read_csv(gchar *filename, struct model_pak *model)
     dyn_array_t *ya = (dyn_array_t *) g_ptr_array_index(y_arrays, bi);
     for (gint i = 0; i < ya->len; i++)
     {
-      if (ya->data[i] < ymin) ymin = ya->data[i];
-      if (ya->data[i] > ymax) ymax = ya->data[i];
+      if (ya->data[i] < ymin)
+        ymin = ya->data[i];
+      if (ya->data[i] > ymax)
+        ymax = ya->data[i];
     }
   }
 
@@ -2267,8 +2267,10 @@ static gboolean graph_read_csv(gchar *filename, struct model_pak *model)
     ymax = x_arr.data[0];
     for (gint i = 1; i < x_arr.len; i++)
     {
-      if (x_arr.data[i] < ymin) ymin = x_arr.data[i];
-      if (x_arr.data[i] > ymax) ymax = x_arr.data[i];
+      if (x_arr.data[i] < ymin)
+        ymin = x_arr.data[i];
+      if (x_arr.data[i] > ymax)
+        ymax = x_arr.data[i];
     }
   }
 
@@ -2334,10 +2336,12 @@ static gboolean graph_read_structured(gchar *filename, struct model_pak *model)
   while (line)
   {
     gchar *trimmed = line;
-    while (*trimmed && g_ascii_isspace(*trimmed)) trimmed++;
+    while (*trimmed && g_ascii_isspace(*trimmed))
+      trimmed++;
     if (*trimmed == '\0' || *trimmed == '#')
     {
-      g_free(line); line = file_read_line(fp);
+      g_free(line);
+      line = file_read_line(fp);
       continue;
     }
     if (g_str_has_prefix(trimmed, "data_x") || g_str_has_prefix(trimmed, "data_y"))
@@ -2345,7 +2349,8 @@ static gboolean graph_read_structured(gchar *filename, struct model_pak *model)
       has_structured = TRUE;
       break;
     }
-    g_free(line); line = file_read_line(fp);
+    g_free(line);
+    line = file_read_line(fp);
   }
   fclose(fp);
 
@@ -2353,12 +2358,14 @@ static gboolean graph_read_structured(gchar *filename, struct model_pak *model)
     return FALSE;
 
   /* --- Phase 2: parse data ------------------------------------------- */
-  dyn_array_t x_arr; dyn_init(&x_arr);
+  dyn_array_t x_arr;
+  dyn_init(&x_arr);
   GPtrArray *y_arrays = g_ptr_array_new_with_free_func(g_free); /* each: dyn_array_t* */
 
   gboolean in_data_x = FALSE;
   gint y_block_target = -1;
-  dyn_array_t cur_y_arr; dyn_init(&cur_y_arr);
+  dyn_array_t cur_y_arr;
+  dyn_init(&cur_y_arr);
 
   fp = fopen(fullpath, "rt");
   line = file_read_line(fp);
@@ -2370,7 +2377,8 @@ static gboolean graph_read_structured(gchar *filename, struct model_pak *model)
     /* Skip blank lines and comments */
     if (*trimmed == '\0' || *trimmed == '#')
     {
-      g_free(line); line = file_read_line(fp);
+      g_free(line);
+      line = file_read_line(fp);
       continue;
     }
 
@@ -2379,7 +2387,8 @@ static gboolean graph_read_structured(gchar *filename, struct model_pak *model)
     {
       in_data_x = TRUE;
       y_block_target = -1;
-      g_free(line); line = file_read_line(fp);
+      g_free(line);
+      line = file_read_line(fp);
       continue;
     }
 
@@ -2392,7 +2401,8 @@ static gboolean graph_read_structured(gchar *filename, struct model_pak *model)
         *saved = cur_y_arr;
         g_ptr_array_add(y_arrays, saved);
       }
-      dyn_free(&cur_y_arr); dyn_init(&cur_y_arr);
+      dyn_free(&cur_y_arr);
+      dyn_init(&cur_y_arr);
 
       in_data_x = FALSE;
       y_block_target = -1;
@@ -2401,7 +2411,8 @@ static gboolean graph_read_structured(gchar *filename, struct model_pak *model)
       if (parse_keyword(trimmed, "data_y", &rest))
         y_block_target = atoi(skip_whitespace(rest));
 
-      g_free(line); line = file_read_line(fp);
+      g_free(line);
+      line = file_read_line(fp);
       continue;
     }
 
@@ -2413,8 +2424,7 @@ static gboolean graph_read_structured(gchar *filename, struct model_pak *model)
         dyn_append(&x_arr, dval);
       else if (y_block_target >= 0)
         dyn_append(&cur_y_arr, dval);
-    }
-    else
+    } else
     {
       /* Missing value — store NaN to preserve row alignment */
       if (in_data_x)
@@ -2423,7 +2433,8 @@ static gboolean graph_read_structured(gchar *filename, struct model_pak *model)
         dyn_append_nan(&cur_y_arr);
     }
 
-    g_free(line); line = file_read_line(fp);
+    g_free(line);
+    line = file_read_line(fp);
   }
   fclose(fp);
 
@@ -2454,8 +2465,10 @@ static gboolean graph_read_structured(gchar *filename, struct model_pak *model)
     dyn_array_t *ya = (dyn_array_t *) g_ptr_array_index(y_arrays, bi);
     for (gint i = 0; i < ya->len; i++)
     {
-      if (ya->data[i] < ymin) ymin = ya->data[i];
-      if (ya->data[i] > ymax) ymax = ya->data[i];
+      if (ya->data[i] < ymin)
+        ymin = ya->data[i];
+      if (ya->data[i] > ymax)
+        ymax = ya->data[i];
     }
   }
 
@@ -2576,8 +2589,10 @@ static void graph_read_legacy(gchar *filename)
   graph->ymax = y[0];
   for (i = 1; i < n; i++)
   {
-    if (y[i] < graph->ymin) graph->ymin = y[i];
-    if (y[i] > graph->ymax) graph->ymax = y[i];
+    if (y[i] < graph->ymin)
+      graph->ymin = y[i];
+    if (y[i] > graph->ymax)
+      graph->ymax = y[i];
   }
 
   /* X data: indices 0..n-1 */

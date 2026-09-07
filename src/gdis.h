@@ -479,10 +479,15 @@ enum { CLEAN, START, UPDATE, STOP, ASSIGN, RECALL, RELEASE };
  * without modification. Can be cleaned up once win32 support is dropped
  * or the codebase migrates to g_slist_size(). */
 #if !defined(g_slist_length)
-static inline gint _gdis_g_slist_length(GSList *l) {
-    gint n = 0;
-    while (l) { l = l->next; n++; }
-    return n;
+static inline gint _gdis_g_slist_length(GSList *l)
+{
+  gint n = 0;
+  while (l)
+  {
+    l = l->next;
+    n++;
+  }
+  return n;
 }
 #define g_slist_length(l) _gdis_g_slist_length(l)
 #endif

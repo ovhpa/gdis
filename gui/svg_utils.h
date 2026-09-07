@@ -20,8 +20,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 The GNU GPL can also be found at http://www.gnu.org
 */
 
-#ifndef  SVG_UTILS_H
-#define  SVG_UTILS_H
+#ifndef SVG_UTILS_H
+#define SVG_UTILS_H
 
 #include <QPixmap>
 #include <QIcon>
@@ -38,7 +38,7 @@ The GNU GPL can also be found at http://www.gnu.org
 #include <QCheckBox>
 #include <functional>
 
-QIcon LoadIconSVG(const char* svgData, const QSize& targetSize = QSize(16, 16));
+QIcon LoadIconSVG(const char *svgData, const QSize &targetSize = QSize(16, 16));
 QIcon loadGdisIcon(const char *embedded_name);
 
 /* Create a label + icon button row for QVBoxLayout */
@@ -76,5 +76,4 @@ QHBoxLayout *add_stretch_widget(QVBoxLayout *parent, QWidget *widget);
  */
 void set_widget_tooltip(QWidget *widget, const char *tooltip);
 
-
-#endif //SVG_UTILS_H
+#endif // SVG_UTILS_H

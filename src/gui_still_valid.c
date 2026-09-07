@@ -1444,8 +1444,7 @@ void qt_stereo_open_window(void)
 
     /* Add to canvas list after the main canvas */
     sysenv.canvas_list = g_slist_append(sysenv.canvas_list, right_canvas);
-  }
-  else
+  } else
   {
     /* Fullscreen mode: use stereo_open_window for dual-head setup */
     stereo_open_window();
@@ -1784,7 +1783,7 @@ void edit_nanotube_new(void)
   gui_refresh(GUI_CANVAS);
 
   /* Rebuild the Qt tree so the model icon reflects its new type. */
-  extern void tree_model_add(struct model_pak *model);
+  extern void tree_model_add(struct model_pak * model);
   tree_model_add(model);
 
   gui_relation_update(model);

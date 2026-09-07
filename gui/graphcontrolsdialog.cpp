@@ -291,7 +291,8 @@ void GraphControlsDialog::auto_y_range()
   gpointer p_y_item = nullptr;
   for (; list; list = g_slist_next(list))
   {
-    if (!list->data) continue;
+    if (!list->data)
+      continue;
     g_data_y *dy = (g_data_y *) list->data;
     if (dy && dy->y != NULL && dy->y_size > 0)
     {
@@ -322,7 +323,8 @@ void GraphControlsDialog::auto_y_range()
 
   for (; list; list = g_slist_next(list))
   {
-    if (!list->data) continue;
+    if (!list->data)
+      continue;
     g_data_y *dy = (g_data_y *) list->data;
     if (dy && dy->y != NULL && dy->y_size > 0)
     {
@@ -652,7 +654,8 @@ void GraphControlsDialog::syncFromGraph()
 
   /* Set spin range: count Y sets, skip X entry */
   gint y_count = graph_count_y_sets(m_graph);
-  if (y_count < 1) y_count = 1;
+  if (y_count < 1)
+    y_count = 1;
   m_setSpin->setMaximum(y_count);
   m_setSpin->setValue(1);
 
@@ -706,8 +709,7 @@ static gint graph_count_y_sets(struct graph_pak *graph)
     if (dy && dy->y != NULL && dy->y_size > 0)
     {
       count++;
-    }
-    else
+    } else
     {
       /* Old API: raw gdouble* — still counts as a Y set */
       count++;
@@ -778,8 +780,7 @@ void GraphControlsDialog::on_set_changed(int setNum)
     {
       m_symbolCombo->setCurrentIndex(symbol_to_combo(p_y->symbol[0]));
     }
-  }
-  else if (p_y)
+  } else if (p_y)
   {
     /* symbol array not allocated — default to none */
     m_symbolCombo->setCurrentIndex(0);

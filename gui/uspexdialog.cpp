@@ -5343,7 +5343,7 @@ void UspexDialog::on_load_remote_folder_clicked()
 }
 
 /* ========================
- * Library flavor helpers 
+ * Library flavor helpers
  * ======================== */
 
 void UspexDialog::sync_ai_lib_flavor()

@@ -1120,7 +1120,6 @@ void canvas_shuffle(void)
   GSList *clist, *mlist;
   struct canvas_pak *canvas;
 
-
   /* find active model in canvas list */
   c = 0;
   mlist = NULL;
@@ -1149,7 +1148,6 @@ void canvas_shuffle(void)
     c++;
   }
 
-
   /* active model not in the canvas list */
   if (sysenv.active_model && !mlist)
   {
@@ -1169,11 +1167,9 @@ void canvas_shuffle(void)
       } else
         canvas->model = NULL;
     }
-  }
-  else
+  } else
   {
   }
-
 }
 
 /*******************************/

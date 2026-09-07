@@ -18,7 +18,7 @@
    along with this program; if not, write to the Free Software Foundation,
    Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
-/* NEW - simplfied struct (all element data is got from the unified database) 
+/* NEW - simplfied struct (all element data is got from the unified database)
    The last three elements are left from previous implementation as TODOs. */
 
 struct table_entry {
@@ -60,4 +60,3 @@ struct table_entry table[] = {
     {9, 7, NULL, NULL, NULL},   {10, 7, NULL, NULL, NULL},  {11, 7, NULL, NULL, NULL},  {12, 7, NULL, NULL, NULL},
     {13, 7, NULL, NULL, NULL},  {14, 7, NULL, NULL, NULL},  {15, 7, NULL, NULL, NULL},  {16, 7, NULL, NULL, NULL},
     {17, 7, NULL, NULL, NULL},  {18, 7, NULL, NULL, NULL}};
-

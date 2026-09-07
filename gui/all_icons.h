@@ -20,9 +20,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 The GNU GPL can also be found at http://www.gnu.org
 */
 
-#ifndef  ALL_ICONS_H
-#define  ALL_ICONS_H
-const char* const DATA_ARROW = R"svg(
+#ifndef ALL_ICONS_H
+#define ALL_ICONS_H
+const char *const DATA_ARROW = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L2,0 L2,1 L3,1 L3,2 L4,2 L4,3 L5,3 L5,4 L6,4 L6,5 L7,5 L7,6 L8,6 L8,7 L9,7 L9,8 L10,8 L10,9 L11,9 L11,10 L10,10 L10,11 L8,11 L8,13 L9,13 L9,15 L8,15 L8,16 L5,16 L5,13 L3,13 L3,14 L2,14 L2,15 L0,15 Z " fill="#1E1E1E" transform="translate(5,0)"/>
 <path d="M0,0 L1,0 L1,1 L2,1 L2,4 L3,4 L3,7 L4,7 L4,9 L2,9 L2,11 L0,11 Z " fill="#3A3A3A" transform="translate(6,3)"/>
@@ -46,7 +46,7 @@ const char* const DATA_ARROW = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#E9E9E9" transform="translate(7,1)"/>
 </svg>
 )svg";
-const char* const DATA_AVIEW = R"svg(
+const char *const DATA_AVIEW = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L7,0 L7,9 L3,9 L3,10 L2,10 L2,9 L0,9 L0,7 L-1,7 L-1,6 L0,6 L0,4 L1,4 L1,3 L5,3 L5,2 L0,2 Z M2,5 L2,8 L4,8 L4,7 L5,7 L5,5 Z " fill="#3F3F3F" transform="translate(5,4)"/>
 <path d="M0,0 L7,0 L7,2 L6,2 L6,7 L5,7 L5,5 L3,5 L3,4 L1,4 L1,3 L5,3 L5,2 L0,2 Z " fill="#272727" transform="translate(5,4)"/>
@@ -95,7 +95,7 @@ const char* const DATA_AVIEW = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#A5A5A5" transform="translate(5,4)"/>
 </svg>
 )svg";
-const char* const DATA_AXES = R"svg(
+const char *const DATA_AXES = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L1,0 L1,2 L2,2 L2,4 L1,4 L1,10 L7,10 L7,9 L9,9 L9,10 L11,10 L11,11 L9,11 L9,12 L7,12 L7,11 L0,11 L0,4 L-1,4 L-1,2 L0,2 Z " fill="#2A2929" transform="translate(5,0)"/>
 <path d="M0,0 L2,0 L2,2 L1,2 L1,3 L-1,3 L-1,1 L0,1 Z " fill="#2B2B2B" transform="translate(2,12)"/>
@@ -103,7 +103,7 @@ const char* const DATA_AXES = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#292828" transform="translate(4,11)"/>
 </svg>
 )svg";
-const char* const DATA_BOX = R"svg(
+const char *const DATA_BOX = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="18" height="18">
 <path d="M0,0 L4,0 L4,1 L5,1 L5,3 L9,3 L9,2 L10,2 L10,1 L13,1 L13,2 L14,2 L14,6 L12,6 L12,11 L13,11 L13,12 L14,12 L14,15 L13,15 L13,16 L10,16 L10,17 L9,17 L9,18 L6,18 L6,17 L5,17 L5,15 L1,15 L1,16 L0,16 L0,17 L-3,17 L-3,16 L-4,16 L-4,13 L-3,13 L-3,12 L-2,12 L-2,7 L-3,7 L-3,6 L-4,6 L-4,3 L-3,3 L-3,2 L0,2 Z M1,6 L1,7 L0,7 L0,8 L-1,8 L-1,11 L1,11 L1,10 L2,10 L2,6 Z M3,6 L3,10 L4,10 L4,11 L5,11 L5,12 L7,12 L7,8 L6,8 L6,7 L5,7 L5,6 Z M9,7 L9,8 L8,8 L8,12 L9,12 L9,11 L11,11 L11,7 Z " fill="#2E4A54" transform="translate(4,0)"/>
 <path d="M0,0 L4,0 L4,1 L5,1 L5,3 L9,3 L9,2 L10,2 L10,1 L13,1 L13,2 L14,2 L14,6 L12,6 L12,11 L13,11 L13,12 L14,12 L14,15 L13,15 L13,16 L10,16 L10,13 L9,13 L9,11 L11,11 L11,7 L9,7 L9,8 L6,8 L6,7 L5,7 L5,4 L2,4 L2,3 L0,3 Z " fill="#4F707D" transform="translate(4,0)"/>
@@ -262,7 +262,7 @@ const char* const DATA_BOX = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#DF9B86" transform="translate(4,0)"/>
 </svg>
 )svg";
-const char* const DATA_BVIEW = R"svg(
+const char *const DATA_BVIEW = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L2,0 L2,4 L7,4 L7,5 L8,5 L8,12 L7,12 L7,13 L5,13 L5,14 L4,14 L4,13 L0,13 Z M2,6 L2,11 L3,11 L3,12 L5,12 L5,11 L6,11 L6,6 Z " fill="#636363" transform="translate(4,0)"/>
 <path d="M0,0 L1,0 L1,3 L6,3 L6,4 L7,4 L7,6 L6,6 L6,9 L5,9 L5,5 L1,5 L1,4 L0,4 Z " fill="#4B4B4B" transform="translate(5,1)"/>
@@ -304,7 +304,7 @@ const char* const DATA_BVIEW = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#C0C0C0" transform="translate(4,0)"/>
 </svg>
 )svg";
-const char* const DATA_CAMERA = R"svg(
+const char *const DATA_CAMERA = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L3,0 L3,3 L4,3 L4,0 L7,0 L7,3 L8,3 L8,8 L5,8 L5,10 L4,10 L4,9 L3,9 L3,10 L2,10 L2,8 L-1,8 L-1,6 L-2,6 L-2,7 L-4,7 L-4,8 L-5,8 L-5,3 L-4,3 L-4,4 L-2,4 L-2,5 L-1,5 L-1,3 L0,3 Z M1,1 L1,3 L2,3 L2,1 Z M5,1 L5,3 L6,3 L6,1 Z M0,4 L0,7 L7,7 L7,4 Z " fill="#000000" transform="translate(7,2)"/>
 <path d="M0,0 L1,0 L1,2 L0,2 Z " fill="#000000" transform="translate(13,14)"/>
@@ -313,24 +313,24 @@ const char* const DATA_CAMERA = R"svg(
 <path d="M0,0 L1,0 L1,2 L0,2 Z " fill="#000000" transform="translate(8,12)"/>
 </svg>
 )svg";
-const char* const DATA_CANVAS_CREATE = R"svg(
+const char *const DATA_CANVAS_CREATE = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L12,0 L12,1 L13,1 L13,13 L12,13 L12,14 L0,14 L0,13 L-1,13 L-1,1 L0,1 Z M1,2 L1,12 L11,12 L11,2 Z " fill="#4D4D4D" transform="translate(2,1)"/>
 <path d="M0,0 L2,0 L2,3 L5,3 L5,5 L2,5 L2,8 L0,8 L0,5 L-3,5 L-3,3 L0,3 Z " fill="#247A3A" transform="translate(7,4)"/>
 </svg>
 )svg";
-const char* const DATA_CANVAS_DELETE = R"svg(
+const char *const DATA_CANVAS_DELETE = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L12,0 L12,1 L13,1 L13,13 L12,13 L12,14 L0,14 L0,13 L-1,13 L-1,1 L0,1 Z M1,2 L1,12 L11,12 L11,2 Z " fill="#4D4D4D" transform="translate(2,1)"/>
 <path d="M0,0 L8,0 L8,2 L0,2 Z " fill="#E82720" transform="translate(4,7)"/>
 </svg>
 )svg";
-const char* const DATA_CANVAS_SINGLE = R"svg(
+const char *const DATA_CANVAS_SINGLE = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L12,0 L12,1 L13,1 L13,13 L12,13 L12,14 L0,14 L0,13 L-1,13 L-1,1 L0,1 Z M1,2 L1,12 L11,12 L11,2 Z " fill="#4D4D4D" transform="translate(2,1)"/>
 </svg>
 )svg";
-const char* const DATA_CELL = R"svg(
+const char *const DATA_CELL = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L7,0 L7,7 L0,7 Z M1,1 L1,6 L6,6 L6,1 Z " fill="#1C1C1C" transform="translate(1,8)"/>
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#353535" transform="translate(13,14)"/>
@@ -356,13 +356,13 @@ const char* const DATA_CELL = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#353535" transform="translate(1,2)"/>
 </svg>
 )svg";
-const char* const DATA_CROSS = R"svg(
+const char *const DATA_CROSS = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L3,0 L3,1 L5,1 L5,2 L6,2 L6,3 L7,3 L7,2 L8,2 L8,1 L9,1 L9,0 L12,0 L12,2 L11,2 L11,3 L10,3 L10,4 L9,4 L9,6 L10,6 L10,8 L11,8 L11,9 L12,9 L12,11 L11,11 L11,10 L10,10 L10,9 L9,9 L9,8 L8,8 L8,7 L5,7 L5,8 L4,8 L4,9 L3,9 L3,10 L2,10 L2,11 L1,11 L1,9 L2,9 L2,7 L3,7 L3,6 L4,6 L4,4 L3,4 L3,3 L2,3 L2,2 L1,2 L1,1 L0,1 Z " fill="#FF472B" transform="translate(2,3)"/>
 <path d="M0,0 L1,0 L1,2 L0,2 Z " fill="#FF4343" transform="translate(13,12)"/>
 </svg>
 )svg";
-const char* const DATA_CVIEW = R"svg(
+const char *const DATA_CVIEW = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L6,0 L6,1 L5,1 L5,2 L1,2 L1,7 L2,7 L2,8 L4,8 L4,7 L5,7 L5,8 L6,8 L6,9 L4,9 L4,10 L2,10 L2,9 L0,9 L0,8 L-1,8 L-1,6 L-2,6 L-2,3 L-1,3 L-1,1 L0,1 Z " fill="#0E0E0E" transform="translate(6,4)"/>
 <path d="M0,0 L6,0 L6,1 L5,1 L5,2 L1,2 L1,7 L0,7 L0,3 L-1,3 L-1,1 L0,1 Z " fill="#101010" transform="translate(6,4)"/>
@@ -395,7 +395,7 @@ const char* const DATA_CVIEW = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#969696" transform="translate(6,4)"/>
 </svg>
 )svg";
-const char* const DATA_DIAMOND2 = R"svg(
+const char *const DATA_DIAMOND2 = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="17" height="18">
 <path d="M0,0 L1,0 L1,1 L2,1 L2,2 L3,2 L3,3 L4,3 L4,4 L5,4 L5,5 L6,5 L6,6 L7,6 L7,7 L8,7 L8,9 L7,9 L7,10 L6,10 L6,11 L5,11 L5,12 L4,12 L4,13 L3,13 L3,14 L2,14 L2,15 L1,15 L1,16 L0,16 L0,15 L-1,15 L-1,14 L-2,14 L-2,13 L-3,13 L-3,12 L-4,12 L-4,11 L-5,11 L-5,10 L-6,10 L-6,9 L-7,9 L-7,7 L-6,7 L-6,6 L-5,6 L-5,5 L-4,5 L-4,4 L-3,4 L-3,3 L-2,3 L-2,2 L-1,2 L-1,1 L0,1 Z " fill="#5CB5B5" transform="translate(8,1)"/>
 <path d="M0,0 L1,0 L1,1 L8,1 L8,9 L7,9 L7,8 L6,8 L6,7 L5,7 L5,6 L4,6 L4,5 L3,5 L3,4 L2,4 L2,3 L1,3 L1,2 L0,2 Z " fill="#284949" transform="translate(1,8)"/>
@@ -457,7 +457,7 @@ const char* const DATA_DIAMOND2 = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#459292" transform="translate(7,2)"/>
 </svg>
 )svg";
-const char* const DATA_DISK = R"svg(
+const char *const DATA_DISK = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L10,0 L10,1 L11,1 L11,12 L-1,12 L-1,1 L0,1 Z " fill="#165ABF" transform="translate(3,2)"/>
 <path d="M0,0 L8,0 L8,5 L0,5 Z " fill="#FFFFFF" transform="translate(4,8)"/>
@@ -482,7 +482,7 @@ const char* const DATA_DISK = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#8B7E7D" transform="translate(8,2)"/>
 </svg>
 )svg";
-const char* const DATA_ELEMENT = R"svg(
+const char *const DATA_ELEMENT = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L12,0 L12,1 L13,1 L13,13 L12,13 L12,14 L0,14 L0,13 L-1,13 L-1,1 L0,1 Z " fill="#7B8C96" transform="translate(2,1)"/>
 <path d="M0,0 L4,0 L4,3 L5,3 L5,0 L9,0 L9,10 L5,10 L5,7 L4,7 L4,10 L0,10 Z " fill="#5F6D75" transform="translate(4,4)"/>
@@ -493,7 +493,7 @@ const char* const DATA_ELEMENT = R"svg(
 <path d="M0,0 L1,0 L1,3 L0,3 Z " fill="#5F6D75" transform="translate(2,3)"/>
 </svg>
 )svg";
-const char* const DATA_FASTFORWARD = R"svg(
+const char *const DATA_FASTFORWARD = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="24" height="24">
 <path d="M0,0 L2,0 L2,1 L3,1 L3,2 L6,2 L6,3 L8,3 L8,4 L9,4 L9,5 L11,5 L11,0 L14,0 L14,1 L15,1 L15,2 L18,2 L18,3 L20,3 L20,4 L21,4 L21,5 L23,5 L23,8 L21,8 L21,9 L20,9 L20,10 L18,10 L18,11 L16,11 L16,12 L14,12 L14,13 L11,13 L11,8 L9,8 L9,9 L8,9 L8,10 L6,10 L6,11 L4,11 L4,12 L2,12 L2,13 L0,13 Z " fill="#808080" transform="translate(1,5)"/>
 <path d="M0,0 L2,0 L2,1 L4,1 L4,2 L5,2 L5,3 L7,3 L7,6 L5,6 L5,7 L4,7 L4,8 L2,8 L2,9 L0,9 L0,10 L-1,10 L-1,9 L-3,9 L-3,1 L-1,1 L-1,2 L1,2 L1,1 L0,1 Z " fill="#97A0CD" transform="translate(17,7)"/>
@@ -639,7 +639,7 @@ const char* const DATA_FASTFORWARD = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#888888" transform="translate(1,5)"/>
 </svg>
 )svg";
-const char* const DATA_FOLDER = R"svg(
+const char *const DATA_FOLDER = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L1,0 L1,1 L3,1 L3,2 L10,2 L10,8 L9,8 L9,13 L-3,13 L-3,9 L-4,9 L-4,3 L-2,3 L-2,2 L-1,2 L-1,1 L0,1 Z " fill="#F8F4A6" transform="translate(5,1)"/>
 <path d="M0,0 L1,0 L1,1 L3,1 L3,2 L10,2 L10,8 L9,8 L9,13 L-3,13 L-3,9 L-4,9 L-4,3 L-2,3 L-2,2 L-1,2 L-1,1 L0,1 Z M-3,4 L-3,8 L-2,8 L-2,12 L8,12 L8,9 L7,9 L7,4 Z " fill="#9B9358" transform="translate(5,1)"/>
@@ -673,7 +673,7 @@ const char* const DATA_FOLDER = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#515151" transform="translate(5,1)"/>
 </svg>
 )svg";
-const char* const DATA_GEOM = R"svg(
+const char *const DATA_GEOM = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L2,0 L2,2 L1,2 L1,5 L0,5 L0,6 L-1,6 L-1,7 L-2,7 L-2,10 L-3,10 L-3,12 L-4,12 L-4,14 L-5,14 L-5,15 L-6,15 L-6,13 L-5,13 L-5,7 L-11,7 L-11,8 L-13,8 L-13,7 L-12,7 L-12,6 L-10,6 L-10,5 L-8,5 L-8,4 L-5,4 L-5,3 L-4,3 L-4,2 L-3,2 L-3,1 L0,1 Z " fill="#161616" transform="translate(14,0)"/>
 <path d="M0,0 L2,0 L2,1 L1,1 L1,2 L4,2 L4,6 L3,6 L3,3 L-3,3 L-3,4 L-5,4 L-5,3 L-4,3 L-4,2 L-2,2 L-2,1 L0,1 Z " fill="#161616" transform="translate(6,4)"/>
@@ -702,7 +702,7 @@ const char* const DATA_GEOM = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#4C4C4C" transform="translate(12,1)"/>
 </svg>
 )svg";
-const char* const DATA_GO = R"svg(
+const char *const DATA_GO = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="17" height="13">
 <path d="M0,0 L7,0 L7,1 L8,1 L8,2 L9,2 L9,3 L10,3 L10,10 L9,10 L9,11 L8,11 L8,12 L7,12 L7,13 L0,13 L0,12 L-1,12 L-1,11 L-2,11 L-2,10 L-3,10 L-3,3 L-2,3 L-2,2 L-1,2 L-1,1 L0,1 Z " fill="#FFFFFF" transform="translate(7,0)"/>
 <path d="M0,0 L7,0 L7,1 L0,1 Z " fill="#3E3E34" transform="translate(7,12)"/>
@@ -720,12 +720,12 @@ const char* const DATA_GO = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#3E3E34" transform="translate(6,1)"/>
 </svg>
 )svg";
-const char* const DATA_GRAPH = R"svg(
+const char *const DATA_GRAPH = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="17">
 <path d="M0,0 L13,0 L13,13 L0,13 Z M1,1 L1,3 L3,3 L3,1 Z M4,1 L4,3 L6,3 L6,1 Z M7,1 L7,3 L9,3 L9,1 Z M10,1 L10,3 L12,3 L12,1 Z M1,4 L1,6 L3,6 L3,4 Z M4,4 L4,6 L6,6 L6,4 Z M7,4 L7,6 L9,6 L9,4 Z M10,4 L10,6 L12,6 L12,4 Z M1,7 L1,9 L3,9 L3,7 Z M4,7 L4,9 L6,9 L6,7 Z M7,7 L7,9 L9,9 L9,7 Z M10,7 L10,9 L12,9 L12,7 Z M1,10 L1,12 L3,12 L3,10 Z M4,10 L4,12 L6,12 L6,10 Z M7,10 L7,12 L9,12 L9,10 Z M10,10 L10,12 L12,12 L12,10 Z " fill="#000000" transform="translate(2,2)"/>
 </svg>
 )svg";
-const char* const DATA_LEFT_ARROW1 = R"svg(
+const char *const DATA_LEFT_ARROW1 = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L1,0 L1,2 L2,2 L2,4 L6,4 L6,11 L2,11 L2,13 L1,13 L1,15 L0,15 L0,13 L-1,13 L-1,12 L-2,12 L-2,11 L-3,11 L-3,10 L-4,10 L-4,9 L-5,9 L-5,8 L-7,8 L-7,7 L-5,7 L-5,6 L-4,6 L-4,5 L-3,5 L-3,4 L-2,4 L-2,3 L-1,3 L-1,2 L0,2 Z " fill="#6EC9E5" transform="translate(7,1)"/>
 <path d="M0,0 L1,0 L1,2 L2,2 L2,4 L6,4 L6,11 L2,11 L2,13 L1,13 L1,10 L5,10 L5,5 L1,5 L1,3 L0,3 L0,4 L-1,4 L-1,5 L-2,5 L-2,6 L-3,6 L-3,7 L-4,7 L-4,9 L-5,9 L-5,8 L-7,8 L-7,7 L-5,7 L-5,6 L-4,6 L-4,5 L-3,5 L-3,4 L-2,4 L-2,3 L-1,3 L-1,2 L0,2 Z " fill="#000000" transform="translate(7,1)"/>
@@ -745,7 +745,7 @@ const char* const DATA_LEFT_ARROW1 = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#000000" transform="translate(6,3)"/>
 </svg>
 )svg";
-const char* const DATA_LOGO_LEFT = R"svg(
+const char *const DATA_LOGO_LEFT = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="56" height="70">
 <path d="M0,0 L56,0 L56,70 L0,70 Z " fill="#000000" transform="translate(0,0)"/>
 <path d="M0,0 L8,0 L8,1 L9,1 L9,2 L10,2 L10,3 L11,3 L11,9 L10,9 L10,10 L9,10 L9,11 L8,11 L8,12 L0,12 Z " fill="#FEFEFE" transform="translate(22,13)"/>
@@ -1010,7 +1010,7 @@ const char* const DATA_LOGO_LEFT = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#1A1A1A" transform="translate(14,12)"/>
 </svg>
 )svg";
-const char* const DATA_LOGO_RIGHT = R"svg(
+const char *const DATA_LOGO_RIGHT = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="74" height="70">
 <path d="M0,0 L74,0 L74,70 L0,70 Z " fill="#0B5173" transform="translate(0,0)"/>
 <path d="M0,0 L74,0 L74,70 L0,70 Z M33,5 L33,6 L31,6 L31,7 L30,7 L30,8 L29,8 L29,9 L23,9 L23,10 L21,10 L21,11 L20,11 L20,12 L19,12 L19,13 L12,13 L12,14 L11,14 L11,15 L10,15 L10,16 L9,16 L9,17 L8,17 L8,18 L7,18 L7,24 L8,24 L8,26 L9,26 L9,27 L10,27 L10,28 L11,28 L11,29 L10,29 L10,30 L9,30 L9,31 L8,31 L8,33 L7,33 L7,38 L8,38 L8,40 L9,40 L9,41 L10,41 L10,44 L9,44 L9,45 L8,45 L8,47 L7,47 L7,53 L8,53 L8,54 L9,54 L9,56 L11,56 L11,57 L12,57 L12,58 L18,58 L18,57 L19,57 L19,58 L20,58 L20,59 L21,59 L21,60 L22,60 L22,61 L24,61 L24,62 L29,62 L29,61 L31,61 L31,63 L32,63 L32,64 L34,64 L34,65 L35,65 L35,66 L40,66 L40,65 L42,65 L42,64 L43,64 L43,63 L44,63 L44,62 L45,62 L45,61 L52,61 L52,60 L53,60 L53,59 L54,59 L54,58 L55,58 L55,57 L62,57 L62,56 L64,56 L64,55 L65,55 L65,53 L66,53 L66,51 L67,51 L67,46 L66,46 L66,45 L65,45 L65,43 L64,43 L64,40 L65,40 L65,39 L66,39 L66,37 L67,37 L67,32 L66,32 L66,30 L65,30 L65,29 L64,29 L64,28 L63,28 L63,27 L64,27 L64,26 L65,26 L65,25 L66,25 L66,23 L67,23 L67,18 L66,18 L66,16 L65,16 L65,15 L64,15 L64,14 L62,14 L62,13 L54,13 L54,11 L52,11 L52,10 L51,10 L51,9 L43,9 L43,8 L42,8 L42,7 L41,7 L41,6 L39,6 L39,5 Z " fill="#000000" transform="translate(0,0)"/>
@@ -2134,7 +2134,7 @@ const char* const DATA_LOGO_RIGHT = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#031721" transform="translate(32,5)"/>
 </svg>
 )svg";
-const char* const DATA_LOGO_WIDE = R"svg(
+const char *const DATA_LOGO_WIDE = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="232" height="80">
 <path d="M0,0 L232,0 L232,80 L0,80 Z " fill="#000000" transform="translate(0,0)"/>
 <path d="M0,0 L6,0 L6,1 L8,1 L8,2 L9,2 L9,3 L10,3 L10,4 L18,4 L18,5 L19,5 L19,6 L21,6 L21,8 L29,8 L29,9 L31,9 L31,10 L32,10 L32,11 L33,11 L33,13 L34,13 L34,18 L33,18 L33,20 L32,20 L32,21 L31,21 L31,22 L30,22 L30,23 L31,23 L31,24 L32,24 L32,25 L33,25 L33,27 L34,27 L34,32 L33,32 L33,34 L32,34 L32,35 L31,35 L31,38 L32,38 L32,40 L33,40 L33,41 L34,41 L34,46 L33,46 L33,48 L32,48 L32,50 L31,50 L31,51 L29,51 L29,52 L22,52 L22,53 L21,53 L21,54 L20,54 L20,55 L19,55 L19,56 L12,56 L12,57 L11,57 L11,58 L10,58 L10,59 L9,59 L9,60 L7,60 L7,61 L2,61 L2,60 L1,60 L1,59 L-1,59 L-1,58 L-2,58 L-2,56 L-4,56 L-4,57 L-9,57 L-9,56 L-11,56 L-11,55 L-12,55 L-12,54 L-13,54 L-13,53 L-14,53 L-14,52 L-15,52 L-15,53 L-21,53 L-21,52 L-22,52 L-22,51 L-24,51 L-24,49 L-25,49 L-25,48 L-26,48 L-26,42 L-25,42 L-25,40 L-24,40 L-24,39 L-23,39 L-23,36 L-24,36 L-24,35 L-25,35 L-25,33 L-26,33 L-26,28 L-25,28 L-25,26 L-24,26 L-24,25 L-23,25 L-23,24 L-22,24 L-22,23 L-23,23 L-23,22 L-24,22 L-24,21 L-25,21 L-25,19 L-26,19 L-26,13 L-25,13 L-25,12 L-24,12 L-24,11 L-23,11 L-23,10 L-22,10 L-22,9 L-21,9 L-21,8 L-14,8 L-14,7 L-13,7 L-13,6 L-12,6 L-12,5 L-10,5 L-10,4 L-4,4 L-4,3 L-3,3 L-3,2 L-2,2 L-2,1 L0,1 Z " fill="#0B5173" transform="translate(107,9)"/>
@@ -3258,7 +3258,7 @@ const char* const DATA_LOGO_WIDE = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#031721" transform="translate(106,9)"/>
 </svg>
 )svg";
-const char* const DATA_MATRIX = R"svg(
+const char *const DATA_MATRIX = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L1,0 L1,10 L0,10 Z " fill="#3D3C3C" transform="translate(13,3)"/>
 <path d="M0,0 L1,0 L1,10 L0,10 Z " fill="#3D3C3C" transform="translate(2,3)"/>
@@ -3276,7 +3276,7 @@ const char* const DATA_MATRIX = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#3D3C3C" transform="translate(4,1)"/>
 </svg>
 )svg";
-const char* const DATA_METHANE = R"svg(
+const char *const DATA_METHANE = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L4,0 L4,1 L6,1 L6,0 L10,0 L10,1 L11,1 L11,2 L12,2 L12,6 L11,6 L11,8 L12,8 L12,12 L11,12 L11,13 L10,13 L10,14 L6,14 L6,13 L4,13 L4,14 L0,14 L0,13 L-1,13 L-1,12 L-2,12 L-2,8 L-1,8 L-1,6 L-2,6 L-2,2 L-1,2 L-1,1 L0,1 Z " fill="#E3E3E3" transform="translate(3,1)"/>
 <path d="M0,0 L1,0 L1,1 L2,1 L2,5 L1,5 L1,7 L2,7 L2,11 L1,11 L1,12 L0,12 L0,13 L-4,13 L-4,12 L-6,12 L-6,13 L-10,13 L-10,12 L-11,12 L-11,11 L-12,11 L-12,7 L-11,7 L-11,6 L-9,6 L-9,8 L-5,8 L-5,11 L-1,11 L-1,10 L0,10 L0,6 L-3,6 L-3,1 L0,1 Z " fill="#737373" transform="translate(13,2)"/>
@@ -3408,7 +3408,7 @@ const char* const DATA_METHANE = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#E1E1E1" transform="translate(5,1)"/>
 </svg>
 )svg";
-const char* const DATA_PALETTE = R"svg(
+const char *const DATA_PALETTE = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L6,0 L6,1 L8,1 L8,2 L9,2 L9,3 L10,3 L10,4 L11,4 L11,8 L10,8 L10,9 L9,9 L9,10 L8,10 L8,11 L6,11 L6,12 L0,12 L0,11 L-2,11 L-2,10 L-3,10 L-3,9 L-4,9 L-4,8 L-5,8 L-5,4 L-4,4 L-4,3 L-3,3 L-3,2 L-2,2 L-2,1 L0,1 Z " fill="#4AB0C4" transform="translate(5,2)"/>
 <path d="M0,0 L4,0 L4,3 L5,3 L5,6 L4,6 L4,7 L3,7 L3,8 L2,8 L2,9 L-1,9 L-1,8 L-2,8 L-2,7 L-3,7 L-3,3 L-2,3 L-2,2 L-1,2 L-1,1 L0,1 Z " fill="#E4725E" transform="translate(3,3)"/>
@@ -3448,7 +3448,7 @@ const char* const DATA_PALETTE = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#D3D3D3" transform="translate(3,3)"/>
 </svg>
 )svg";
-const char* const DATA_PAUSE = R"svg(
+const char *const DATA_PAUSE = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="24" height="24">
 <path d="M0,0 L5,0 L5,15 L0,15 Z " fill="#9094C0" transform="translate(14,5)"/>
 <path d="M0,0 L5,0 L5,15 L0,15 Z " fill="#9094C0" transform="translate(5,5)"/>
@@ -3506,7 +3506,7 @@ const char* const DATA_PAUSE = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#585C58" transform="translate(5,5)"/>
 </svg>
 )svg";
-const char* const DATA_PLAY = R"svg(
+const char *const DATA_PLAY = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="24" height="24">
 <path d="M0,0 L4,0 L4,1 L6,1 L6,2 L7,2 L7,3 L9,3 L9,4 L10,4 L10,5 L12,5 L12,6 L13,6 L13,9 L12,9 L12,10 L10,10 L10,11 L8,11 L8,12 L7,12 L7,13 L5,13 L5,14 L3,14 L3,15 L0,15 Z " fill="#8890BA" transform="translate(7,5)"/>
 <path d="M0,0 L1,0 L1,1 L2,1 L2,2 L3,2 L3,1 L7,1 L7,2 L8,2 L8,5 L7,5 L7,6 L5,6 L5,7 L3,7 L3,8 L2,8 L2,9 L-2,9 L-2,8 L-1,8 L-1,7 L1,7 L1,6 L-3,6 L-3,2 L0,2 Z " fill="#5C5E64" transform="translate(12,9)"/>
@@ -3594,18 +3594,18 @@ const char* const DATA_PLAY = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#A8ACA8" transform="translate(7,5)"/>
 </svg>
 )svg";
-const char* const DATA_PLOTS = R"svg(
+const char *const DATA_PLOTS = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L1,0 L1,2 L2,2 L2,4 L1,4 L1,6 L2,6 L2,7 L1,7 L1,9 L2,9 L2,10 L1,10 L1,13 L3,13 L3,12 L4,12 L4,13 L6,13 L6,12 L7,12 L7,13 L10,13 L10,12 L12,12 L12,13 L14,13 L14,14 L12,14 L12,15 L10,15 L10,14 L0,14 L0,4 L-1,4 L-1,2 L0,2 Z " fill="#292828" transform="translate(2,0)"/>
 </svg>
 )svg";
-const char* const DATA_PLUS = R"svg(
+const char *const DATA_PLUS = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L4,0 L4,4 L8,4 L8,8 L4,8 L4,12 L0,12 L0,8 L-4,8 L-4,4 L0,4 Z " fill="#6FBA7D" transform="translate(6,2)"/>
 <path d="M0,0 L2,0 L2,4 L6,4 L6,6 L2,6 L2,10 L0,10 L0,6 L-4,6 L-4,4 L0,4 Z " fill="#247A3A" transform="translate(7,3)"/>
 </svg>
 )svg";
-const char* const DATA_POLYMER = R"svg(
+const char *const DATA_POLYMER = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="18" height="18">
 <path d="M0,0 L3,0 L3,1 L4,1 L4,2 L8,2 L8,1 L13,1 L13,2 L15,2 L15,3 L13,3 L13,5 L12,5 L12,6 L9,6 L9,5 L8,5 L8,4 L4,4 L4,5 L3,5 L3,6 L1,6 L1,5 L0,5 L0,4 L-1,4 L-1,1 L0,1 Z " fill="#2E4A54" transform="translate(1,6)"/>
 <path d="M0,0 L5,0 L5,1 L7,1 L7,2 L5,2 L5,4 L4,4 L4,5 L1,5 L1,4 L0,4 Z " fill="#FD6130" transform="translate(9,7)"/>
@@ -3654,7 +3654,7 @@ const char* const DATA_POLYMER = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#78CFED" transform="translate(1,6)"/>
 </svg>
 )svg";
-const char* const DATA_RENDER_SETUP = R"svg(
+const char *const DATA_RENDER_SETUP = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L8,0 L8,1 L9,1 L9,10 L8,10 L8,11 L7,11 L7,12 L6,12 L6,13 L5,13 L5,14 L-4,14 L-4,4 L-3,4 L-3,3 L-2,3 L-2,2 L-1,2 L-1,1 L0,1 Z M0,1 L0,2 L1,2 L1,1 Z M6,1 L6,2 L7,2 L7,1 Z M7,2 L7,3 L8,3 L8,2 Z M-3,9 L-3,13 L0,13 L0,12 L-1,12 L-1,11 L-2,11 L-2,9 Z " fill="#A08A21" transform="translate(5,1)"/>
 <path d="M0,0 L7,0 L7,8 L4,8 L4,7 L2,7 L2,6 L1,6 L1,4 L0,4 Z " fill="#FEE055" transform="translate(2,6)"/>
@@ -3727,7 +3727,7 @@ const char* const DATA_RENDER_SETUP = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#8E8E8E" transform="translate(4,2)"/>
 </svg>
 )svg";
-const char* const DATA_REWIND = R"svg(
+const char *const DATA_REWIND = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="24" height="24">
 <path d="M0,0 L3,0 L3,5 L5,5 L5,4 L6,4 L6,3 L8,3 L8,2 L10,2 L10,1 L12,1 L12,0 L14,0 L14,13 L12,13 L12,12 L11,12 L11,11 L8,11 L8,10 L6,10 L6,9 L5,9 L5,8 L3,8 L3,13 L0,13 L0,12 L-1,12 L-1,11 L-4,11 L-4,10 L-6,10 L-6,9 L-7,9 L-7,8 L-9,8 L-9,5 L-7,5 L-7,4 L-6,4 L-6,3 L-4,3 L-4,2 L-2,2 L-2,1 L0,1 Z " fill="#686E88" transform="translate(9,6)"/>
 <path d="M0,0 L1,0 L1,9 L0,9 L0,8 L-1,8 L-1,7 L-3,7 L-3,6 L-5,6 L-5,7 L-4,7 L-4,8 L-6,8 L-6,7 L-7,7 L-7,6 L-6,6 L-6,5 L-7,5 L-7,4 L-6,4 L-6,3 L-4,3 L-4,2 L-2,2 L-2,1 L0,1 Z " fill="#98A0CF" transform="translate(21,8)"/>
@@ -3877,7 +3877,7 @@ const char* const DATA_REWIND = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#989C98" transform="translate(9,6)"/>
 </svg>
 )svg";
-const char* const DATA_RIGHT_ARROW1 = R"svg(
+const char *const DATA_RIGHT_ARROW1 = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L1,0 L1,2 L2,2 L2,3 L3,3 L3,4 L4,4 L4,5 L5,5 L5,6 L6,6 L6,7 L8,7 L8,8 L6,8 L6,9 L5,9 L5,10 L4,10 L4,11 L3,11 L3,12 L2,12 L2,13 L1,13 L1,15 L0,15 L0,13 L-1,13 L-1,11 L-5,11 L-5,4 L-1,4 L-1,2 L0,2 Z " fill="#6EC9E5" transform="translate(8,1)"/>
 <path d="M0,0 L1,0 L1,3 L-3,3 L-3,8 L1,8 L1,11 L0,11 L0,9 L-4,9 L-4,2 L0,2 Z " fill="#000000" transform="translate(7,3)"/>
@@ -3898,7 +3898,7 @@ const char* const DATA_RIGHT_ARROW1 = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#000000" transform="translate(9,3)"/>
 </svg>
 )svg";
-const char* const DATA_ROTATE1 = R"svg(
+const char *const DATA_ROTATE1 = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L4,0 L4,1 L5,1 L5,3 L6,3 L6,6 L7,6 L7,5 L9,5 L9,6 L11,6 L11,8 L9,8 L9,9 L7,9 L7,8 L6,8 L6,11 L5,11 L5,13 L4,13 L4,14 L0,14 L0,12 L-1,12 L-1,10 L-2,10 L-2,9 L0,9 L0,10 L1,10 L1,12 L3,12 L3,10 L4,10 L4,8 L-5,8 L-5,6 L-2,6 L-2,4 L-3,4 L-3,3 L-1,3 L-1,2 L0,2 Z M1,2 L1,3 L2,3 L2,4 L1,4 L1,6 L4,6 L4,3 L3,3 L3,2 Z " fill="#2B2B2B" transform="translate(5,1)"/>
 <path d="M0,0 L2,0 L2,1 L3,1 L3,3 L5,3 L5,1 L6,1 L6,3 L7,3 L7,4 L6,4 L6,5 L2,5 L2,3 L1,3 L1,1 L0,1 Z " fill="#2B2B2B" transform="translate(3,10)"/>
@@ -3934,7 +3934,7 @@ const char* const DATA_ROTATE1 = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#E6E6E6" transform="translate(5,1)"/>
 </svg>
 )svg";
-const char* const DATA_ROTATE2 = R"svg(
+const char *const DATA_ROTATE2 = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L6,0 L6,1 L8,1 L8,2 L9,2 L9,3 L10,3 L10,5 L11,5 L11,12 L10,12 L10,14 L9,14 L9,15 L7,15 L7,16 L6,16 L6,15 L5,15 L5,14 L6,14 L6,13 L7,13 L7,12 L8,12 L8,11 L9,11 L9,6 L8,6 L8,5 L7,5 L7,4 L6,4 L6,3 L4,3 L4,2 L2,2 L2,3 L0,3 L0,4 L-1,4 L-1,5 L-2,5 L-2,6 L-3,6 L-3,11 L-2,11 L-2,12 L-1,12 L-1,11 L0,11 L0,16 L-5,16 L-5,15 L-4,15 L-4,12 L-5,12 L-5,5 L-4,5 L-4,3 L-3,3 L-3,2 L-2,2 L-2,1 L0,1 Z " fill="#080808" transform="translate(5,0)"/>
 <path d="M0,0 L2,0 L2,2 L1,2 L1,7 L2,7 L2,8 L3,8 L3,7 L4,7 L4,12 L-1,12 L-1,11 L0,11 L0,8 L-1,8 L-1,1 L0,1 Z " fill="#323232" transform="translate(1,4)"/>
@@ -4025,7 +4025,7 @@ const char* const DATA_ROTATE2 = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#CACACA" transform="translate(5,0)"/>
 </svg>
 )svg";
-const char* const DATA_ROTATE3 = R"svg(
+const char *const DATA_ROTATE3 = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L2,0 L2,2 L3,2 L3,4 L2,4 L2,5 L5,5 L5,6 L7,6 L7,7 L8,7 L8,11 L6,11 L6,12 L4,12 L4,13 L3,13 L3,11 L4,11 L4,10 L6,10 L6,8 L4,8 L4,7 L2,7 L2,16 L0,16 L0,13 L-2,13 L-2,14 L-3,14 L-3,12 L-4,12 L-4,11 L-6,11 L-6,7 L-5,7 L-5,6 L-3,6 L-3,5 L0,5 L0,4 L-1,4 L-1,2 L0,2 Z M-3,7 L-3,8 L-4,8 L-4,10 L-3,10 L-3,9 L-2,9 L-2,10 L0,10 L0,7 Z " fill="#2B2B2B" transform="translate(7,0)"/>
 <path d="M0,0 L1,0 L1,3 L-1,3 L-1,4 L-3,4 L-3,5 L-4,5 L-4,3 L-3,3 L-3,2 L-1,2 L-1,1 L0,1 Z " fill="#2B2B2B" transform="translate(14,8)"/>
@@ -4063,7 +4063,7 @@ const char* const DATA_ROTATE3 = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#999999" transform="translate(7,0)"/>
 </svg>
 )svg";
-const char* const DATA_SELECT_ALL = R"svg(
+const char *const DATA_SELECT_ALL = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L2,0 L2,1 L4,1 L4,3 L5,3 L5,5 L4,5 L4,7 L3,7 L3,8 L0,8 L0,9 L1,9 L1,10 L2,10 L2,13 L1,13 L1,14 L0,14 L0,15 L-1,15 L-1,16 L-4,16 L-4,15 L-5,15 L-5,14 L-6,14 L-6,13 L-7,13 L-7,9 L-9,9 L-9,8 L-10,8 L-10,6 L-11,6 L-11,3 L-10,3 L-10,2 L-8,2 L-8,1 L-5,1 L-5,2 L-2,2 L-2,1 L0,1 Z M-3,7 L-3,8 L-2,8 L-2,7 Z " fill="#F8FF32" transform="translate(11,0)"/>
 <path d="M0,0 L2,0 L2,1 L4,1 L4,3 L5,3 L5,5 L4,5 L4,7 L3,7 L3,8 L0,8 L0,9 L1,9 L1,10 L2,10 L2,13 L1,13 L1,14 L0,14 L0,15 L-1,15 L-1,16 L-4,16 L-4,15 L-5,15 L-5,14 L-6,14 L-6,13 L-7,13 L-7,9 L-5,9 L-5,13 L-4,13 L-4,14 L-1,14 L-1,13 L0,13 L0,10 L-1,10 L-1,8 L-2,8 L-2,7 L-3,7 L-3,5 L-2,5 L-2,6 L-1,6 L-1,7 L2,7 L2,6 L3,6 L3,2 L-2,2 L-2,1 L0,1 Z " fill="#F8FF36" transform="translate(11,0)"/>
@@ -4135,7 +4135,7 @@ const char* const DATA_SELECT_ALL = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#FBFF8B" transform="translate(9,1)"/>
 </svg>
 )svg";
-const char* const DATA_SPLIT_BOTH = R"svg(
+const char *const DATA_SPLIT_BOTH = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L16,0 L16,16 L0,16 Z M2,1 L2,2 L1,2 L1,7 L7,7 L7,1 Z M9,1 L9,7 L15,7 L15,2 L14,2 L14,1 Z M1,9 L1,15 L7,15 L7,9 Z M9,9 L9,15 L15,15 L15,9 Z " fill="#4D4D4D" transform="translate(0,0)"/>
 <path d="M0,0 L7,0 L7,1 L2,1 L2,2 L1,2 L1,8 L8,8 L8,1 L9,1 L9,8 L15,8 L15,9 L9,9 L9,15 L8,15 L8,9 L1,9 L1,16 L0,16 Z " fill="#424242" transform="translate(0,0)"/>
@@ -4176,7 +4176,7 @@ const char* const DATA_SPLIT_BOTH = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#7F7F7F" transform="translate(0,0)"/>
 </svg>
 )svg";
-const char* const DATA_SPLIT_HORZ = R"svg(
+const char *const DATA_SPLIT_HORZ = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L16,0 L16,16 L0,16 Z M2,1 L2,2 L1,2 L1,7 L15,7 L15,2 L14,2 L14,1 Z M1,9 L1,15 L15,15 L15,9 Z " fill="#4D4D4D" transform="translate(0,0)"/>
 <path d="M0,0 L1,0 L1,6 L15,6 L15,7 L1,7 L1,15 L0,15 Z " fill="#4D4D4D" transform="translate(0,1)"/>
@@ -4195,7 +4195,7 @@ const char* const DATA_SPLIT_HORZ = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#7F7F7F" transform="translate(0,0)"/>
 </svg>
 )svg";
-const char* const DATA_SPLIT_NONE = R"svg(
+const char *const DATA_SPLIT_NONE = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L16,0 L16,16 L0,16 Z M2,1 L2,2 L1,2 L1,15 L15,15 L15,2 L14,2 L14,1 Z " fill="#4D4D4D" transform="translate(0,0)"/>
 <path d="M0,0 L16,0 L16,1 L15,1 L15,2 L14,2 L14,1 L2,1 L2,2 L1,2 L1,1 L0,1 Z " fill="#4D4D4D" transform="translate(0,0)"/>
@@ -4208,7 +4208,7 @@ const char* const DATA_SPLIT_NONE = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#7F7F7F" transform="translate(0,0)"/>
 </svg>
 )svg";
-const char* const DATA_SPLIT_VERT = R"svg(
+const char *const DATA_SPLIT_VERT = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L16,0 L16,16 L0,16 Z M2,1 L2,2 L1,2 L1,15 L7,15 L7,1 Z M9,1 L9,15 L15,15 L15,2 L14,2 L14,1 Z " fill="#4D4D4D" transform="translate(0,0)"/>
 <path d="M0,0 L16,0 L16,1 L15,1 L15,2 L14,2 L14,1 L8,1 L8,15 L7,15 L7,1 L2,1 L2,2 L1,2 L1,1 L0,1 Z " fill="#4D4D4D" transform="translate(0,0)"/>
@@ -4225,7 +4225,7 @@ const char* const DATA_SPLIT_VERT = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#7F7F7F" transform="translate(0,0)"/>
 </svg>
 )svg";
-const char* const DATA_STEP_BACKWARD = R"svg(
+const char *const DATA_STEP_BACKWARD = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="24" height="24">
 <path d="M0,0 L3,0 L3,15 L-1,15 L-1,14 L-3,14 L-3,13 L-4,13 L-4,12 L-6,12 L-6,11 L-7,11 L-7,10 L-9,10 L-9,9 L-10,9 L-10,6 L-9,6 L-9,5 L-7,5 L-7,4 L-5,4 L-5,3 L-4,3 L-4,2 L-2,2 L-2,1 L0,1 Z " fill="#9099C8" transform="translate(12,4)"/>
 <path d="M0,0 L5,0 L5,15 L0,15 Z " fill="#9094C0" transform="translate(17,4)"/>
@@ -4341,7 +4341,7 @@ const char* const DATA_STEP_BACKWARD = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#D0D0D0" transform="translate(12,4)"/>
 </svg>
 )svg";
-const char* const DATA_STEP_FORWARD = R"svg(
+const char *const DATA_STEP_FORWARD = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="24" height="24">
 <path d="M0,0 L4,0 L4,1 L6,1 L6,2 L7,2 L7,3 L9,3 L9,4 L10,4 L10,5 L12,5 L12,6 L13,6 L13,9 L12,9 L12,10 L10,10 L10,11 L8,11 L8,12 L7,12 L7,13 L5,13 L5,14 L3,14 L3,15 L0,15 Z " fill="#8890BA" transform="translate(9,5)"/>
 <path d="M0,0 L5,0 L5,15 L0,15 Z " fill="#9094C0" transform="translate(2,5)"/>
@@ -4456,7 +4456,7 @@ const char* const DATA_STEP_FORWARD = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#585C58" transform="translate(2,5)"/>
 </svg>
 )svg";
-const char* const DATA_STOP = R"svg(
+const char *const DATA_STOP = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="24" height="24">
 <path d="M0,0 L13,0 L13,15 L0,15 Z " fill="#9094C0" transform="translate(6,5)"/>
 <path d="M0,0 L13,0 L13,15 L0,15 Z M1,1 L1,14 L12,14 L12,1 Z " fill="#303030" transform="translate(6,5)"/>
@@ -4487,7 +4487,7 @@ const char* const DATA_STOP = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#585C58" transform="translate(6,5)"/>
 </svg>
 )svg";
-const char* const DATA_SURFACE = R"svg(
+const char *const DATA_SURFACE = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="18" height="18">
 <path d="M0,0 L4,0 L4,1 L5,1 L5,3 L9,3 L9,2 L10,2 L10,1 L13,1 L13,2 L14,2 L14,6 L12,6 L12,9 L11,9 L11,7 L9,7 L9,8 L8,8 L8,10 L7,10 L7,8 L6,8 L6,7 L5,7 L5,6 L3,6 L3,8 L2,8 L2,6 L1,6 L1,7 L0,7 L0,8 L-1,8 L-1,10 L-2,10 L-2,7 L-3,7 L-3,6 L-4,6 L-4,3 L-3,3 L-3,2 L0,2 Z " fill="#FD6130" transform="translate(4,4)"/>
 <path d="M0,0 L3,0 L3,1 L5,1 L5,2 L8,2 L8,4 L6,4 L6,6 L5,6 L5,4 L4,4 L4,5 L3,5 L3,6 L2,6 L2,8 L1,8 L1,5 L0,5 L0,4 L-1,4 L-1,1 L0,1 Z " fill="#66B3CF" transform="translate(1,6)"/>
@@ -4569,7 +4569,7 @@ const char* const DATA_SURFACE = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#DF9B86" transform="translate(4,4)"/>
 </svg>
 )svg";
-const char* const DATA_T1 = R"svg(
+const char *const DATA_T1 = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L16,0 L16,16 L0,16 Z " fill="#101010" transform="translate(0,0)"/>
 <path d="M0,0 L2,0 L2,2 L4,2 L4,4 L5,4 L5,8 L6,8 L6,12 L0,12 L0,14 L-2,14 L-2,2 L0,2 Z " fill="#333333" transform="translate(2,2)"/>
@@ -4627,7 +4627,7 @@ const char* const DATA_T1 = R"svg(
 <path d="M0,0 L2,0 L2,1 L0,1 Z " fill="#333333" transform="translate(10,2)"/>
 </svg>
 )svg";
-const char* const DATA_T2 = R"svg(
+const char *const DATA_T2 = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L16,0 L16,16 L0,16 Z " fill="#0D0D0D" transform="translate(0,0)"/>
 <path d="M0,0 L2,0 L2,2 L4,2 L4,0 L10,0 L10,10 L8,10 L8,8 L2,8 L2,4 L1,4 L1,3 L0,3 Z " fill="#4C4C4C" transform="translate(6,2)"/>
@@ -4684,7 +4684,7 @@ const char* const DATA_T2 = R"svg(
 <path d="M0,0 L2,0 L2,1 L0,1 Z " fill="#333333" transform="translate(2,2)"/>
 </svg>
 )svg";
-const char* const DATA_T3 = R"svg(
+const char *const DATA_T3 = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L16,0 L16,16 L0,16 Z " fill="#333333" transform="translate(0,0)"/>
 <path d="M0,0 L6,0 L6,3 L9,3 L9,2 L12,2 L12,0 L16,0 L16,6 L0,6 Z " fill="#333333" transform="translate(0,10)"/>
@@ -4743,7 +4743,7 @@ const char* const DATA_T3 = R"svg(
 <path d="M0,0 L2,0 L2,1 L0,1 Z " fill="#333333" transform="translate(6,2)"/>
 </svg>
 )svg";
-const char* const DATA_TB_ANIMATE = R"svg(
+const char *const DATA_TB_ANIMATE = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L3,0 L3,1 L5,1 L5,2 L6,2 L6,3 L8,3 L8,4 L9,4 L9,5 L11,5 L11,6 L12,6 L12,8 L11,8 L11,9 L9,9 L9,10 L7,10 L7,11 L6,11 L6,12 L4,12 L4,13 L2,13 L2,14 L1,14 L1,13 L0,13 Z " fill="#8C96C3" transform="translate(2,1)"/>
 <path d="M0,0 L3,0 L3,2 L4,2 L4,6 L1,6 L1,12 L0,12 Z " fill="#7C83B0" transform="translate(2,1)"/>
@@ -4818,7 +4818,7 @@ const char* const DATA_TB_ANIMATE = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#A8ACA8" transform="translate(2,1)"/>
 </svg>
 )svg";
-const char* const DATA_TB_DIFFRACTION = R"svg(
+const char *const DATA_TB_DIFFRACTION = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L14,0 L14,1 L0,1 Z " fill="#000000" transform="translate(1,14)"/>
 <path d="M0,0 L14,0 L14,1 L0,1 Z " fill="#000000" transform="translate(1,12)"/>
@@ -4837,7 +4837,7 @@ const char* const DATA_TB_DIFFRACTION = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#000000" transform="translate(14,2)"/>
 </svg>
 )svg";
-const char* const DATA_TB_ISOSURFACE = R"svg(
+const char *const DATA_TB_ISOSURFACE = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L4,0 L4,1 L6,1 L6,0 L10,0 L10,1 L11,1 L11,2 L12,2 L12,6 L11,6 L11,8 L12,8 L12,12 L11,12 L11,13 L10,13 L10,14 L6,14 L6,13 L4,13 L4,14 L0,14 L0,13 L-1,13 L-1,12 L-2,12 L-2,8 L-1,8 L-1,6 L-2,6 L-2,2 L-1,2 L-1,1 L0,1 Z " fill="#507099" transform="translate(3,1)"/>
 <path d="M0,0 L4,0 L4,1 L5,1 L5,3 L7,3 L7,4 L5,4 L5,5 L6,5 L6,7 L5,7 L5,8 L2,8 L2,7 L3,7 L3,6 L-2,6 L-2,2 L-1,2 L-1,1 L0,1 Z " fill="#7C95BA" transform="translate(3,1)"/>
@@ -4946,7 +4946,7 @@ const char* const DATA_TB_ISOSURFACE = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#6582A8" transform="translate(3,1)"/>
 </svg>
 )svg";
-const char* const DATA_TB_SURFACE = R"svg(
+const char *const DATA_TB_SURFACE = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L2,0 L2,1 L4,1 L4,2 L6,2 L6,3 L8,3 L8,4 L10,4 L10,14 L9,14 L9,13 L7,13 L7,14 L5,14 L5,15 L4,15 L4,16 L3,16 L3,15 L1,15 L1,14 L-1,14 L-1,13 L-3,13 L-3,14 L-4,14 L-4,4 L-2,4 L-2,2 L-1,2 L-1,1 L0,1 Z " fill="#869E86" transform="translate(5,0)"/>
 <path d="M0,0 L2,0 L2,1 L4,1 L4,2 L6,2 L6,3 L8,3 L8,4 L10,4 L10,14 L9,14 L9,5 L8,5 L8,6 L6,6 L6,7 L4,7 L4,8 L3,8 L3,7 L0,7 L0,6 L-2,6 L-2,5 L-3,5 L-3,14 L-4,14 L-4,4 L-2,4 L-2,2 L-1,2 L-1,1 L0,1 Z " fill="#657765" transform="translate(5,0)"/>
@@ -4975,7 +4975,7 @@ const char* const DATA_TB_SURFACE = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#383F38" transform="translate(8,7)"/>
 </svg>
 )svg";
-const char* const DATA_TO_EPS = R"svg(
+const char *const DATA_TO_EPS = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L1,0 L1,1 L2,1 L2,0 L3,0 L3,1 L4,1 L4,0 L5,0 L5,1 L6,1 L6,0 L7,0 L7,1 L8,1 L8,0 L9,0 L9,1 L10,1 L10,0 L11,0 L11,1 L12,1 L12,0 L13,0 L13,1 L14,1 L14,0 L15,0 L15,4 L-1,4 L-1,1 L0,1 Z " fill="#000000" transform="translate(1,12)"/>
 <path d="M0,0 L4,0 L4,3 L3,3 L3,7 L4,7 L4,10 L0,10 Z M1,2 L1,4 L2,4 L2,3 L3,3 L3,2 Z M1,6 L1,8 L3,8 L3,7 L2,7 L2,6 Z " fill="#000000" transform="translate(0,1)"/>
@@ -4999,7 +4999,7 @@ const char* const DATA_TO_EPS = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#333333" transform="translate(5,2)"/>
 </svg>
 )svg";
-const char* const DATA_TO_PNG = R"svg(
+const char *const DATA_TO_PNG = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L1,0 L1,1 L2,1 L2,0 L3,0 L3,1 L4,1 L4,0 L5,0 L5,1 L6,1 L6,0 L7,0 L7,1 L8,1 L8,0 L9,0 L9,1 L10,1 L10,0 L11,0 L11,1 L12,1 L12,0 L13,0 L13,1 L14,1 L14,0 L15,0 L15,4 L-1,4 L-1,1 L0,1 Z " fill="#000000" transform="translate(1,12)"/>
 <path d="M0,0 L5,0 L5,5 L2,5 L2,8 L3,8 L3,10 L0,10 L0,8 L1,8 L1,2 L0,2 Z M2,2 L2,3 L4,3 L4,2 Z " fill="#000000" transform="translate(0,1)"/>
@@ -5025,7 +5025,7 @@ const char* const DATA_TO_PNG = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#333333" transform="translate(0,2)"/>
 </svg>
 )svg";
-const char* const DATA_TOOLS = R"svg(
+const char *const DATA_TOOLS = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L2,0 L2,1 L3,1 L3,3 L4,3 L4,4 L5,4 L5,5 L6,5 L6,4 L7,4 L7,3 L8,3 L8,1 L9,1 L9,0 L11,0 L11,1 L10,1 L10,3 L12,3 L12,2 L13,2 L13,4 L12,4 L12,5 L11,5 L11,6 L9,6 L9,8 L10,8 L10,9 L11,9 L11,10 L12,10 L12,13 L11,13 L11,14 L9,14 L9,13 L8,13 L8,12 L7,12 L7,11 L6,11 L6,10 L5,10 L5,11 L4,11 L4,13 L3,13 L3,14 L1,14 L1,13 L2,13 L2,11 L0,11 L0,12 L-1,12 L-1,10 L0,10 L0,9 L1,9 L1,8 L3,8 L3,7 L4,7 L4,6 L3,6 L3,4 L2,4 L2,3 L1,3 L1,2 L0,2 Z " fill="#B7B7B7" transform="translate(2,1)"/>
 <path d="M0,0 L3,0 L3,2 L4,2 L4,3 L5,3 L5,4 L6,4 L6,7 L5,7 L5,8 L3,8 L3,7 L2,7 L2,6 L1,6 L1,5 L0,5 L0,4 L-1,4 L-1,1 L0,1 Z " fill="#71BC00" transform="translate(8,7)"/>
@@ -5111,7 +5111,7 @@ const char* const DATA_TOOLS = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#989898" transform="translate(2,1)"/>
 </svg>
 )svg";
-const char* const DATA_TRACK = R"svg(
+const char *const DATA_TRACK = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L16,0 L16,16 L0,16 Z " fill="#999999" transform="translate(0,0)"/>
 <path d="M0,0 L3,0 L3,1 L4,1 L4,2 L5,2 L5,3 L6,3 L6,4 L4,4 L4,3 L3,3 L3,2 L2,2 L2,1 L1,1 L1,4 L-2,4 L-2,6 L1,6 L1,9 L2,9 L2,8 L3,8 L3,7 L4,7 L4,6 L6,6 L6,7 L5,7 L5,9 L7,9 L7,13 L-9,13 L-9,9 L-3,9 L-3,11 L-1,11 L-1,9 L0,9 L0,7 L-3,7 L-3,3 L0,3 Z " fill="#999999" transform="translate(9,3)"/>
@@ -5173,7 +5173,7 @@ const char* const DATA_TRACK = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#666666" transform="translate(13,4)"/>
 </svg>
 )svg";
-const char* const DATA_XVIEW = R"svg(
+const char *const DATA_XVIEW = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L2,0 L2,1 L3,1 L3,3 L4,3 L4,2 L5,2 L5,0 L8,0 L8,1 L7,1 L7,2 L6,2 L6,4 L5,4 L5,5 L6,5 L6,7 L7,7 L7,8 L8,8 L8,9 L5,9 L5,8 L4,8 L4,6 L3,6 L3,8 L2,8 L2,9 L0,9 L0,7 L1,7 L1,6 L2,6 L2,3 L1,3 L1,2 L0,2 Z " fill="#3F3F3F" transform="translate(4,4)"/>
 <path d="M0,0 L3,0 L3,1 L2,1 L2,2 L1,2 L1,4 L0,4 L0,3 L-1,3 L-1,2 L0,2 Z " fill="#3F3F3F" transform="translate(9,4)"/>
@@ -5215,7 +5215,7 @@ const char* const DATA_XVIEW = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#5E5E5E" transform="translate(4,4)"/>
 </svg>
 )svg";
-const char* const DATA_YVIEW = R"svg(
+const char *const DATA_YVIEW = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L3,0 L3,3 L4,3 L4,6 L5,6 L5,4 L6,4 L6,1 L7,1 L7,0 L9,0 L9,2 L8,2 L8,4 L7,4 L7,7 L6,7 L6,9 L5,9 L5,12 L2,12 L2,11 L3,11 L3,6 L2,6 L2,4 L1,4 L1,1 L0,1 Z " fill="#151515" transform="translate(3,4)"/>
 <path d="M0,0 L2,0 L2,2 L1,2 L1,4 L0,4 L0,7 L-1,7 L-1,6 L-2,6 L-2,4 L-1,4 L-1,1 L0,1 Z " fill="#3B3B3B" transform="translate(10,4)"/>
@@ -5263,7 +5263,7 @@ const char* const DATA_YVIEW = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#D0D0D0" transform="translate(3,4)"/>
 </svg>
 )svg";
-const char* const DATA_ZVIEW = R"svg(
+const char *const DATA_ZVIEW = R"svg(
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
 <path d="M0,0 L7,0 L7,2 L6,2 L6,4 L5,4 L5,5 L4,5 L4,6 L3,6 L3,8 L7,8 L7,9 L0,9 L0,7 L1,7 L1,6 L2,6 L2,4 L3,4 L3,3 L4,3 L4,2 L0,2 Z " fill="#232323" transform="translate(4,4)"/>
 <path d="M0,0 L2,0 L2,1 L7,1 L7,2 L0,2 Z " fill="#010101" transform="translate(4,11)"/>
@@ -5295,4 +5295,4 @@ const char* const DATA_ZVIEW = R"svg(
 <path d="M0,0 L1,0 L1,1 L0,1 Z " fill="#6B6B6B" transform="translate(4,4)"/>
 </svg>
 )svg";
-#endif //ALL_ICONS_H
+#endif // ALL_ICONS_H

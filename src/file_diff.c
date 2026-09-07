@@ -204,7 +204,7 @@ gint write_diffax(gchar *filename, struct model_pak *data)
   if (!fp)
     return (3);
 
-/* setup the layers */
+  /* setup the layers */
   tot_layer = g_slist_length(data->layer_list);
   if (!tot_layer)
   {

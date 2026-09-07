@@ -32,81 +32,81 @@ The GNU GPL can also be found at http://www.gnu.org
 
 /* Icon lookup table - all_icons */
 struct icon_entry {
-  const char* const data;
+  const char *const data;
   const char *name;
 };
 
 static const icon_entry embedded_icons[] = {
-  {.data = DATA_ARROW, .name = "ARROW"},
-  {.data = DATA_AVIEW, .name = "AVIEW"},
-  {.data = DATA_AXES, .name = "AXES"},
-  {.data = DATA_BOX, .name = "BOX"},
-  {.data = DATA_BVIEW, .name = "BVIEW"},
-  {.data = DATA_CAMERA, .name = "CAMERA"},
-  {.data = DATA_CANVAS_CREATE, .name = "CANVAS_CREATE"},
-  {.data = DATA_CANVAS_DELETE, .name = "CANVAS_DELETE"},
-  {.data = DATA_CANVAS_SINGLE, .name = "CANVAS_SINGLE"},
-  {.data = DATA_CELL, .name = "CELL"},
-  {.data = DATA_CROSS, .name = "CROSS"},
-  {.data = DATA_CVIEW, .name = "CVIEW"},
-  {.data = DATA_DIAMOND2, .name = "DIAMOND2"},
-  {.data = DATA_DISK, .name = "DISK"},
-  {.data = DATA_ELEMENT, .name = "ELEMENT"},
-  {.data = DATA_FASTFORWARD, .name = "FASTFORWARD"},
-  {.data = DATA_FOLDER, .name = "FOLDER"},
-  {.data = DATA_GEOM, .name = "GEOM"},
-  {.data = DATA_GO, .name = "GO"},
-  {.data = DATA_GRAPH, .name = "GRAPH"},
-  {.data = DATA_LEFT_ARROW1, .name = "LEFT_ARROW1"},
-  {.data = DATA_LOGO_LEFT, .name = "LOGO_LEFT"},
-  {.data = DATA_LOGO_RIGHT, .name = "LOGO_RIGHT"},
-  {.data = DATA_LOGO_WIDE, .name = "LOGO_WIDE"},
-  {.data = DATA_MATRIX, .name = "MATRIX"},
-  {.data = DATA_METHANE, .name = "METHANE"},
-  {.data = DATA_PALETTE, .name = "PALETTE"},
-  {.data = DATA_PAUSE, .name = "PAUSE"},
-  {.data = DATA_PLAY, .name = "PLAY"},
-  {.data = DATA_PLOTS, .name = "PLOTS"},
-  {.data = DATA_PLUS, .name = "PLUS"},
-  {.data = DATA_POLYMER, .name = "POLYMER"},
-  {.data = DATA_RENDER_SETUP, .name = "RENDER_SETUP"},
-  {.data = DATA_REWIND, .name = "REWIND"},
-  {.data = DATA_RIGHT_ARROW1, .name = "RIGHT_ARROW1"},
-  {.data = DATA_ROTATE1, .name = "ROTATE1"},
-  {.data = DATA_ROTATE2, .name = "ROTATE2"},
-  {.data = DATA_ROTATE3, .name = "ROTATE3"},
-  {.data = DATA_SELECT_ALL, .name = "SELECT_ALL"},
-  {.data = DATA_SPLIT_BOTH, .name = "SPLIT_BOTH"},
-  {.data = DATA_SPLIT_HORZ, .name = "SPLIT_HORZ"},
-  {.data = DATA_SPLIT_NONE, .name = "SPLIT_NONE"},
-  {.data = DATA_SPLIT_VERT, .name = "SPLIT_VERT"},
-  {.data = DATA_STEP_BACKWARD, .name = "STEP_BACKWARD"},
-  {.data = DATA_STEP_FORWARD, .name = "STEP_FORWARD"},
-  {.data = DATA_STOP, .name = "STOP"},
-  {.data = DATA_SURFACE, .name = "SURFACE"},
-  {.data = DATA_T1, .name = "T1"},
-  {.data = DATA_T2, .name = "T2"},
-  {.data = DATA_T3, .name = "T3"},
-  {.data = DATA_TB_ANIMATE, .name = "TB_ANIMATE"},
-  {.data = DATA_TB_DIFFRACTION, .name = "TB_DIFFRACTION"},
-  {.data = DATA_TB_ISOSURFACE, .name = "TB_ISOSURFACE"},
-  {.data = DATA_TB_SURFACE, .name = "TB_SURFACE"},
-  {.data = DATA_TO_EPS, .name = "TO_EPS"},
-  {.data = DATA_TO_PNG, .name = "TO_PNG"},
-  {.data = DATA_TOOLS, .name = "TOOLS"},
-  {.data = DATA_TRACK, .name = "TRACK"},
-  {.data = DATA_XVIEW, .name = "XVIEW"},
-  {.data = DATA_YVIEW, .name = "YVIEW"},
-  {.data = DATA_ZVIEW, .name = "ZVIEW"},
+    {.data = DATA_ARROW, .name = "ARROW"},
+    {.data = DATA_AVIEW, .name = "AVIEW"},
+    {.data = DATA_AXES, .name = "AXES"},
+    {.data = DATA_BOX, .name = "BOX"},
+    {.data = DATA_BVIEW, .name = "BVIEW"},
+    {.data = DATA_CAMERA, .name = "CAMERA"},
+    {.data = DATA_CANVAS_CREATE, .name = "CANVAS_CREATE"},
+    {.data = DATA_CANVAS_DELETE, .name = "CANVAS_DELETE"},
+    {.data = DATA_CANVAS_SINGLE, .name = "CANVAS_SINGLE"},
+    {.data = DATA_CELL, .name = "CELL"},
+    {.data = DATA_CROSS, .name = "CROSS"},
+    {.data = DATA_CVIEW, .name = "CVIEW"},
+    {.data = DATA_DIAMOND2, .name = "DIAMOND2"},
+    {.data = DATA_DISK, .name = "DISK"},
+    {.data = DATA_ELEMENT, .name = "ELEMENT"},
+    {.data = DATA_FASTFORWARD, .name = "FASTFORWARD"},
+    {.data = DATA_FOLDER, .name = "FOLDER"},
+    {.data = DATA_GEOM, .name = "GEOM"},
+    {.data = DATA_GO, .name = "GO"},
+    {.data = DATA_GRAPH, .name = "GRAPH"},
+    {.data = DATA_LEFT_ARROW1, .name = "LEFT_ARROW1"},
+    {.data = DATA_LOGO_LEFT, .name = "LOGO_LEFT"},
+    {.data = DATA_LOGO_RIGHT, .name = "LOGO_RIGHT"},
+    {.data = DATA_LOGO_WIDE, .name = "LOGO_WIDE"},
+    {.data = DATA_MATRIX, .name = "MATRIX"},
+    {.data = DATA_METHANE, .name = "METHANE"},
+    {.data = DATA_PALETTE, .name = "PALETTE"},
+    {.data = DATA_PAUSE, .name = "PAUSE"},
+    {.data = DATA_PLAY, .name = "PLAY"},
+    {.data = DATA_PLOTS, .name = "PLOTS"},
+    {.data = DATA_PLUS, .name = "PLUS"},
+    {.data = DATA_POLYMER, .name = "POLYMER"},
+    {.data = DATA_RENDER_SETUP, .name = "RENDER_SETUP"},
+    {.data = DATA_REWIND, .name = "REWIND"},
+    {.data = DATA_RIGHT_ARROW1, .name = "RIGHT_ARROW1"},
+    {.data = DATA_ROTATE1, .name = "ROTATE1"},
+    {.data = DATA_ROTATE2, .name = "ROTATE2"},
+    {.data = DATA_ROTATE3, .name = "ROTATE3"},
+    {.data = DATA_SELECT_ALL, .name = "SELECT_ALL"},
+    {.data = DATA_SPLIT_BOTH, .name = "SPLIT_BOTH"},
+    {.data = DATA_SPLIT_HORZ, .name = "SPLIT_HORZ"},
+    {.data = DATA_SPLIT_NONE, .name = "SPLIT_NONE"},
+    {.data = DATA_SPLIT_VERT, .name = "SPLIT_VERT"},
+    {.data = DATA_STEP_BACKWARD, .name = "STEP_BACKWARD"},
+    {.data = DATA_STEP_FORWARD, .name = "STEP_FORWARD"},
+    {.data = DATA_STOP, .name = "STOP"},
+    {.data = DATA_SURFACE, .name = "SURFACE"},
+    {.data = DATA_T1, .name = "T1"},
+    {.data = DATA_T2, .name = "T2"},
+    {.data = DATA_T3, .name = "T3"},
+    {.data = DATA_TB_ANIMATE, .name = "TB_ANIMATE"},
+    {.data = DATA_TB_DIFFRACTION, .name = "TB_DIFFRACTION"},
+    {.data = DATA_TB_ISOSURFACE, .name = "TB_ISOSURFACE"},
+    {.data = DATA_TB_SURFACE, .name = "TB_SURFACE"},
+    {.data = DATA_TO_EPS, .name = "TO_EPS"},
+    {.data = DATA_TO_PNG, .name = "TO_PNG"},
+    {.data = DATA_TOOLS, .name = "TOOLS"},
+    {.data = DATA_TRACK, .name = "TRACK"},
+    {.data = DATA_XVIEW, .name = "XVIEW"},
+    {.data = DATA_YVIEW, .name = "YVIEW"},
+    {.data = DATA_ZVIEW, .name = "ZVIEW"},
 };
 
 static const int NUM_EMBEDDED = sizeof(embedded_icons) / sizeof(embedded_icons[0]);
 
-QIcon LoadIconSVG(const char* svgData, const QSize& targetSize)
+QIcon LoadIconSVG(const char *svgData, const QSize &targetSize)
 {
   QByteArray byteArray(svgData);
   QSvgRenderer renderer(byteArray);
-  if (!renderer.isValid()) 
+  if (!renderer.isValid())
   {
     /* did not read properly, return an empty icon */
     return QIcon();
@@ -238,5 +238,3 @@ void set_widget_tooltip(QWidget *widget, const char *tooltip)
   if (widget && tooltip)
     widget->setToolTip(QString::fromUtf8(tooltip));
 }
-
-

@@ -64,7 +64,6 @@ void file_init(void)
   GSList *rlist = NULL;
   struct file_pak *file_data;
 
-
 #if DEBUG_FILE_INIT
   printf("read: ");
   for (list = rlist; list; list = g_slist_next(list))
@@ -1360,7 +1359,6 @@ void file_load(gchar *filename, struct model_pak *mdata)
   struct model_pak *data;
   struct file_pak *file_data;
 
-
 #if DEBUG_FILE_LOAD
   printf("loading: [%s] into: %p\n", filename, mdata);
 #endif
@@ -1478,10 +1476,8 @@ void file_load(gchar *filename, struct model_pak *mdata)
       /* not on tree - must have just been loaded */
       tree_model_add(data);
 
-
       /* Assign model to canvas for rendering */
       canvas_shuffle();
-
 
       /* create gulp supercells */
       flag = 0;
@@ -1548,7 +1544,6 @@ void file_load_dialog(void)
   case GEOMVIEW_OFF:
     sysenv.file_type = DATA;
   }
-
 }
 #endif
 
@@ -1660,7 +1655,6 @@ void file_save_dialog(void)
   model = sysenv.active_model;
   if (model)
     text = model->basename;
-
 }
 #endif
 

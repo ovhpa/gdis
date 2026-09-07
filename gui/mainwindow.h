@@ -39,7 +39,6 @@ The GNU GPL can also be found at http://www.gnu.org
 #include <QStackedWidget>
 #include <QDockWidget>
 
-
 class GLCanvas;
 class TextOverlayWidget;
 class QSplitter;
@@ -77,9 +76,9 @@ private slots:
   void on_import_graph();
   void on_export_canvas();
   void on_export_graph_data();
-/*
-  void on_export_graph_data();
-*/
+  /*
+    void on_export_graph_data();
+  */
 
   /* Edit */
   void on_edit_undo();
@@ -157,7 +156,6 @@ private slots:
   void on_select_mode_changed(int index);
 
   /* Update text overlay geometry to match canvas */
-
 
 public:
   void refresh_qt_tree();

@@ -800,17 +800,16 @@ void MainWindow::setupDockWidgets()
   /* Set refresh callback for redraw_canvas */
   extern void qt_set_refresh_callback(void (*)(void));
   static MainWindow *s_mw2 = this;
-  qt_set_refresh_callback(
-      []() {
-        /* Always refresh edit panel on redraw when it's the active panel. */
-        if (s_mw2 && s_mw2->m_panelStack)
-        {
-          int idx = s_mw2->m_panelStack->currentIndex();
-          if (idx == 1) /* Editing panel is visible */
-            update_edit_panel(s_mw2->m_panelStack->widget(1));
-        }
-        QMetaObject::invokeMethod(s_mw2->m_canvas, [s_mw2]() { s_mw2->m_canvas->update(); });
-      });
+  qt_set_refresh_callback([]() {
+    /* Always refresh edit panel on redraw when it's the active panel. */
+    if (s_mw2 && s_mw2->m_panelStack)
+    {
+      int idx = s_mw2->m_panelStack->currentIndex();
+      if (idx == 1) /* Editing panel is visible */
+        update_edit_panel(s_mw2->m_panelStack->widget(1));
+    }
+    QMetaObject::invokeMethod(s_mw2->m_canvas, [s_mw2]() { s_mw2->m_canvas->update(); });
+  });
   /* ascribe left bottom corner to bottomDockWidget */
   setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
 }
@@ -841,10 +840,10 @@ void MainWindow::on_file_open()
 
 void MainWindow::on_file_save()
 {
-/*
-  extern void file_save_dialog(void);
-  file_save_dialog();
-*/
+  /*
+    extern void file_save_dialog(void);
+    file_save_dialog();
+  */
 }
 
 extern "C" void qt_refresh_qt_tree(void);
@@ -902,8 +901,7 @@ static void qt_tree_select_delete(void)
   {
     int next = selected < newCount ? selected : newCount - 1;
     qt_tree_model_select(next);
-  }
-  else
+  } else
   {
     /* No models left — clear active model and force canvas redraw. */
     extern void tree_select_active(void);
@@ -919,7 +917,8 @@ void MainWindow::on_import_geomview()
 {
   /* Import Geomview OFF file. */
   QString filePath = QFileDialog::getOpenFileName(this, tr("Import Geomview"), "", "Geomview OFF (*.off)");
-  if (filePath.isEmpty()) return;
+  if (filePath.isEmpty())
+    return;
 
   import_off(g_strdup(filePath.toUtf8().constData()));
 }
@@ -928,7 +927,8 @@ void MainWindow::on_import_project()
 {
   /* Import GDIS project file. */
   QString filePath = QFileDialog::getOpenFileName(this, tr("Import Project"), "", "GDIS Project (*.pcf)");
-  if (filePath.isEmpty()) return;
+  if (filePath.isEmpty())
+    return;
 
   import_pcf(g_strdup(filePath.toUtf8().constData()));
 }
@@ -937,15 +937,17 @@ void MainWindow::on_import_graph()
 {
   /* Import graph data file. */
   QString filePath = QFileDialog::getOpenFileName(this, tr("Import Graph"), "", "CSV Files (*.csv);;All Files (*)");
-  if (filePath.isEmpty()) return;
+  if (filePath.isEmpty())
+    return;
 
-  extern void graph_read(gchar *filename);
+  extern void graph_read(gchar * filename);
   graph_read(g_strdup(filePath.toUtf8().constData()));
 }
 
 void MainWindow::on_export_canvas()
 {
-  if (!g_gl_canvas) return;
+  if (!g_gl_canvas)
+    return;
 
   /* Get the raw RGBA buffer from sysenv.cairo_surface. */
   extern unsigned char *qt_cairo_surface(void);
@@ -954,7 +956,8 @@ void MainWindow::on_export_canvas()
   unsigned char *pixels = qt_cairo_surface();
   gint w = qt_cairo_width();
   gint h = qt_cairo_height();
-  if (!pixels || w <= 0 || h <= 0) return;
+  if (!pixels || w <= 0 || h <= 0)
+    return;
 
   /* Build default filename. */
   QString baseName = "gdis_snapshot";
@@ -964,8 +967,10 @@ void MainWindow::on_export_canvas()
 
   /* Ask user for output format and file path. */
   QString defaultFilter = "PNG Image (*.png)";
-  QString filePath = QFileDialog::getSaveFileName(this, tr("Export Canvas Snapshot"), baseName + ".png", "PNG Image (*.png);;JPEG Image (*.jpg *.jpeg)", &defaultFilter);
-  if (filePath.isEmpty()) return;
+  QString filePath = QFileDialog::getSaveFileName(this, tr("Export Canvas Snapshot"), baseName + ".png",
+                                                  "PNG Image (*.png);;JPEG Image (*.jpg *.jpeg)", &defaultFilter);
+  if (filePath.isEmpty())
+    return;
 
   /* Cairo surface is ARGB32 format (A,R,G,B on little-endian). */
   QImage img(pixels, w, h, w * 4, QImage::Format_ARGB32);
@@ -992,12 +997,13 @@ void MainWindow::on_export_graph_data()
   if (model && model->basename)
     defaultName = QString(model->basename) + ".csv";
 
-  QString filePath = QFileDialog::getSaveFileName(this, tr("Export Graph Data"), defaultName,
-                                                   "CSV Files (*.csv);;All Files (*)");
-  if (filePath.isEmpty()) return;
+  QString filePath =
+      QFileDialog::getSaveFileName(this, tr("Export Graph Data"), defaultName, "CSV Files (*.csv);;All Files (*)");
+  if (filePath.isEmpty())
+    return;
 
   /* graph_write expects a basename in sysenv.cwd — extract just the filename. */
-  extern void graph_write(gchar *name, gpointer ptr_graph);
+  extern void graph_write(gchar * name, gpointer ptr_graph);
   QString baseName = QFileInfo(filePath).fileName();
   graph_write(g_strdup(baseName.toUtf8().constData()), model->graph_active);
 }
@@ -1079,12 +1085,14 @@ void MainWindow::resizeEvent(QResizeEvent *event)
    * when dock visibility changes on a maximized window. We fix this by
    * manually setting the container geometry to match the window size minus
    * menu bar and toolbar space. */
-  if (centralWidget()) {
+  if (centralWidget())
+  {
     /* Calculate available space: window rect minus non-client area.
      * QMainWindow already accounts for menu/toolbar in its layout, but we
      * need to ensure the central widget fills whatever space is available. */
     QRect avail = contentsRect();
-    if (!avail.isEmpty() && centralWidget()->geometry() != avail) {
+    if (!avail.isEmpty() && centralWidget()->geometry() != avail)
+    {
       centralWidget()->setGeometry(avail);
     }
   }
@@ -1162,7 +1170,8 @@ void MainWindow::on_tools_docking()
   struct model_pak *model = qt_get_active_model();
   if (!model || model->periodic != 2)
   {
-    QMessageBox::warning(this, "Docking", "Docking requires a surface model (periodic=2). Please load a surface first.");
+    QMessageBox::warning(this, "Docking",
+                         "Docking requires a surface model (periodic=2). Please load a surface first.");
     return;
   }
   qt_dock_dialog();
@@ -1603,8 +1612,6 @@ void MainWindow::on_tree_selection_changed(const QModelIndex &current, const QMo
   m_canvas->update();
 }
 
-
-
 /* ============================================================
    Panel creation helpers
    ============================================================ */
@@ -1679,45 +1686,55 @@ static QWidget *create_edit_panel(QWidget *parent)
   extern gint qt_edit_type_translate(void);
   /* Map Qt panel indices (0-11) to C enum types for atom_properties_change. */
   gint local_edit_type_map[12];
-  local_edit_type_map[0] = ELEMENT;   local_edit_type_map[1] = NAME;    local_edit_type_map[2] = CORE_FF;
-  local_edit_type_map[3] = COORD_X;   local_edit_type_map[4] = COORD_Y; local_edit_type_map[5] = COORD_Z;
-  local_edit_type_map[6] = CHARGE;    local_edit_type_map[7] = WEIGHT;  local_edit_type_map[8] = SOF;
-  local_edit_type_map[9] = CORE_GROWTH_SLICE;   local_edit_type_map[10] = CORE_REGION; local_edit_type_map[11] = CORE_TRANSLATE;
-
-
-
+  local_edit_type_map[0] = ELEMENT;
+  local_edit_type_map[1] = NAME;
+  local_edit_type_map[2] = CORE_FF;
+  local_edit_type_map[3] = COORD_X;
+  local_edit_type_map[4] = COORD_Y;
+  local_edit_type_map[5] = COORD_Z;
+  local_edit_type_map[6] = CHARGE;
+  local_edit_type_map[7] = WEIGHT;
+  local_edit_type_map[8] = SOF;
+  local_edit_type_map[9] = CORE_GROWTH_SLICE;
+  local_edit_type_map[10] = CORE_REGION;
+  local_edit_type_map[11] = CORE_TRANSLATE;
 
   /* Store pointers for the cellChanged handler and refresh_guard. */
   s_edit_table = table;
   QObject::connect(table, &QTableWidget::cellChanged, [table]() {
-    if (!s_edit_table) return;
+    if (!s_edit_table)
+      return;
     int row = table->currentRow();
-    if (row < 0 || row >= 12) return;
+    if (row < 0 || row >= 12)
+      return;
     QTableWidgetItem *item = table->item(row, 1);
-    if (!item) return;
+    if (!item)
+      return;
 
     /* Guard against re-entrant calls from update_edit_panel. */
-    if (s_applying_edit_ptr && s_applying_edit_ptr->loadAcquire()) return;
+    if (s_applying_edit_ptr && s_applying_edit_ptr->loadAcquire())
+      return;
 
     gint local_map[12];
     memcpy(local_map, g_main_window->get_edit_type_map(), sizeof(local_map));
 
-    if (s_applying_edit_ptr) s_applying_edit_ptr->storeRelease(1);
+    if (s_applying_edit_ptr)
+      s_applying_edit_ptr->storeRelease(1);
     qt_set_edit_field_text(local_map[row], item->text().toUtf8().constData());
     qt_atom_properties_change(local_map[row]);
-    if (s_applying_edit_ptr) s_applying_edit_ptr->storeRelease(0);
+    if (s_applying_edit_ptr)
+      s_applying_edit_ptr->storeRelease(0);
 
     /* Mark model as needing clear so redraw actually repaints */
     {
       struct model_pak *model = qt_get_active_model();
-      if (model) model->need_clear = TRUE;
+      if (model)
+        model->need_clear = TRUE;
     }
 
     /* Force immediate GL refresh with full clear. */
     extern void redraw_canvas(gint);
     redraw_canvas(ALL);
-
-
   });
 
   /* Buttons: Add atoms, Add bonds, Delete bonds, Normal mode */
@@ -1814,7 +1831,7 @@ static QWidget *create_display_panel(QWidget *parent)
     auto *lbl = new QLabel(label, row);
     lbl->setStyleSheet("QLabel { font-weight: normal; } ");
     hbox->addWidget(lbl);
-    auto *btn = new QPushButton(loadIcon("GO",row), "", row);
+    auto *btn = new QPushButton(loadIcon("GO", row), "", row);
     btn->setFixedSize(28, 28);
     btn->setStyleSheet("QPushButton { border: none; padding: 0; } "
                        "QPushButton:hover { background-color: rgba(180,180,255,0.3); }");
@@ -2111,8 +2128,6 @@ extern "C" void qt_update_edit_panel_qt()
     g_main_window->refresh_edit_panel();
 }
 
-
-
 void MainWindow::sync_edit_panel_if_visible()
 {
   if (m_panelStack && m_panelStack->currentIndex() == 1)
@@ -2137,7 +2152,8 @@ void MainWindow::refresh_edit_panel()
 /* Refresh the spatial list in an open EditDialog. */
 extern "C" void qt_refresh_edit_dialog_spatial_list(void)
 {
-  if (g_main_window && g_main_window->getEditDialog()) {
+  if (g_main_window && g_main_window->getEditDialog())
+  {
     g_main_window->getEditDialog()->populate_spatial_list();
   }
 }
@@ -2372,7 +2388,8 @@ void MainWindow::updateOverlayGeometry()
 
 void MainWindow::forceCanvasResize()
 {
-  if (!m_canvas) return;
+  if (!m_canvas)
+    return;
 
   /* Force QOpenGLWidget to recompute its viewport by triggering a redraw.
    * This is called from resizeEvent and WindowStateChange handlers as a
@@ -2389,15 +2406,17 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
   }
 
   /* Catch dock widget hide/show events — forces canvas redraw when docks toggle. */
-  if ((event->type() == QEvent::Hide || event->type() == QEvent::Show) &&
-      qobject_cast<QDockWidget *>(obj)) {
+  if ((event->type() == QEvent::Hide || event->type() == QEvent::Show) && qobject_cast<QDockWidget *>(obj))
+  {
     forceCanvasResize();
   }
 
   /* Catch central widget resize events — catches layout-driven resizes.
    * We force the canvas to recompute its viewport. */
-  if (event->type() == QEvent::Resize && obj == centralWidget()) {
-    if (m_canvas) m_canvas->update();
+  if (event->type() == QEvent::Resize && obj == centralWidget())
+  {
+    if (m_canvas)
+      m_canvas->update();
   }
 
   /* Handle Enter/Return key on the edit table for inline editing. */
@@ -2586,7 +2605,7 @@ void MainWindow::refresh_qt_tree()
     QStandardItem *iconItem = new QStandardItem();
     if (icon_name)
     {
-      iconItem->setIcon(loadIcon(icon_name,m_modelTree));
+      iconItem->setIcon(loadIcon(icon_name, m_modelTree));
     }
     QStandardItem *nameItem = new QStandardItem(QString(qt_tree_model_name(i)));
     nameItem->setData(i, Qt::UserRole);
@@ -2721,28 +2740,28 @@ extern "C" void qt_gui_content_refresh(gpointer dummy)
 /* EOF: catastophic edit */
 
 /* Qt bridge: set nanotube chirality values. */
-//extern "C" void qt_set_edit_chirality(int idx, gdouble val)
+// extern "C" void qt_set_edit_chirality(int idx, gdouble val)
 //{
-//  /* Chirality is stored in the edit dialog's state. This is a no-op stub.
-//   * The actual chirality values are applied when the nanotube is created. */
-//}
-//extern "C" gboolean sysenv_ignore_tree_select(void) { return FALSE; }
+//   /* Chirality is stored in the edit dialog's state. This is a no-op stub.
+//    * The actual chirality values are applied when the nanotube is created. */
+// }
+// extern "C" gboolean sysenv_ignore_tree_select(void) { return FALSE; }
 //
 ///* Qt bridge: add model to tree and redraw canvas. */
-//extern "C" void tree_model_add(struct model_pak *model)
+// extern "C" void tree_model_add(struct model_pak *model)
 //{
-//  /* Stub — model already in sysenv.mal, just trigger refresh */
-//  if (g_main_window)
-//    qt_refresh_qt_tree();
-//}
+//   /* Stub — model already in sysenv.mal, just trigger refresh */
+//   if (g_main_window)
+//     qt_refresh_qt_tree();
+// }
 //
-//extern "C" void redraw_canvas(gint region)
+// extern "C" void redraw_canvas(gint region)
 //{
-//  /* Trigger repaint in Qt mode. */
-//  if (g_gl_canvas)
-//    g_gl_canvas->update();
-//}
-//extern "C" void qt_update_content_table(void) { /* stub */ }
-//extern "C" void qt_tree_refresh(void) { /* stub */ }
-//extern "C" void qt_set_content_table(gpointer table_ptr) { /* stub */ }
-//extern "C" void qt_gui_symmetry_refresh(void) { /* stub */ }
+//   /* Trigger repaint in Qt mode. */
+//   if (g_gl_canvas)
+//     g_gl_canvas->update();
+// }
+// extern "C" void qt_update_content_table(void) { /* stub */ }
+// extern "C" void qt_tree_refresh(void) { /* stub */ }
+// extern "C" void qt_set_content_table(gpointer table_ptr) { /* stub */ }
+// extern "C" void qt_gui_symmetry_refresh(void) { /* stub */ }

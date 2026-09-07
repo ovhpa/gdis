@@ -630,7 +630,8 @@ void make_fg_visible(void)
 
   /* Skip if background hasn't changed — fg colours are already correct. */
   static gint first_call = 1;
-  if (!first_call && fabs(cached_bg[0] - bg[0]) < 0.001 && fabs(cached_bg[1] - bg[1]) < 0.001 && fabs(cached_bg[2] - bg[2]) < 0.001)
+  if (!first_call && fabs(cached_bg[0] - bg[0]) < 0.001 && fabs(cached_bg[1] - bg[1]) < 0.001 &&
+      fabs(cached_bg[2] - bg[2]) < 0.001)
     return;
   first_call = 0;
 
@@ -645,8 +646,7 @@ void make_fg_visible(void)
     fg[0] = 0.0;
     fg[1] = 0.0;
     fg[2] = 0.0;
-  }
-  else
+  } else
   {
     /* Dark background — use light fg for contrast */
     fg[0] = 1.0;
@@ -665,8 +665,7 @@ void make_fg_visible(void)
     fg[0] = 1.0;
     fg[1] = 0.85;
     fg[2] = 0.0;
-  }
-  else
+  } else
   {
     /* Dark background — use bright white/yellow label */
     fg[0] = 1.0;
@@ -682,8 +681,7 @@ void make_fg_visible(void)
     sysenv.render.title_colour[0] = 0.1;
     sysenv.render.title_colour[1] = 0.2;
     sysenv.render.title_colour[2] = 0.6;
-  }
-  else
+  } else
   {
     /* Dark background — use light blue-ish title */
     sysenv.render.title_colour[0] = 0.5;
@@ -2572,7 +2570,6 @@ void gl_draw_spatial(gint material, struct model_pak *data)
   }
 }
 
-
 /*************************/
 /* draw camera waypoints */
 /*************************/
@@ -3085,7 +3082,7 @@ gint gl_canvas_refresh(void)
   gint w, h;
 
 #if DEBUG_CANVAS_REFRESH_TRACE
-  fprintf(stderr, "[RENDER]  gl_canvas_refresh ENTER: active_model=%p\n", (void*)sysenv.active_model);
+  fprintf(stderr, "[RENDER]  gl_canvas_refresh ENTER: active_model=%p\n", (void *) sysenv.active_model);
 #endif
 
   /* Semaphore entry guard: prevent re-entrant gl_canvas_refresh calls.
@@ -3093,21 +3090,21 @@ gint gl_canvas_refresh(void)
    * motion. The paintGL semaphore catches most cases, but this C-side guard
    * is a safety net for direct redraw_canvas() calls from non-GUI code paths. */
   if (sysenv.active_model && ((struct model_pak *) sysenv.active_model)->drawing_in_progress)
-    {
+  {
 #if DEBUG_CANVAS_REFRESH_TRACE
-      fprintf(stderr, "[RENDER]  EARLY EXIT: drawing_in_progress\n");
+    fprintf(stderr, "[RENDER]  EARLY EXIT: drawing_in_progress\n");
 #endif
-      return TRUE;
-    }
+    return TRUE;
+  }
 
   /* Safety: if no canvases, just clear and return */
   if (!sysenv.canvas_list)
-    {
+  {
 #if DEBUG_CANVAS_REFRESH_TRACE
-      fprintf(stderr, "[RENDER]  EARLY EXIT: no canvas list\n");
+    fprintf(stderr, "[RENDER]  EARLY EXIT: no canvas list\n");
 #endif
-      return TRUE;
-    }
+    return TRUE;
+  }
 
   /* No active model — clear the framebuffer to background colour so stale
    * geometry from a deleted model is removed. */
@@ -3130,9 +3127,8 @@ gint gl_canvas_refresh(void)
     canvas = list->data;
     model = canvas->model;
 #if DEBUG_CANVAS_REFRESH_TRACE
-      fprintf(stderr, "[RENDER]  need_check: canvas_model=%p, active=%p, w=%d, h=%d\n",
-             (void*)model, (void*)sysenv.active_model,
-             canvas->width, canvas->height);
+    fprintf(stderr, "[RENDER]  need_check: canvas_model=%p, active=%p, w=%d, h=%d\n", (void *) model,
+            (void *) sysenv.active_model, canvas->width, canvas->height);
 #endif
     if (model && canvas->width > 0 && canvas->height > 0)
     {
@@ -3152,8 +3148,8 @@ gint gl_canvas_refresh(void)
       {
         need_render = TRUE;
 #if DEBUG_CANVAS_REFRESH_TRACE
-        fprintf(stderr, "[RENDER]    need_render=TRUE (redraw=%d resize=%d match_active=%d)\n",
-               model->redraw, canvas->resize, (int)match_active);
+        fprintf(stderr, "[RENDER]    need_render=TRUE (redraw=%d resize=%d match_active=%d)\n", model->redraw,
+                canvas->resize, (int) match_active);
 #endif
         break;
       }
@@ -3163,7 +3159,7 @@ gint gl_canvas_refresh(void)
   /* If nothing needs rendering, skip — the previous frame's content is still valid.
    * Clearing to background here causes flicker/black screen during drag polling. */
 #if DEBUG_CANVAS_REFRESH_TRACE
-  fprintf(stderr, "[RENDER]  need_render=%d\n", (int)need_render);
+  fprintf(stderr, "[RENDER]  need_render=%d\n", (int) need_render);
 #endif
   if (!need_render)
   {
@@ -3271,9 +3267,8 @@ gint gl_canvas_refresh(void)
 #endif
 
 #if DEBUG_CANVAS_REFRESH_TRACE
-      fprintf(stderr, "[RENDER]  Canvas: model=%p, active_model=%p, redraw=%d, resize=%d\n",
-             (void*)model, (void*)sysenv.active_model,
-             model ? model->redraw : -1, canvas->resize);
+    fprintf(stderr, "[RENDER]  Canvas: model=%p, active_model=%p, redraw=%d, resize=%d\n", (void *) model,
+            (void *) sysenv.active_model, model ? model->redraw : -1, canvas->resize);
 #endif
 
     /* set up viewing transformations (even if no model - border) */
@@ -3287,8 +3282,8 @@ gint gl_canvas_refresh(void)
       gboolean redraw_this = model->redraw || canvas->resize;
       int skip = (!redraw_this && canvas->model != sysenv.active_model);
 #if DEBUG_CANVAS_REFRESH_TRACE
-      fprintf(stderr, "[RENDER]    redraw_this=%d, match_active=%d, skip=%d\n",
-             (int)redraw_this, (canvas->model == sysenv.active_model), (int)skip);
+      fprintf(stderr, "[RENDER]    redraw_this=%d, match_active=%d, skip=%d\n", (int) redraw_this,
+              (canvas->model == sysenv.active_model), (int) skip);
 #endif
       if (skip)
         continue;

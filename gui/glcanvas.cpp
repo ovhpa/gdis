@@ -128,9 +128,9 @@ void GLCanvas::paintGL()
    * to avoid double-clearing and interleaved draw operations. */
   static bool rendering = false;
   if (rendering)
-    {
-      return;
-    }
+  {
+    return;
+  }
   rendering = true;
 
   /* Clear drawing_in_progress at start of paintGL to prevent stale semaphore.

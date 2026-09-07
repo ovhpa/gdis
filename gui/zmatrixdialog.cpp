@@ -47,11 +47,10 @@ extern "C" {
 #endif
 #include "matrix.h"
 
-
 #include "renderdialog.h"
 
 ZMatrixDialog::ZMatrixDialog(struct model_pak *model, QWidget *parent)
-  : QDialog(parent), m_model(model), m_zmat((struct zmat_pak *) model->zmatrix)
+    : QDialog(parent), m_model(model), m_zmat((struct zmat_pak *) model->zmatrix)
 {
   setWindowTitle("Z-matrix Editor");
   setMinimumWidth(600);
@@ -255,12 +254,13 @@ void ZMatrixDialog::update_variable_combo()
   if (!m_zmat || !m_zmat->vars)
   {
     GList *keys = NULL;
-    g_hash_table_foreach(m_zmat->vars,
-                         [](gpointer key, gpointer val, gpointer user_data) {
-                           GList **list = (GList **) user_data;
-                           *list = g_list_append(*list, key);
-                         },
-                         &keys);
+    g_hash_table_foreach(
+        m_zmat->vars,
+        [](gpointer key, gpointer val, gpointer user_data) {
+          GList **list = (GList **) user_data;
+          *list = g_list_append(*list, key);
+        },
+        &keys);
 
     for (GList *l = keys; l; l = g_list_next(l))
       m_variableCombo->addItem(QString((gchar *) l->data));
@@ -289,7 +289,8 @@ void ZMatrixDialog::on_variable_name_changed()
   m_zmat = (struct zmat_pak *) m_model->zmatrix;
 
   const char *name = m_variableCombo->currentText().toUtf8().constData();
-  if (!m_zmat || !m_zmat->vars) return;
+  if (!m_zmat || !m_zmat->vars)
+    return;
   {
     const char *val = (const char *) g_hash_table_lookup(m_zmat->vars, name);
     if (val)
@@ -320,7 +321,8 @@ void ZMatrixDialog::on_recompute_geometry()
   for (GSList *list = m_zmat->zcores; list; list = g_slist_next(list))
   {
     struct core_pak *core = (struct core_pak *) list->data;
-    if (!core) continue;
+    if (!core)
+      continue;
     delete_core(core);
   }
   delete_commit(m_model);

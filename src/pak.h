@@ -115,9 +115,9 @@ struct render_pak {
   gdouble fg_colour[3];
   gdouble bg_colour[3];
   gdouble morph_colour[3];
-  gdouble rsurf_colour[3];   /* re-entrant surface */
-  gdouble halo_colour[3];    /* selection halo colour */
-  gdouble label_colour[3];   /* geometry labels */
+  gdouble rsurf_colour[3]; /* re-entrant surface */
+  gdouble halo_colour[3];  /* selection halo colour */
+  gdouble label_colour[3]; /* geometry labels */
   gdouble title_colour[3]; /* axes titles */
   gdouble ribbon_colour[3];
   gchar *morph_finish;

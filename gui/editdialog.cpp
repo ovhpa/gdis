@@ -133,25 +133,30 @@ void gui_spatial_delete_all(void)
 void EditDialog::delete_selected_spacial()
 {
   struct model_pak *model = (struct model_pak *) sysenv.active_model;
-  if (!model) return;
+  if (!model)
+    return;
 
   /* Collect all selected spatial pointers from the table, then delete them.
    * This handles multi-selection properly instead of relying on the stale
    * sysenv.cedit.spatial_selected pointer. */
   std::vector<void *> to_delete;
   auto indexes = m_spatialTable->selectionModel()->selectedRows();
-  for (const QModelIndex &idx : indexes) {
+  for (const QModelIndex &idx : indexes)
+  {
     void *spatial = idx.data(Qt::UserRole).value<void *>();
-    if (spatial) to_delete.push_back(spatial);
+    if (spatial)
+      to_delete.push_back(spatial);
   }
 
   /* Delete each spatial */
-  for (void *sp : to_delete) {
+  for (void *sp : to_delete)
+  {
     spatial_destroy(sp, model);
   }
 
   /* Force full redraw — deleted geometry leaves stale pixels. */
-  if (!to_delete.empty()) {
+  if (!to_delete.empty())
+  {
     model->need_clear = TRUE;
     sysenv.refresh_dialog = TRUE;
     redraw_canvas(SINGLE);
@@ -168,10 +173,12 @@ extern "C" void gui_spatial_delete_selected(void)
   extern struct model_pak *qt_get_active_model(void);
 
   struct model_pak *model = qt_get_active_model();
-  if (!model) return;
+  if (!model)
+    return;
 
   /* Delete the C-side spatial_selected pointer. */
-  if (sysenv.cedit.spatial_selected) {
+  if (sysenv.cedit.spatial_selected)
+  {
     spatial_destroy(sysenv.cedit.spatial_selected, model);
     model->need_clear = TRUE;
     sysenv.refresh_dialog = TRUE;
@@ -325,8 +332,7 @@ void EditDialog::do_construct_transmat()
   /* Handle special cases */
   switch (type)
   {
-  case IDENTITY:
-  {
+  case IDENTITY: {
     /* Reset to identity matrix and zero translation */
     gdouble tmat[9];
     matrix_identity(tmat);
@@ -339,8 +345,7 @@ void EditDialog::do_construct_transmat()
     return;
   }
 
-  case LATMAT:
-  {
+  case LATMAT: {
     /* Use lattice matrix - copy directly */
     gdouble tmat[9];
     memcpy(tmat, data->latmat, 9 * sizeof(gdouble));
@@ -407,8 +412,7 @@ void EditDialog::do_construct_transmat()
     VEC3SET(v1, 0.0, 0.0, 1.0);
     vecmat(data->latmat, v1);
     break;
-  default:
-  {
+  default: {
     /* Try to parse as spatial object index */
     bool numOk = false;
     gdouble idx_d = refText.toDouble(&numOk);
@@ -431,11 +435,9 @@ void EditDialog::do_construct_transmat()
     int listLen = g_slist_length(spatialList);
     if (idx >= listLen)
     {
-      gui_text_show(1, QString("Invalid spatial index %1 (0-%2).\n")
-                            .arg(idx)
-                            .arg(listLen - 1)
-                            .toUtf8()
-                            .constData()); /* WARNING */
+      gui_text_show(
+          1,
+          QString("Invalid spatial index %1 (0-%2).\n").arg(idx).arg(listLen - 1).toUtf8().constData()); /* WARNING */
       return;
     }
 
@@ -894,7 +896,7 @@ void EditDialog::setupBuilderPage()
     qt_set_edit_chirality(1, (gdouble) val);
   });
 
-/* Sync length to CEDIT on change */
+  /* Sync length to CEDIT on change */
   connect(m_nanotubeLengthSpin, QOverload<double>::of(&QDoubleSpinBox::valueChanged), [this](double val) {
     extern void qt_set_edit_length(double val);
     qt_set_edit_length(val);
@@ -1366,7 +1368,8 @@ void EditDialog::on_delete_all_vectors()
 {
   extern void spatial_destroy_by_type(gint, struct model_pak *);
   struct model_pak *model = (struct model_pak *) sysenv.active_model;
-  if (model) {
+  if (model)
+  {
     spatial_destroy_by_type(SPATIAL_VECTOR, model);
     model->need_clear = TRUE;
     redraw_canvas(ALL);
@@ -1378,7 +1381,8 @@ void EditDialog::on_delete_all_planes()
 {
   extern void spatial_destroy_by_type(gint, struct model_pak *);
   struct model_pak *model = (struct model_pak *) sysenv.active_model;
-  if (model) {
+  if (model)
+  {
     spatial_destroy_by_type(SPATIAL_GENERIC, model);
     model->need_clear = TRUE;
     redraw_canvas(ALL);
@@ -1391,10 +1395,7 @@ void EditDialog::on_delete_all_spatial()
   extern void gui_spatial_delete_all(void);
   gui_spatial_delete_all();
 }
-void EditDialog::on_delete_selected_spatial()
-{
-  delete_selected_spacial();
-}
+void EditDialog::on_delete_selected_spatial() { delete_selected_spacial(); }
 void EditDialog::on_spatial_colour_all()
 {
   gdouble col[3];
@@ -1413,10 +1414,7 @@ void EditDialog::on_spatial_colour_select()
 }
 
 /* Transformations callbacks */
-void EditDialog::on_construct_transmat()
-{
-  do_construct_transmat();
-}
+void EditDialog::on_construct_transmat() { do_construct_transmat(); }
 void EditDialog::sync_transmat_to_cedit()
 {
   gdouble tmat[9], tvec[3];
@@ -1454,10 +1452,7 @@ void EditDialog::on_apply_latmat()
   extern void edit_transform_latmat(void);
   edit_transform_latmat();
 }
-void EditDialog::on_modify_periodicity()
-{
-  extern void qt_cb_modify_periodicity(gint);
-}
+void EditDialog::on_modify_periodicity() { extern void qt_cb_modify_periodicity(gint); }
 
 /* Periodicity is handled by the inline spin box in the transformations page */
 
@@ -1580,7 +1575,8 @@ extern "C" void gui_spatial_delete(gpointer data)
 
   /* Force full redraw — deleted geometry leaves stale pixels. */
   struct model_pak *model = (struct model_pak *) sysenv.active_model;
-  if (model) model->need_clear = TRUE;
+  if (model)
+    model->need_clear = TRUE;
 
   sysenv.refresh_dialog = TRUE;
   redraw_canvas(SINGLE);
@@ -1641,7 +1637,7 @@ extern "C" void qt_cb_modify_periodicity(gint val)
   sysenv.refresh_dialog = TRUE;
 
   /* Rebuild the Qt tree so the model icon reflects its new type. */
-  extern void tree_model_add(struct model_pak *model);
+  extern void tree_model_add(struct model_pak * model);
   tree_model_add(model);
 
   redraw_canvas(SINGLE);

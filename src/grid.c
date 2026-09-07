@@ -373,9 +373,9 @@ void grid_credential_init(const gchar *grid_password)
 
 #ifndef __WIN32
 #ifndef __APPLE__
-      waitpid(pid, NULL, WEXITED);  /* Linux: explicit exit-only wait */
+      waitpid(pid, NULL, WEXITED); /* Linux: explicit exit-only wait */
 #else
-      waitpid(pid, NULL, 0);         /* macOS: standard blocking wait (equivalent to WEXITED) */
+      waitpid(pid, NULL, 0); /* macOS: standard blocking wait (equivalent to WEXITED) */
 #endif
 #endif
 
