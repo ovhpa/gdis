@@ -296,6 +296,15 @@ gint read_gdisrc(void)
         sysenv.render.rsurf_colour[2] = str_to_float(*(buff + 3));
       }
     }
+    if (g_ascii_strncasecmp("colour_halo", *buff, 11) == 0)
+    {
+      if (num_tokens > 3)
+      {
+        sysenv.render.halo_colour[0] = str_to_float(*(buff + 1));
+        sysenv.render.halo_colour[1] = str_to_float(*(buff + 2));
+        sysenv.render.halo_colour[2] = str_to_float(*(buff + 3));
+      }
+    }
 
     /* cleanup */
     g_strfreev(buff);
@@ -345,6 +354,8 @@ gint write_gdisrc(void)
           sysenv.render.morph_colour[2]);
   fprintf(fp, "colour_rsurf %f %f %f\n", sysenv.render.rsurf_colour[0], sysenv.render.rsurf_colour[1],
           sysenv.render.rsurf_colour[2]);
+  fprintf(fp, "colour_halo %f %f %f\n", sysenv.render.halo_colour[0], sysenv.render.halo_colour[1],
+          sysenv.render.halo_colour[2]);
 
   if (sysenv.babel_path)
     fprintf(fp, "babel_path %s\n", sysenv.babel_path);
@@ -548,6 +559,7 @@ void sys_init(gint argc, gchar *argv[])
   VEC3SET(sysenv.render.bg_colour, 0.0, 0.0, 0.0);
   VEC3SET(sysenv.render.morph_colour, 0.1, 0.1, 0.8);
   VEC3SET(sysenv.render.rsurf_colour, 0.0, 0.3, 0.6);
+  VEC3SET(sysenv.render.halo_colour, 1.0, 0.95, 0.45);
   VEC3SET(sysenv.render.label_colour, 1.0, 1.0, 0.0);
   VEC3SET(sysenv.render.title_colour, 0.0, 1.0, 1.0);
   VEC3SET(sysenv.render.ribbon_colour, 0.0, 0.0, 1.0);

@@ -2506,6 +2506,8 @@ void space_image_widget_reset(void)
   {
     space_make_images(INITIAL, model);
     coords_init(CENT_COORDS, model);
+    /* Force framebuffer clear — geometry changed (atom positions reset) */
+    model->need_clear = TRUE;
   }
 
   /* update widget and canvas */

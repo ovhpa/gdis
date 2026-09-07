@@ -42,6 +42,7 @@ The GNU GPL can also be found at http://www.gnu.org
 // #include "quaternion.h"
 #include "render.h"
 
+#include <QColorDialog>
 #include <QHash>
 #include <QTableWidgetItem>
 #include <QHeaderView>
@@ -1016,7 +1017,28 @@ void MainWindow::on_edit_paste()
   extern void select_paste(void);
   select_paste();
 }
-void MainWindow::on_edit_colour() { /* TODO: implement */ }
+void MainWindow::on_edit_colour()
+{
+  extern struct sysenv_pak sysenv;
+  extern void redraw_canvas(gint);
+
+  /* Current halo colour from C side */
+  QColor current(sysenv.render.halo_colour[0] * 255, sysenv.render.halo_colour[1] * 255,
+                 sysenv.render.halo_colour[2] * 255);
+
+  auto color = QColorDialog::getColor(current, this, tr("Selection halo colour"));
+  if (color.isValid())
+  {
+    /* Update the C-side rendering structure */
+    sysenv.render.halo_colour[0] = color.redF();
+    sysenv.render.halo_colour[1] = color.greenF();
+    sysenv.render.halo_colour[2] = color.blueF();
+
+    /* Trigger redraw so the new colour takes effect */
+    if (m_canvas)
+      m_canvas->update();
+  }
+}
 void MainWindow::on_edit_delete()
 {
   extern void select_delete(void);

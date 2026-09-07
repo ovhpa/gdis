@@ -33,20 +33,6 @@ The original `README.md` file list some features packages and contributors:
 4. [Brute force symmetry analyzer](http://www.cobalt.chem.ucalgary.ca/ps/symmetry/).
         &copy;1996 S. Pachkovsky
 
-There are a few optional packages that enhance the GDIS experience.
-
-1. For rendering (and subsequent image/movie viewing) you will need:
-        - [POVRay](http://www.povray.org)
-        - [ImageMagick](http://imagemagick.org)
-
-2. Although GDIS supports output files from a large number of codes, input files can be created and run within GDIS for:
-        - [GULP](http://nanochemistry.curtin.edu.au/gulp/)
-        - [GAMESS](http://www.msg.chem.iastate.edu/GAMESS/)
-        - [SIESTA](http://departments.icmab.es/leem/siesta/)
-        - [Monty](http://www.vsc.science.ru.nl/deij/monty.html)
-        - [VASP](http://www.vasp.at/)
-        - [USPEX](http://www.uspex-team.org/en/uspex/overview)
-
 ### Citation
 
 Additionally, GDIS was the main focus of the following funding papers:

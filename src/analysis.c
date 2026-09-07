@@ -171,6 +171,11 @@ void analysis_show(struct model_pak *model)
   /* clear any other special objects displayed */
   model->picture_active = NULL;
 
+  /* Force framebuffer clear before drawing the new graph/plot. Without this,
+   * the old model rendering remains visible underneath the new plot content, causing
+   * visual artifacts where both are superimposed until user interaction triggers a refresh. */
+  model->need_clear = TRUE;
+
   /* display the new plot */
   /*
    */

@@ -1072,7 +1072,9 @@ void RenderDialog::loadLightFromWidget()
   m_currentLight.x[0] = m_lightXSpin->value();
   m_currentLight.x[1] = m_lightYSpin->value();
   m_currentLight.x[2] = m_lightZSpin->value();
-  m_currentLight.type = m_lightTypeCombo->currentIndex() == 1 ? POSITIONAL : DIRECTIONAL;
+  /* Store combo box index directly (0=Directional, 1=Positional) to match
+   * the type field initialization in the header. Avoids enum value mismatch */
+  m_currentLight.type = m_lightTypeCombo->currentIndex();
 }
 
 void RenderDialog::saveLightToWidget(int row)
@@ -1086,6 +1088,7 @@ void RenderDialog::saveLightToWidget(int row)
   m_lightXSpin->setValue(light->x[0]);
   m_lightYSpin->setValue(light->x[1]);
   m_lightZSpin->setValue(light->x[2]);
+  /* Convert enum value back to combo box index (7=DIRECTIONAL→0, 8=POSITIONAL→1) */
   m_lightTypeCombo->setCurrentIndex(light->type == DIRECTIONAL ? 0 : 1);
 }
 
@@ -1169,7 +1172,17 @@ void RenderDialog::on_light_add()
 {
   loadLightFromWidget();
   struct light_pak *light = (struct light_pak *) g_malloc(sizeof(struct light_pak));
-  memcpy(light, &m_currentLight, sizeof(struct light_pak));
+  /* Copy fields individually - m_currentLight has different layout than struct light_pak */
+  light->type = (m_currentLight.type == 1) ? POSITIONAL : DIRECTIONAL;
+  light->x[0] = m_currentLight.x[0];
+  light->x[1] = m_currentLight.x[1];
+  light->x[2] = m_currentLight.x[2];
+  light->colour[0] = m_currentLight.colour.redF();
+  light->colour[1] = m_currentLight.colour.greenF();
+  light->colour[2] = m_currentLight.colour.blueF();
+  light->ambient = m_currentLight.ambient;
+  light->diffuse = m_currentLight.diffuse;
+  light->specular = m_currentLight.specular;
   sysenv.render.light_list = g_slist_append(sysenv.render.light_list, light);
   updateLightList();
   triggerRedraw();
@@ -1197,7 +1210,17 @@ void RenderDialog::on_light_modify()
   struct light_pak *light = (struct light_pak *) g_slist_nth_data((GSList *) sysenv.render.light_list, row);
   if (!light)
     return;
-  memcpy(light, &m_currentLight, sizeof(struct light_pak));
+  /* Copy fields individually - m_currentLight has different layout than struct light_pak */
+  light->type = (m_currentLight.type == 1) ? POSITIONAL : DIRECTIONAL;
+  light->x[0] = m_currentLight.x[0];
+  light->x[1] = m_currentLight.x[1];
+  light->x[2] = m_currentLight.x[2];
+  light->colour[0] = m_currentLight.colour.redF();
+  light->colour[1] = m_currentLight.colour.greenF();
+  light->colour[2] = m_currentLight.colour.blueF();
+  light->ambient = m_currentLight.ambient;
+  light->diffuse = m_currentLight.diffuse;
+  light->specular = m_currentLight.specular;
   updateLightList();
   triggerRedraw();
 }

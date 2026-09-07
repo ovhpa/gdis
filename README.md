@@ -40,6 +40,20 @@ make -j$(nproc)
 
 Note: at present these two options have **not** been tested, so it is not recommended to use any.
 
+There are a few optional packages that enhance the GDIS experience.
+
+1. For rendering (and subsequent image/movie viewing) you will need:
+        - [POVRay](http://www.povray.org)
+        - [ImageMagick](http://imagemagick.org)
+
+2. Although GDIS supports output files from a large number of codes, input files can be created and run within GDIS for:
+        - [GULP](http://nanochemistry.curtin.edu.au/gulp/)
+        - [GAMESS](http://www.msg.chem.iastate.edu/GAMESS/)
+        - [SIESTA](http://departments.icmab.es/leem/siesta/)
+        - [Monty](http://www.vsc.science.ru.nl/deij/monty.html)
+        - [VASP](http://www.vasp.at/)
+        - [USPEX](http://www.uspex-team.org/en/uspex/overview)
+
 ### Notes
 
 If you are compiling on a Mac, it is recommended that you use [MacPorts](https://www.macports.org) to install Qt6 and Mesa. Homebrew is not yet officially supported (but it is a WIP, see [gdis.rb](gdis.rb)).

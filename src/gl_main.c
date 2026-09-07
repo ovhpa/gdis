@@ -1348,7 +1348,7 @@ void gl_draw_halo_list(GSList *list, struct model_pak *data)
   gl_init_circle(&circle, h, data);
 
   /* halo colour */
-  VEC4SET(halo, 1.0, 0.95, 0.45, 1.0);
+  VEC4SET(halo, sysenv.render.halo_colour[0], sysenv.render.halo_colour[1], sysenv.render.halo_colour[2], 1.0);
   for (item = list; item; item = g_slist_next(item))
   {
     core = item->data;
