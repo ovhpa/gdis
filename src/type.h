@@ -31,4 +31,3 @@ void type_dreiding_gasteiger(struct model_pak *, gint);
 
 gint type_check_list(GSList *);
 gint type_apply(gpointer, GSList *);
-

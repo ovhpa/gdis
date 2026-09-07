@@ -1315,3 +1315,93 @@ Yb3+ 27.891701 1.732720 18.761400 0.138790 12.607200 7.644120 5.476470 16.815300
 %gdis_end
 
 
+%gdis_elem
+symbol: Ds
+  name: Darmstadtium
+number: 110
+weight: 281.000000
+  cova: 2.600000
+   vdw: 3.000000
+charge: 0.000000
+colour: 53100 53100 53100
+%gdis_end
+%gdis_elem
+symbol: Rg
+  name: Roentgenium
+number: 111
+weight: 282.000000
+  cova: 2.600000
+   vdw: 3.000000
+charge: 0.000000
+colour: 53100 53100 53100
+%gdis_end
+%gdis_elem
+symbol: Cn
+  name: Copernicium
+number: 112
+weight: 285.000000
+  cova: 2.600000
+   vdw: 3.000000
+charge: 0.000000
+colour: 53100 53100 53100
+%gdis_end
+%gdis_elem
+symbol: Nh
+  name: Nihonium
+number: 113
+weight: 286.000000
+  cova: 2.600000
+   vdw: 3.000000
+charge: 0.000000
+colour: 53100 53100 53100
+%gdis_end
+%gdis_elem
+symbol: Fl
+  name: Flerovium
+number: 114
+weight: 289.000000
+  cova: 2.600000
+   vdw: 3.000000
+charge: 0.000000
+colour: 53100 53100 53100
+%gdis_end
+%gdis_elem
+symbol: Mc
+  name: Moscovium
+number: 115
+weight: 290.000000
+  cova: 2.600000
+   vdw: 3.000000
+charge: 0.000000
+colour: 53100 53100 53100
+%gdis_end
+%gdis_elem
+symbol: Lv
+  name: Livermorium
+number: 116
+weight: 293.000000
+  cova: 2.600000
+   vdw: 3.000000
+charge: 0.000000
+colour: 53100 53100 53100
+%gdis_end
+%gdis_elem
+symbol: Ts
+  name: Tennessine
+number: 117
+weight: 294.000000
+  cova: 2.600000
+   vdw: 3.000000
+charge: 0.000000
+colour: 53100 53100 53100
+%gdis_end
+%gdis_elem
+symbol: Og
+  name: Oganesson
+number: 118
+weight: 294.000000
+  cova: 2.600000
+   vdw: 3.000000
+charge: 0.000000
+colour: 53100 53100 53100
+%gdis_end

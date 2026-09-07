@@ -20,6 +20,21 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 The GNU GPL can also be found at http://www.gnu.org
 */
 
+#ifndef MODEL_H
+#define MODEL_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* Property data structure */
+#define MAX_VALUE_SIZE 128
+struct property_pak {
+  guint rank;
+  gchar *label;
+  gchar value[MAX_VALUE_SIZE];
+};
+
 struct model_pak *model_new(void);
 void model_init(struct model_pak *);
 gint model_prep(struct model_pak *);
@@ -30,10 +45,7 @@ gpointer model_dup(struct model_pak *);
 void model_content_refresh(struct model_pak *);
 
 void property_free(gpointer);
-void property_add_ranked(guint, 
-                         const gchar *,
-                         const gchar *,
-                         struct model_pak *);
+void property_add_ranked(guint, const gchar *, const gchar *, struct model_pak *);
 guint property_rank(gpointer);
 gchar *property_label(gpointer);
 gchar *property_value(gpointer);
@@ -44,4 +56,8 @@ void gamess_init(gpointer);
 void free_vasp_out(gpointer);
 void free_uspex_out(gpointer);
 
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
+#endif /* MODEL_H */

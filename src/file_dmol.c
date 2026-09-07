@@ -40,53 +40,50 @@ extern struct elem_pak elements[];
 /****************/
 gint write_dmol(gchar *filename, struct model_pak *model)
 {
-gint i;
-gdouble x[3];
-GSList *list;
-struct core_pak *core;
-FILE *fp;
+  gint i;
+  gdouble x[3];
+  GSList *list;
+  struct core_pak *core;
+  FILE *fp;
 
-/* checks */
-g_return_val_if_fail(model != NULL, 1);
-g_return_val_if_fail(filename != NULL, 2);
+  /* checks */
+  g_return_val_if_fail(model != NULL, 1);
+  g_return_val_if_fail(filename != NULL, 2);
 
-/* open the file */
-fp = fopen(filename,"wt");
-if (!fp)
-  return(3);
+  /* open the file */
+  fp = fopen(filename, "wt");
+  if (!fp)
+    return (3);
 
-if (model->periodic == 3)
+  if (model->periodic == 3)
   {
-  fprintf(fp, "$cell vectors\n");
+    fprintf(fp, "$cell vectors\n");
 
-/* NB: DMOL matrices are transposed wrt gdis */
-  for (i=0 ; i<3 ; i++)
+    /* NB: DMOL matrices are transposed wrt gdis */
+    for (i = 0; i < 3; i++)
     {
-    fprintf(fp, "          %20.14f%20.14f%20.14f\n",
-                          model->latmat[i]/AU2ANG,
-                          model->latmat[i+3]/AU2ANG,
-                          model->latmat[i+6]/AU2ANG);
+      fprintf(fp, "          %20.14f%20.14f%20.14f\n", model->latmat[i] / AU2ANG, model->latmat[i + 3] / AU2ANG,
+              model->latmat[i + 6] / AU2ANG);
     }
   }
 
-fprintf(fp, "$coordinates\n");
-for (list=model->cores ; list ; list=g_slist_next(list))
+  fprintf(fp, "$coordinates\n");
+  for (list = model->cores; list; list = g_slist_next(list))
   {
-  core = list->data;
-  if (core->status & DELETED)
-    continue;
+    core = list->data;
+    if (core->status & DELETED)
+      continue;
 
-/* everything is cartesian after latmat mult */
-  ARR3SET(x, core->x);
-  vecmat(model->latmat, x);
-  fprintf(fp,"%-10s%20.14f%20.14f%20.14f%5d\n",
-              elements[core->atom_code].symbol,
-              x[0]/AU2ANG, x[1]/AU2ANG, x[2]/AU2ANG, core->atom_code);
+    /* everything is cartesian after latmat mult */
+    ARR3SET(x, core->x);
+    vecmat(model->latmat, x);
+    fprintf(fp, "%-10s%20.14f%20.14f%20.14f%5d\n", elements[core->atom_code].symbol, x[0] / AU2ANG, x[1] / AU2ANG,
+            x[2] / AU2ANG, core->atom_code);
   }
-fprintf(fp, "$end\n");
+  fprintf(fp, "$end\n");
 
-fclose(fp);
-return(0);
+  fclose(fp);
+  return (0);
 }
 
 /****************/
@@ -94,70 +91,70 @@ return(0);
 /****************/
 gint read_dmol_frame(FILE *fp, struct model_pak *model)
 {
-gint i, num_tokens;
-gchar *line, **buff;
-struct core_pak *core;
+  gint i, num_tokens;
+  gchar *line, **buff;
+  struct core_pak *core;
 
-g_assert(fp != NULL);
+  g_assert(fp != NULL);
 
-line = file_read_line(fp);
+  line = file_read_line(fp);
 
-while (line)
+  while (line)
   {
-/* read cell vectors */
-  if (g_ascii_strncasecmp(line, "$cell", 5) == 0 && model)
+    /* read cell vectors */
+    if (g_ascii_strncasecmp(line, "$cell", 5) == 0 && model)
     {
-    for (i=0 ; i<3 ; i++)
+      for (i = 0; i < 3; i++)
       {
+        g_free(line);
+        line = file_read_line(fp);
+        buff = tokenize(line, &num_tokens);
+        if (num_tokens > 2)
+        {
+          model->latmat[i] = AU2ANG * str_to_float(*(buff));
+          model->latmat[i + 3] = AU2ANG * str_to_float(*(buff + 1));
+          model->latmat[i + 6] = AU2ANG * str_to_float(*(buff + 2));
+        }
+        g_strfreev(buff);
+      }
+      model->periodic = 3;
+      model->construct_pbc = TRUE;
+    }
+
+    /* read coordinates */
+    if (g_ascii_strncasecmp(line, "$coord", 5) == 0 && model)
+    {
       g_free(line);
       line = file_read_line(fp);
       buff = tokenize(line, &num_tokens);
-      if (num_tokens > 2)
+      while (num_tokens > 3)
+      {
+        if (elem_symbol_test(*buff))
         {
-        model->latmat[i] = AU2ANG*str_to_float(*(buff));
-        model->latmat[i+3] = AU2ANG*str_to_float(*(buff+1));
-        model->latmat[i+6] = AU2ANG*str_to_float(*(buff+2));
+          core = new_core(*buff, model);
+          model->cores = g_slist_prepend(model->cores, core);
+          core->x[0] = AU2ANG * str_to_float(*(buff + 1));
+          core->x[1] = AU2ANG * str_to_float(*(buff + 2));
+          core->x[2] = AU2ANG * str_to_float(*(buff + 3));
         }
-      g_strfreev(buff);
+        g_free(line);
+        line = file_read_line(fp);
+        g_strfreev(buff);
+        buff = tokenize(line, &num_tokens);
       }
-    model->periodic = 3;
-    model->construct_pbc = TRUE;
+      g_strfreev(buff);
+      model->fractional = FALSE;
     }
 
-/* read coordinates */
-  if (g_ascii_strncasecmp(line, "$coord", 5) == 0 && model)
-    {
+    /* terminate frame read */
+    if (g_ascii_strncasecmp(line, "$end", 4) == 0)
+      return (0);
+
     g_free(line);
     line = file_read_line(fp);
-    buff = tokenize(line, &num_tokens);
-    while (num_tokens > 3)
-      {
-      if (elem_symbol_test(*buff))
-        {
-        core = new_core(*buff, model);
-        model->cores = g_slist_prepend(model->cores, core);
-        core->x[0] = AU2ANG*str_to_float(*(buff+1));
-        core->x[1] = AU2ANG*str_to_float(*(buff+2));
-        core->x[2] = AU2ANG*str_to_float(*(buff+3));
-        }
-      g_free(line);
-      line = file_read_line(fp);
-      g_strfreev(buff);
-      buff = tokenize(line, &num_tokens);
-      }
-    g_strfreev(buff);
-    model->fractional = FALSE;
-    }
-
-/* terminate frame read */
-  if (g_ascii_strncasecmp(line, "$end", 4) == 0)
-    return(0);
-
-  g_free(line);
-  line = file_read_line(fp);
   }
 
-return(1);
+  return (1);
 }
 
 /****************/
@@ -167,48 +164,48 @@ return(1);
 gint read_dmol(gchar *filename, struct model_pak *model)
 {
 #ifdef UNUSED_BUT_SET
-gint flag;
+  gint flag;
 #endif
-FILE *fp;
+  FILE *fp;
 
-/* checks */
-g_return_val_if_fail(model != NULL, 1);
-g_return_val_if_fail(filename != NULL, 2);
+  /* checks */
+  g_return_val_if_fail(model != NULL, 1);
+  g_return_val_if_fail(filename != NULL, 2);
 
-fp = fopen(filename,"rt");
-if (!fp)
-  return(3);
+  fp = fopen(filename, "rt");
+  if (!fp)
+    return (3);
 
 /* loop while there's data */
 #ifdef UNUSED_BUT_SET
-flag=0;
+  flag = 0;
 #endif
-model->num_frames = 0;
+  model->num_frames = 0;
 
-read_dmol_frame(fp, model);
+  read_dmol_frame(fp, model);
 
-for (;;)
+  for (;;)
   {
-  add_frame_offset(fp, model);
+    add_frame_offset(fp, model);
 
-  if (read_dmol_frame(fp, NULL))
-    break;
+    if (read_dmol_frame(fp, NULL))
+      break;
 
-  model->num_frames++;
+    model->num_frames++;
   }
 
-/* get rid of frame list if only one frame */
-if (model->num_frames == 1)
+  /* get rid of frame list if only one frame */
+  if (model->num_frames == 1)
   {
-  free_list(model->frame_list);
-  model->frame_list = NULL;
+    free_list(model->frame_list);
+    model->frame_list = NULL;
   }
 
-/* model setup */
-strcpy(model->filename, filename);
-g_free(model->basename);
-model->basename = parse_strip(filename);
-model_prep(model);
+  /* model setup */
+  strcpy(model->filename, filename);
+  g_free(model->basename);
+  model->basename = parse_strip(filename);
+  model_prep(model);
 
-return(0);
+  return (0);
 }

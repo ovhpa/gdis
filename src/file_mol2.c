@@ -45,67 +45,64 @@ gint read_mol2(gchar *filename, struct model_pak *data)
   gchar **buff, line[LINELEN];
   struct core_pak *core;
   FILE *fp;
-  
+
   /* checks */
   g_return_val_if_fail(data != NULL, 1);
   g_return_val_if_fail(filename != NULL, 1);
-  
+
   fp = fopen(filename, "rt");
   if (!fp)
-    return(1);
-  
-  
+    return (1);
+
   while (!fgetline(fp, line))
-    {
+  {
     if (g_strrstr(line, "@<TRIPOS>ATOM") != NULL)
-      {
+    {
       while (!fgetline(fp, line))
-        {
+      {
         if (line[0] == '@')
-          {
+        {
           break;
-          }
+        }
         buff = tokenize(line, &num_tokens);
         if (num_tokens < 6)
-          {
+        {
           gui_text_show(ERROR, "Invalid ATOM line in mol2 file\n");
-          return(2);
-          }
-        else
-          {
-          core = new_core(*(buff+1), data);
+          return (2);
+        } else
+        {
+          core = new_core(*(buff + 1), data);
           data->cores = g_slist_prepend(data->cores, core);
-          
-          core->x[0] = str_to_float(*(buff+2));
-          core->x[1] = str_to_float(*(buff+3));
-          core->x[2] = str_to_float(*(buff+4));
-          
+
+          core->x[0] = str_to_float(*(buff + 2));
+          core->x[1] = str_to_float(*(buff + 3));
+          core->x[2] = str_to_float(*(buff + 4));
+
           if (num_tokens >= 6)
-            {
-            core->atom_type = g_strdup(*(buff+5));
-            }
-          if (num_tokens >= 9)
-            {
-            core->charge = str_to_float(*(buff+8));
-            core->lookup_charge = FALSE;
-            }
-#if DEBUG_READ_MOL2
-            printf("Atom %d %f %f %f Charge %f\n",n, core->x[0],
-                 core->x[1], core->x[2], core->charge);
-#endif
+          {
+            core->atom_type = g_strdup(*(buff + 5));
           }
-        g_strfreev(buff);
+          if (num_tokens >= 9)
+          {
+            core->charge = str_to_float(*(buff + 8));
+            core->lookup_charge = FALSE;
+          }
+#if DEBUG_READ_MOL2
+          printf("Atom %d %f %f %f Charge %f\n", n, core->x[0], core->x[1], core->x[2], core->charge);
+#endif
         }
+        g_strfreev(buff);
       }
     }
+  }
 
-/* model setup */
+  /* model setup */
   strcpy(data->filename, filename);
   g_free(data->basename);
   data->basename = parse_strip(filename);
-  
+
   model_prep(data);
   fclose(fp);
-  
-  return(0);
+
+  return (0);
 }

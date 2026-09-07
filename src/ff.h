@@ -21,19 +21,10 @@ The GNU GPL can also be found at http://www.gnu.org
 */
 
 /* types */
-enum
-{
-FF_HARMONIC, FF_MORSE, FF_BUCKINGHAM, FF_LENNARD,
-FF_3B_HARMONIC, FF_DIHEDRAL, FF_IMPROPER, FF_DIHEDRAL_RB
-};
+enum { FF_HARMONIC, FF_MORSE, FF_BUCKINGHAM, FF_LENNARD, FF_3B_HARMONIC, FF_DIHEDRAL, FF_IMPROPER, FF_DIHEDRAL_RB };
 
 /* units */
-enum
-{
-FF_UNKNOWN,
-FF_ANG, FF_AU, FF_DEG, FF_RAD,
-FF_EV, FF_KJ, FF_KCAL
-};
+enum { FF_UNKNOWN, FF_ANG, FF_AU, FF_DEG, FF_RAD, FF_EV, FF_KJ, FF_KCAL };
 
 /* prototypes */
 
@@ -53,4 +44,3 @@ void ff_dump_type(gint, GSList *);
 GSList *ff_gulp_parse(const gchar *);
 gpointer ff_gulp_new(const gchar *);
 gchar *ff_gulp_string(gpointer);
-

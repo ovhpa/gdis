@@ -22,22 +22,20 @@ The GNU GPL can also be found at http://www.gnu.org
 
 /* NB: property table is still assoc with model */
 /* configs should link to relevant dialog & settings */
-struct config_pak
-{
-gint id;
-gchar *label;            /* tree label */
-gpointer data;           /* computational code structure */
+struct config_pak {
+  gint id;
+  gchar *label;  /* tree label */
+  gpointer data; /* computational code structure */
 };
 
-struct project_pak
-{
-gchar *label;          /* id / tree label */
-gchar *path;           /* job directory */
+struct project_pak {
+  gchar *label; /* id / tree label */
+  gchar *path;  /* job directory */
 
-GSList *models;        /* associated structures */
-GSList *configs;       /* associated code configs */
+  GSList *models;  /* associated structures */
+  GSList *configs; /* associated code configs */
 
-GHashTable *data;      /* project specific data items */
+  GHashTable *data; /* project specific data items */
 };
 
 /* prototypes */
@@ -50,4 +48,3 @@ void project_model_add(struct model_pak *, gpointer);
 void project_data_set(gchar *, gpointer, gpointer);
 
 gchar *project_path(gpointer);
-

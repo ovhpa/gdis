@@ -40,21 +40,21 @@ extern struct elem_pak elements[];
 /*****************************************************************/
 void meta_parse_units(gchar **value, gchar **units, gchar *source)
 {
-gchar **buff;
+  gchar **buff;
 
-buff = g_strsplit(source, " ", 2);
+  buff = g_strsplit(source, " ", 2);
 
-if (*buff+0)
-  *value = g_strdup(*(buff+0));
-else
-  *value = NULL;
+  if (*buff + 0)
+    *value = g_strdup(*(buff + 0));
+  else
+    *value = NULL;
 
-if (*buff+1)
-  *units = g_strdup(*(buff+1));
-else
-  *units = NULL;
+  if (*buff + 1)
+    *units = g_strdup(*(buff + 1));
+  else
+    *units = NULL;
 
-g_strfreev(buff);
+  g_strfreev(buff);
 }
 
 /****************/
@@ -62,49 +62,47 @@ g_strfreev(buff);
 /****************/
 gint write_meta(gchar *filename, struct model_pak *model)
 {
-gchar *energy_package=NULL, *energy_value=NULL, *energy_gradient=NULL;
-gchar *energy_method=NULL, *energy_basis=NULL, *energy_functional=NULL;
-gchar *value=NULL, *units=NULL;
-GSList *list;
-FILE *fp;
+  gchar *energy_package = NULL, *energy_value = NULL, *energy_gradient = NULL;
+  gchar *energy_method = NULL, *energy_basis = NULL, *energy_functional = NULL;
+  gchar *value = NULL, *units = NULL;
+  GSList *list;
+  FILE *fp;
 
-/* checks */
-g_return_val_if_fail(model != NULL, 1);
-g_return_val_if_fail(filename != NULL, 2);
+  /* checks */
+  g_return_val_if_fail(model != NULL, 1);
+  g_return_val_if_fail(filename != NULL, 2);
 
-/* open the file */
-fp = fopen(filename,"wt");
-if (!fp)
-  return(3);
+  /* open the file */
+  fp = fopen(filename, "wt");
+  if (!fp)
+    return (3);
 
-/* fill in the blanks ... */
-/* <key> separator <item1> separator <item 2> ... etc */
-/* separator atm will be '|' */
+  /* fill in the blanks ... */
+  /* <key> separator <item1> separator <item 2> ... etc */
+  /* separator atm will be '|' */
 
-/* structural information */
-fprintf(fp, "formula|");
-for (list=model->unique_atom_list ; list ; list=g_slist_next(list))
+  /* structural information */
+  fprintf(fp, "formula|");
+  for (list = model->unique_atom_list; list; list = g_slist_next(list))
   {
-  int code = GPOINTER_TO_INT(list->data);
-  select_clear(model);
-  select_all_elem(code, model);
-  fprintf(fp, "%s %d ", elements[code].symbol, g_slist_length(model->selection));
+    int code = GPOINTER_TO_INT(list->data);
+    select_clear(model);
+    select_all_elem(code, model);
+    fprintf(fp, "%s %d ", elements[code].symbol, g_slist_length(model->selection));
   }
-fprintf(fp, "\n");
-fprintf(fp, "molecules|%d\n", g_slist_length(model->moles));
-fprintf(fp, "dimensionality|%d\n", model->periodic);
-switch(model->periodic)
+  fprintf(fp, "\n");
+  fprintf(fp, "molecules|%d\n", g_slist_length(model->moles));
+  fprintf(fp, "dimensionality|%d\n", model->periodic);
+  switch (model->periodic)
   {
   case 3:
-    fprintf(fp, "cell|%f %f %f %f %f %f\n",
-                 model->pbc[0], model->pbc[1], model->pbc[2],
-                 R2D*model->pbc[3], R2D*model->pbc[4], R2D*model->pbc[5]);
+    fprintf(fp, "cell|%f %f %f %f %f %f\n", model->pbc[0], model->pbc[1], model->pbc[2], R2D * model->pbc[3],
+            R2D * model->pbc[4], R2D * model->pbc[5]);
     fprintf(fp, "spacegroup|%s\n", model->sginfo.spacename);
     break;
 
   case 2:
-    fprintf(fp, "cell|%f %f %f \n",
-                 model->pbc[0], model->pbc[1], R2D*model->pbc[5]);
+    fprintf(fp, "cell|%f %f %f \n", model->pbc[0], model->pbc[1], R2D * model->pbc[5]);
     break;
 
   case 1:
@@ -112,13 +110,13 @@ switch(model->periodic)
     break;
   }
 
-/* energetics information */
-/* only for recognized output types ... input files only have structual meta data stored */
-/* check eligible types for energy etc output */
-/* TODO - include a version number (if available) in package??? */
-energy_value = property_lookup("Energy", model);
+  /* energetics information */
+  /* only for recognized output types ... input files only have structual meta data stored */
+  /* check eligible types for energy etc output */
+  /* TODO - include a version number (if available) in package??? */
+  energy_value = property_lookup("Energy", model);
 
-switch(model->id)
+  switch (model->id)
   {
   case ABINIT_OUT:
     energy_package = g_strdup("ABINIT");
@@ -162,62 +160,61 @@ switch(model->id)
     break;
   }
 
-if (energy_package)
+  if (energy_package)
   {
-  fprintf(fp, "package|%s\n", energy_package);
-  g_free(energy_package);
+    fprintf(fp, "package|%s\n", energy_package);
+    g_free(energy_package);
   }
-if (energy_method)
+  if (energy_method)
   {
-  fprintf(fp, "method|%s\n", energy_method);
-  g_free(energy_method);
+    fprintf(fp, "method|%s\n", energy_method);
+    g_free(energy_method);
   }
-if (energy_basis)
+  if (energy_basis)
   {
-  fprintf(fp, "basis|%s\n", energy_basis);
-  g_free(energy_basis);
+    fprintf(fp, "basis|%s\n", energy_basis);
+    g_free(energy_basis);
   }
-if (energy_functional)
+  if (energy_functional)
   {
-  fprintf(fp, "functional|%s\n", energy_functional);
-  g_free(energy_functional);
+    fprintf(fp, "functional|%s\n", energy_functional);
+    g_free(energy_functional);
   }
 
-if (energy_value)
+  if (energy_value)
   {
-  meta_parse_units(&value, &units, energy_value);
-  if (value)
+    meta_parse_units(&value, &units, energy_value);
+    if (value)
     {
-    fprintf(fp, "energy|%s", value);
-    g_free(value);
-    if (units)
+      fprintf(fp, "energy|%s", value);
+      g_free(value);
+      if (units)
       {
-      fprintf(fp, "|%s", units);
-      g_free(units);
+        fprintf(fp, "|%s", units);
+        g_free(units);
       }
     }
-  fprintf(fp, "\n");
-  g_free(energy_value);
+    fprintf(fp, "\n");
+    g_free(energy_value);
   }
 
-if (energy_gradient)
+  if (energy_gradient)
   {
-  meta_parse_units(&value, &units, energy_gradient);
-  if (value)
+    meta_parse_units(&value, &units, energy_gradient);
+    if (value)
     {
-    fprintf(fp, "gradient|%s", value);
-    g_free(value);
-    if (units)
+      fprintf(fp, "gradient|%s", value);
+      g_free(value);
+      if (units)
       {
-      fprintf(fp, "|%s", units);
-      g_free(units);
+        fprintf(fp, "|%s", units);
+        g_free(units);
       }
     }
-  fprintf(fp, "\n");
-  g_free(energy_gradient);
+    fprintf(fp, "\n");
+    g_free(energy_gradient);
   }
 
-fclose(fp);
-return(0);
+  fclose(fp);
+  return (0);
 }
-

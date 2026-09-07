@@ -20,16 +20,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 The GNU GPL can also be found at http://www.gnu.org
 */
 
-struct count_pak
-{
-/* physical extents */
-gdouble start;
-gdouble stop;
-gdouble step;
+struct count_pak {
+  /* physical extents */
+  gdouble start;
+  gdouble stop;
+  gdouble step;
 
-/* discrete count data */
-gint size;
-gint *bins;
+  /* discrete count data */
+  gint size;
+  gint *bins;
 };
 
 gpointer count_new(gdouble, gdouble, gdouble);
@@ -42,4 +41,3 @@ gdouble count_stop(gpointer);
 
 gint count_insert(gdouble, gpointer);
 void count_add(gpointer, gpointer);
-

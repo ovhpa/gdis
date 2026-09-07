@@ -55,37 +55,37 @@ gint current_colour[3];
 /**********************/
 gint core_undelete(struct model_pak *model, GSList *list)
 {
-struct core_pak *core;
-struct shel_pak *shell;
+  struct core_pak *core;
+  struct shel_pak *shell;
 
-g_assert(model != NULL);
-g_assert(list != NULL);
+  g_assert(model != NULL);
+  g_assert(list != NULL);
 
-core = list->data;
+  core = list->data;
 
-core->status &= ~DELETED;
+  core->status &= ~DELETED;
 
-model->cores = g_slist_prepend(model->cores, core);
-if (core->shell)
+  model->cores = g_slist_prepend(model->cores, core);
+  if (core->shell)
   {
-  shell = core->shell;
+    shell = core->shell;
 
-  shell->status &= ~DELETED;
-  model->shels = g_slist_prepend(model->shels, core->shell);
+    shell->status &= ~DELETED;
+    model->shels = g_slist_prepend(model->shels, core->shell);
   }
 
-/* FIXME - this doesnt work */
-/*
-connect_atom_compute(core, model);
-*/
+  /* FIXME - this doesnt work */
+  /*
+  connect_atom_compute(core, model);
+  */
 
-/* TODO - more fine grained molecule recalc (ie recalc of affected molecules only) */
-connect_bonds(model);
-connect_molecules(model);
-model_content_refresh(model);
-gui_refresh(GUI_MODEL_PROPERTIES);
+  /* TODO - more fine grained molecule recalc (ie recalc of affected molecules only) */
+  connect_bonds(model);
+  connect_molecules(model);
+  model_content_refresh(model);
+  gui_refresh(GUI_MODEL_PROPERTIES);
 
-return(TRUE);
+  return (TRUE);
 }
 
 /**********************************/
@@ -93,46 +93,43 @@ return(TRUE);
 /**********************************/
 void delete_core(struct core_pak *core)
 {
-core->status |= DELETED;
-if (core->shell)
-  (core->shell)->status |= DELETED;
+  core->status |= DELETED;
+  if (core->shell)
+    (core->shell)->status |= DELETED;
 }
 
 /**********************************/
 /* flag shell only                */
 /**********************************/
-void delete_shell(struct shel_pak *shell)
-{
-  shell->status |= DELETED;
-}
+void delete_shell(struct shel_pak *shell) { shell->status |= DELETED; }
 
 /*********************************/
 /* delete primitive for one core */
 /*********************************/
 void core_delete_single(struct core_pak *core, struct model_pak *model)
 {
-GSList *list;
+  GSList *list;
 
-/* flag the core as deleted */
-delete_core(core);
+  /* flag the core as deleted */
+  delete_core(core);
 
-/* remove core references */
-connect_atom_clear(core, model);
+  /* remove core references */
+  connect_atom_clear(core, model);
 
-/* register the undo */
-/* TODO - when a model is deleted - flush related undo's to avoid mem leaks */
-list = NULL;
-list = g_slist_prepend(list, core);
-undo_register(model, core_undelete, list);
+  /* register the undo */
+  /* TODO - when a model is deleted - flush related undo's to avoid mem leaks */
+  list = NULL;
+  list = g_slist_prepend(list, core);
+  undo_register(model, core_undelete, list);
 
-/* remove from lists */
-model->cores = g_slist_remove(model->cores, core);
-if (core->shell)
-  model->shels = g_slist_remove(model->shels, core->shell);
+  /* remove from lists */
+  model->cores = g_slist_remove(model->cores, core);
+  if (core->shell)
+    model->shels = g_slist_remove(model->shels, core->shell);
 
-/* TODO - more fine grained molecule recalc (ie recalc of affected molecules only) */
-connect_molecules(model);
-gui_refresh(GUI_MODEL_PROPERTIES);
+  /* TODO - more fine grained molecule recalc (ie recalc of affected molecules only) */
+  connect_molecules(model);
+  gui_refresh(GUI_MODEL_PROPERTIES);
 }
 
 /*********************************/
@@ -141,23 +138,23 @@ gui_refresh(GUI_MODEL_PROPERTIES);
 /* NB: leave symmetry / pbc structure intact */
 void core_delete_all(struct model_pak *model)
 {
-g_assert(model != NULL);
+  g_assert(model != NULL);
 
-/* free core reference lists */
-free_mol_list(model);
-wipe_bonds(model);
-g_slist_free(model->unique_atom_list);
-model->unique_atom_list = NULL;
+  /* free core reference lists */
+  free_mol_list(model);
+  wipe_bonds(model);
+  g_slist_free(model->unique_atom_list);
+  model->unique_atom_list = NULL;
 
-/* free cores */
-free_slist(model->cores);
-model->cores = NULL;
+  /* free cores */
+  free_slist(model->cores);
+  model->cores = NULL;
 
-/* redo dependancies */
-zone_init(model);
-calc_emp(model);
-gui_refresh(GUI_MODEL_PROPERTIES);
-model->state = 0;
+  /* redo dependancies */
+  zone_init(model);
+  calc_emp(model);
+  gui_refresh(GUI_MODEL_PROPERTIES);
+  model->state = 0;
 }
 
 /*******************************************************/
@@ -166,119 +163,119 @@ model->state = 0;
 #define DEBUG_DELETE_COMMIT 0
 void delete_commit(struct model_pak *data)
 {
-gint flag1=FALSE;
+  gint flag1 = FALSE;
 #ifdef UNUSED_BUT_SET
-gint flag2=FALSE;
+  gint flag2 = FALSE;
 #endif
-gpointer m;
-GSList *list1, *list2;
-struct core_pak *core;
-struct shel_pak *shell;
-struct bond_pak *bond;
+  gpointer m;
+  GSList *list1, *list2;
+  struct core_pak *core;
+  struct shel_pak *shell;
+  struct bond_pak *bond;
 
-g_assert(data != NULL);
+  g_assert(data != NULL);
 
-/* delete flaged cores in list */
-list1 = data->cores;
-while (list1)
+  /* delete flaged cores in list */
+  list1 = data->cores;
+  while (list1)
   {
-  core = list1->data;
-  list1 = g_slist_next(list1);
+    core = list1->data;
+    list1 = g_slist_next(list1);
 
-  if (core->status & DELETED)
+    if (core->status & DELETED)
     {
 #if DEBUG_DELETE_COMMIT
-printf("Deleting %s core [%p] ...\n", core->label, core);
+      printf("Deleting %s core [%p] ...\n", core->label, core);
 #endif
-    flag1 = TRUE;
+      flag1 = TRUE;
 
-/* flag assoc. shell */
-    if (core->shell)
+      /* flag assoc. shell */
+      if (core->shell)
       {
-      shell = core->shell;
-      shell->status |= DELETED;
+        shell = core->shell;
+        shell->status |= DELETED;
       }
 
-/* update connectivity */
-    connect_atom_clear(core, data);
-    list2 = data->ubonds;
-    while (list2)
+      /* update connectivity */
+      connect_atom_clear(core, data);
+      list2 = data->ubonds;
+      while (list2)
       {
-      bond = list2->data;
-      list2 = g_slist_next(list2);
+        bond = list2->data;
+        list2 = g_slist_next(list2);
 
-      if (bond->atom1 == core || bond->atom2 == core)
+        if (bond->atom1 == core || bond->atom2 == core)
         {
-        data->ubonds = g_slist_remove(data->ubonds, bond);
-        g_free(bond);
+          data->ubonds = g_slist_remove(data->ubonds, bond);
+          g_free(bond);
         }
       }
 
-/* update selection */
-    data->selection = g_slist_remove(data->selection, core);
+      /* update selection */
+      data->selection = g_slist_remove(data->selection, core);
 
-/* delete any labels that reference the deleted core */
-    list2 = data->measure_list;
-    while (list2)
+      /* delete any labels that reference the deleted core */
+      list2 = data->measure_list;
+      while (list2)
       {
-      m = list2->data;
-      list2 = g_slist_next(list2);
-      if (measure_has_core(core, m))
-        measure_free(m, data);
+        m = list2->data;
+        list2 = g_slist_next(list2);
+        if (measure_has_core(core, m))
+          measure_free(m, data);
       }
-/* update main list */
-    data->cores = g_slist_remove(data->cores, core);
-    g_free(core);
+      /* update main list */
+      data->cores = g_slist_remove(data->cores, core);
+      g_free(core);
     }
   }
 
-/* delete flaged shells in list */
-list1 = data->shels;
-while (list1)
+  /* delete flaged shells in list */
+  list1 = data->shels;
+  while (list1)
   {
-  shell = list1->data;
-  list1 = g_slist_next(list1);
+    shell = list1->data;
+    list1 = g_slist_next(list1);
 
-  if (shell->status & DELETED)
+    if (shell->status & DELETED)
     {
 #ifdef UNUSED_BUT_SET
-    flag2 = TRUE;
+      flag2 = TRUE;
 #endif
-/* update main list */
-    data->shels = g_slist_remove(data->shels, shell);
-    g_free(shell);
+      /* update main list */
+      data->shels = g_slist_remove(data->shels, shell);
+      g_free(shell);
     }
   }
 
-/* refresh totals */
-data->num_atoms = g_slist_length(data->cores);
-data->num_shells = g_slist_length(data->shels);
+  /* refresh totals */
+  data->num_atoms = g_slist_length(data->cores);
+  data->num_shells = g_slist_length(data->shels);
 
-/* refresh spatial partitioning */
-/* it's probably best to refresh the partitioning here, rather than */
-/* incrementally as it's speedups for large models we're targeting */
-zone_init(data);
+  /* refresh spatial partitioning */
+  /* it's probably best to refresh the partitioning here, rather than */
+  /* incrementally as it's speedups for large models we're targeting */
+  zone_init(data);
 
-/* cope with deleted bonds - expensive, so only do if required */
-if (flag1)
+  /* cope with deleted bonds - expensive, so only do if required */
+  if (flag1)
   {
-  connect_bonds(data);
-  connect_molecules(data);
+    connect_bonds(data);
+    connect_molecules(data);
   }
 
-/* refresh net charge calc */
-calc_emp(data);
+  /* refresh net charge calc */
+  calc_emp(data);
 
-/* refresh unique atom list */
-g_slist_free(data->unique_atom_list);
-data->unique_atom_list = find_unique(ELEMENT, data);
+  /* refresh unique atom list */
+  g_slist_free(data->unique_atom_list);
+  data->unique_atom_list = find_unique(ELEMENT, data);
 
-/* refresh widgets */
-meas_graft_model(data);
-gui_refresh(GUI_MODEL_PROPERTIES);
+  /* refresh widgets */
+  meas_graft_model(data);
+  gui_refresh(GUI_MODEL_PROPERTIES);
 
-/* reset functions with static pointers to cores */
-data->state = 0;
+  /* reset functions with static pointers to cores */
+  data->state = 0;
 }
 
 /*********************/
@@ -286,59 +283,58 @@ data->state = 0;
 /*********************/
 /* return the number of items copied (ie 0-2) */
 #define DEBUG_COPY_CORE 0
-struct core_pak *copy_core(struct core_pak *core, struct model_pak *src,
-                                                  struct model_pak *dest)
+struct core_pak *copy_core(struct core_pak *core, struct model_pak *src, struct model_pak *dest)
 {
-gint items=0;
-gdouble vec[3];
-struct core_pak *copyc;
-struct shel_pak *copys;
+  gint items = 0;
+  gdouble vec[3];
+  struct core_pak *copyc;
+  struct shel_pak *copys;
 
-/* checks */
-g_assert(core != NULL);
-g_assert(src != NULL);
-g_assert(dest != NULL);
+  /* checks */
+  g_assert(core != NULL);
+  g_assert(src != NULL);
+  g_assert(dest != NULL);
 
-/* duplicate data structure */
-copyc = dup_core(core);
-items++;
-
-/* setup status */
-copyc->status = copyc->status & (~SELECT & ~SELECT);
-copyc->orig = copyc->primary = TRUE;
-copyc->primary_core = NULL;
-VEC3SET(copyc->offset, 0.0, 0.0, 0.0);
-
-/* coords, account for transformation matrices */
-ARR3SET(vec, core->rx);
-vecmat(dest->ilatmat, vec);
-ARR3ADD(vec, dest->centroid);
-ARR3SET(copyc->x, vec);
-
-dest->cores = g_slist_prepend(dest->cores, copyc);
-
-/* attached shell? */
-if (copyc->shell)
-  {
-  copys = copyc->shell;
+  /* duplicate data structure */
+  copyc = dup_core(core);
   items++;
 
-/* main info */
-  copys->status = copys->status & (~SELECT);
-  copys->primary=copys->orig=TRUE; 
-  copys->primary_shell = NULL;
-  VEC3SET(copys->offset, 0.0, 0.0, 0.0);
+  /* setup status */
+  copyc->status = copyc->status & (~SELECT & ~SELECT);
+  copyc->orig = copyc->primary = TRUE;
+  copyc->primary_core = NULL;
+  VEC3SET(copyc->offset, 0.0, 0.0, 0.0);
 
-/* coords, account for transformation matrices */
-  ARR3SET(vec, copys->rx);
+  /* coords, account for transformation matrices */
+  ARR3SET(vec, core->rx);
   vecmat(dest->ilatmat, vec);
   ARR3ADD(vec, dest->centroid);
-  ARR3SET(copys->x, vec);
+  ARR3SET(copyc->x, vec);
 
-  dest->shels = g_slist_prepend(dest->shels, copys);
+  dest->cores = g_slist_prepend(dest->cores, copyc);
+
+  /* attached shell? */
+  if (copyc->shell)
+  {
+    copys = copyc->shell;
+    items++;
+
+    /* main info */
+    copys->status = copys->status & (~SELECT);
+    copys->primary = copys->orig = TRUE;
+    copys->primary_shell = NULL;
+    VEC3SET(copys->offset, 0.0, 0.0, 0.0);
+
+    /* coords, account for transformation matrices */
+    ARR3SET(vec, copys->rx);
+    vecmat(dest->ilatmat, vec);
+    ARR3ADD(vec, dest->centroid);
+    ARR3SET(copys->x, vec);
+
+    dest->shels = g_slist_prepend(dest->shels, copys);
   }
 
-return(copyc);
+  return (copyc);
 }
 
 /********************/
@@ -346,43 +342,43 @@ return(copyc);
 /********************/
 struct core_pak *dup_core(struct core_pak *orig)
 {
-struct core_pak *core;
+  struct core_pak *core;
 
-/* checks */
-g_assert(orig != NULL);
+  /* checks */
+  g_assert(orig != NULL);
 
-core = g_malloc(sizeof(struct core_pak));
+  core = g_malloc(sizeof(struct core_pak));
 
-memcpy(core, orig, sizeof(struct core_pak));
+  memcpy(core, orig, sizeof(struct core_pak));
 
-/* clear pointers */
-core->bonds = NULL;
-core->shell = NULL;
-core->mol = NULL;
-core->primary_core = NULL;
+  /* clear pointers */
+  core->bonds = NULL;
+  core->shell = NULL;
+  core->mol = NULL;
+  core->primary_core = NULL;
 
-/* duplicate strings */
-if (orig->atom_label)
-  core->atom_label = g_strdup(orig->atom_label);
-if (orig->atom_type)
-  core->atom_type = g_strdup(orig->atom_type);
-if (orig->res_name)
-  core->res_name = g_strdup(orig->res_name);
-if (orig->flags)
-  core->flags = g_strdup(orig->flags);
+  /* duplicate strings */
+  if (orig->atom_label)
+    core->atom_label = g_strdup(orig->atom_label);
+  if (orig->atom_type)
+    core->atom_type = g_strdup(orig->atom_type);
+  if (orig->res_name)
+    core->res_name = g_strdup(orig->res_name);
+  if (orig->flags)
+    core->flags = g_strdup(orig->flags);
 
-core->vibx_list = NULL;
-core->viby_list = NULL;
-core->vibz_list = NULL;
+  core->vibx_list = NULL;
+  core->viby_list = NULL;
+  core->vibz_list = NULL;
 
-/* duplicate the shell */
-if (orig->shell)
+  /* duplicate the shell */
+  if (orig->shell)
   {
-  core->shell = dup_shel(orig->shell);
-  (core->shell)->core = core;
+    core->shell = dup_shel(orig->shell);
+    (core->shell)->core = core;
   }
 
-return(core);
+  return (core);
 }
 
 /*********************/
@@ -390,24 +386,24 @@ return(core);
 /*********************/
 struct shel_pak *dup_shel(struct shel_pak *orig)
 {
-struct shel_pak *shel;
+  struct shel_pak *shel;
 
-/* checks */
-g_assert(orig != NULL);
+  /* checks */
+  g_assert(orig != NULL);
 
-shel = g_malloc(sizeof(struct shel_pak));
+  shel = g_malloc(sizeof(struct shel_pak));
 
-memcpy(shel, orig, sizeof(struct shel_pak));
+  memcpy(shel, orig, sizeof(struct shel_pak));
 
-/* clear pointers */
-shel->core = NULL;
-shel->primary_shell = NULL;
-VEC3SET(shel->pic, 0, 0, 0);
+  /* clear pointers */
+  shel->core = NULL;
+  shel->primary_shell = NULL;
+  VEC3SET(shel->pic, 0, 0, 0);
 
-/* duplicate strings */
-shel->flags = g_strdup(orig->flags);
+  /* duplicate strings */
+  shel->flags = g_strdup(orig->flags);
 
-return(shel);
+  return (shel);
 }
 
 /****************************/
@@ -415,36 +411,36 @@ return(shel);
 /****************************/
 void core_init(gchar *elem, struct core_pak *core, struct model_pak *model)
 {
-gint code;
-struct elem_pak elem_data;
+  gint code;
+  struct elem_pak elem_data;
 
-/* attempt to match atom type with database */
-if (model->protein)
-  code = pdb_elem_type(elem);
-else
-  code = elem_test(elem);
+  /* attempt to match atom type with database */
+  if (model->protein)
+    code = pdb_elem_type(elem);
+  else
+    code = elem_test(elem);
 
-/* general initialization */
-core->atom_code = code;
-core->atom_type = NULL;
-core->atom_label = NULL;
-core->res_name = NULL;
-core->res_no = 1;
-core->chain = 'A';
-core->atom_order = 0;
+  /* general initialization */
+  core->atom_code = code;
+  core->atom_type = NULL;
+  core->atom_label = NULL;
+  core->res_name = NULL;
+  core->res_no = 1;
+  core->chain = 'A';
+  core->atom_order = 0;
 
-/* default values for NMR values */
-core->atom_nmr_shift=0.0;
-core->atom_nmr_aniso=0.0;
-core->atom_nmr_asym=0.0;
-core->atom_nmr_cq=0.0;
-core->atom_nmr_efgasym=0.0;
+  /* default values for NMR values */
+  core->atom_nmr_shift = 0.0;
+  core->atom_nmr_aniso = 0.0;
+  core->atom_nmr_asym = 0.0;
+  core->atom_nmr_cq = 0.0;
+  core->atom_nmr_efgasym = 0.0;
 
-/* element related initialization */
-get_elem_data(code, &elem_data, model);
-core->bond_cutoff = elem_data.cova;
-ARR3SET(core->colour, elem_data.colour);
-core->colour[3] = 1.0;
+  /* element related initialization */
+  get_elem_data(code, &elem_data, model);
+  core->bond_cutoff = elem_data.cova;
+  ARR3SET(core->colour, elem_data.colour);
+  core->colour[3] = 1.0;
 }
 
 /***************************/
@@ -452,69 +448,69 @@ core->colour[3] = 1.0;
 /***************************/
 gpointer core_new(gchar *elem, gchar *label, struct model_pak *model)
 {
-struct core_pak *core;
+  struct core_pak *core;
 
-g_assert(elem != NULL);
-g_assert(model != NULL);
+  g_assert(elem != NULL);
+  g_assert(model != NULL);
 
-core = g_malloc(sizeof(struct core_pak));
+  core = g_malloc(sizeof(struct core_pak));
 
-/* element related initialization */
-core_init(elem, core, model);
+  /* element related initialization */
+  core_init(elem, core, model);
 
-/* general initialization */
-gchar *tamp;
-if (label)
-  tamp=g_strdup_printf("%s",label);
-else
-  tamp=g_strdup_printf("%s",elem);
-core->atom_label=tamp;
-/* the following now trigger a heap-buffer-overflow
- *  I think this is due to g_strdup being used on a
- *  possibly non null-terminated string array.
- *                                         -- OVHPA
-if (label)
-  core->atom_label = g_strdup(label);//trigger a heap-buffer-overflow
-else
-  core->atom_label = g_strdup(elem);
-*/
-VEC4SET(core->x, 0.0, 0.0, 0.0, 1.0);
-VEC4SET(core->rx, 0.0, 0.0, 0.0, 1.0);
-VEC3SET(core->v, 0.0, 0.0, 0.0);
-VEC3SET(core->offset, 0.0, 0.0, 0.0);
-core->status = NORMAL;
-core->primary = TRUE;
-core->orig = TRUE;
-core->ghost = FALSE;
-core->breathe = FALSE;
-core->growth = FALSE;
-core->translate = FALSE;
-core->render_mode = BALL_STICK;
-core->render_wire = FALSE;
-core->region = REGION1A;
-core->radius = 0.0;
-core->has_sof = FALSE;
-core->sof = 1.0;
-core->charge = 0.0;
-core->lookup_charge = TRUE;
-core->mass = 0.0;
-core->lookup_mass = TRUE;
-core->flags = NULL;
-core->bonds = NULL;
-core->mol = NULL;
-core->shell = NULL;
-core->primary_core = NULL;
-core->vibx_list = NULL;
-core->viby_list = NULL;
-core->vibz_list = NULL;
+  /* general initialization */
+  gchar *tamp;
+  if (label)
+    tamp = g_strdup_printf("%s", label);
+  else
+    tamp = g_strdup_printf("%s", elem);
+  core->atom_label = tamp;
+  /* the following now trigger a heap-buffer-overflow
+   *  I think this is due to g_strdup being used on a
+   *  possibly non null-terminated string array.
+   *                                         -- OVHPA
+  if (label)
+    core->atom_label = g_strdup(label);//trigger a heap-buffer-overflow
+  else
+    core->atom_label = g_strdup(elem);
+  */
+  VEC4SET(core->x, 0.0, 0.0, 0.0, 1.0);
+  VEC4SET(core->rx, 0.0, 0.0, 0.0, 1.0);
+  VEC3SET(core->v, 0.0, 0.0, 0.0);
+  VEC3SET(core->offset, 0.0, 0.0, 0.0);
+  core->status = NORMAL;
+  core->primary = TRUE;
+  core->orig = TRUE;
+  core->ghost = FALSE;
+  core->breathe = FALSE;
+  core->growth = FALSE;
+  core->translate = FALSE;
+  core->render_mode = BALL_STICK;
+  core->render_wire = FALSE;
+  core->region = REGION1A;
+  core->radius = 0.0;
+  core->has_sof = FALSE;
+  core->sof = 1.0;
+  core->charge = 0.0;
+  core->lookup_charge = TRUE;
+  core->mass = 0.0;
+  core->lookup_mass = TRUE;
+  core->flags = NULL;
+  core->bonds = NULL;
+  core->mol = NULL;
+  core->shell = NULL;
+  core->primary_core = NULL;
+  core->vibx_list = NULL;
+  core->viby_list = NULL;
+  core->vibz_list = NULL;
 
-/* NEW: hydrogen bond capabilities */
-if (g_strrstr(elem, "H") != NULL)
-  core->hydrogen_bond = TRUE;
-else 
-  core->hydrogen_bond = FALSE;
+  /* NEW: hydrogen bond capabilities */
+  if (g_strrstr(elem, "H") != NULL)
+    core->hydrogen_bond = TRUE;
+  else
+    core->hydrogen_bond = FALSE;
 
-return(core);
+  return (core);
 }
 
 /*******************************/
@@ -524,11 +520,11 @@ return(core);
 #define DEBUG_NEW_CORE 0
 struct core_pak *new_core(gchar *elem, struct model_pak *model)
 {
-struct core_pak *core;
+  struct core_pak *core;
 
-core = core_new(elem, NULL, model);
+  core = core_new(elem, NULL, model);
 
-return(core);
+  return (core);
 }
 
 /****************************/
@@ -536,49 +532,49 @@ return(core);
 /****************************/
 gpointer shell_new(gchar *elem, gchar *label, struct model_pak *model)
 {
-gint code;
-struct elem_pak elem_data;
-struct shel_pak *shell;
+  gint code;
+  struct elem_pak elem_data;
+  struct shel_pak *shell;
 
-g_assert(elem != NULL);
-g_assert(model != NULL);
+  g_assert(elem != NULL);
+  g_assert(model != NULL);
 
-shell = g_malloc(sizeof(struct shel_pak));
+  shell = g_malloc(sizeof(struct shel_pak));
 
-/* attempt to match atom type with database */
-code = elem_test(elem);
-if (!code)
-  printf("Warning: element [%s] not found.\n", elem);
+  /* attempt to match atom type with database */
+  code = elem_test(elem);
+  if (!code)
+    printf("Warning: element [%s] not found.\n", elem);
 
-/* init modifiable element data */
-get_elem_data(code, &elem_data, model);
-ARR3SET(shell->colour, elem_data.colour);
+  /* init modifiable element data */
+  get_elem_data(code, &elem_data, model);
+  ARR3SET(shell->colour, elem_data.colour);
 
-shell->atom_code = code;
-if (label)
-  shell->shell_label = g_strdup(label);
-else
-  shell->shell_label = g_strdup(elem);
-VEC4SET(shell->x, 0.0, 0.0, 0.0, 1.0);
-VEC4SET(shell->rx, 0.0, 0.0, 0.0, 1.0);
-VEC3SET(shell->v, 0.0, 0.0, 0.0);
-VEC3SET(shell->offset, 0.0, 0.0, 0.0);
-shell->status = NORMAL;
-shell->primary = TRUE;
-shell->orig = TRUE;
-shell->breathe = FALSE;
-shell->translate = FALSE;
-shell->region = REGION1A;
-shell->core = NULL;
-shell->primary_shell = NULL;
-shell->radius = 0.0;
-shell->charge = 0.0;
-shell->mass = 0.0;
-shell->has_sof = FALSE;
-shell->sof = 1.0;
-shell->flags = NULL;
+  shell->atom_code = code;
+  if (label)
+    shell->shell_label = g_strdup(label);
+  else
+    shell->shell_label = g_strdup(elem);
+  VEC4SET(shell->x, 0.0, 0.0, 0.0, 1.0);
+  VEC4SET(shell->rx, 0.0, 0.0, 0.0, 1.0);
+  VEC3SET(shell->v, 0.0, 0.0, 0.0);
+  VEC3SET(shell->offset, 0.0, 0.0, 0.0);
+  shell->status = NORMAL;
+  shell->primary = TRUE;
+  shell->orig = TRUE;
+  shell->breathe = FALSE;
+  shell->translate = FALSE;
+  shell->region = REGION1A;
+  shell->core = NULL;
+  shell->primary_shell = NULL;
+  shell->radius = 0.0;
+  shell->charge = 0.0;
+  shell->mass = 0.0;
+  shell->has_sof = FALSE;
+  shell->sof = 1.0;
+  shell->flags = NULL;
 
-return(shell);
+  return (shell);
 }
 
 /**********************************/
@@ -587,11 +583,11 @@ return(shell);
 /* deprec */
 struct shel_pak *new_shell(gchar *elem, struct model_pak *model)
 {
-struct shel_pak *shell;
+  struct shel_pak *shell;
 
-shell = shell_new(elem, NULL, model);
+  shell = shell_new(elem, NULL, model);
 
-return(shell);
+  return (shell);
 }
 
 /***************************************/
@@ -599,18 +595,18 @@ return(shell);
 /***************************************/
 GSList *dup_core_list(GSList *orig)
 {
-GSList *copy, *list;
-struct core_pak *core;
+  GSList *copy, *list;
+  struct core_pak *core;
 
-copy = NULL;
-for (list=orig ; list ; list=g_slist_next(list))
+  copy = NULL;
+  for (list = orig; list; list = g_slist_next(list))
   {
-  core = dup_core(list->data);
-  copy = g_slist_prepend(copy, core);
+    core = dup_core(list->data);
+    copy = g_slist_prepend(copy, core);
   }
-copy = g_slist_reverse(copy);
+  copy = g_slist_reverse(copy);
 
-return(copy);
+  return (copy);
 }
 
 /****************************************/
@@ -618,18 +614,18 @@ return(copy);
 /****************************************/
 GSList *dup_shell_list(GSList *orig)
 {
-GSList *copy, *list;
-struct shel_pak *shell;
+  GSList *copy, *list;
+  struct shel_pak *shell;
 
-copy = NULL;
-for (list=orig ; list ; list=g_slist_next(list))
+  copy = NULL;
+  for (list = orig; list; list = g_slist_next(list))
   {
-  shell = dup_shel(list->data);
-  copy = g_slist_prepend(copy, shell);
+    shell = dup_shel(list->data);
+    copy = g_slist_prepend(copy, shell);
   }
-copy = g_slist_reverse(copy);
+  copy = g_slist_reverse(copy);
 
-return(copy);
+  return (copy);
 }
 
 /**************************/
@@ -640,134 +636,133 @@ return(copy);
 #define DEBUG_REMOVE_DUPLICATES_MORE 0
 void delete_duplicate_cores(struct model_pak *model)
 {
-gdouble vec[3];
-GSList *list1, *list2, *za_list;
-gpointer zone;
-struct core_pak *core1, *core2;
-struct shel_pak *s1, *s2;
+  gdouble vec[3];
+  GSList *list1, *list2, *za_list;
+  gpointer zone;
+  struct core_pak *core1, *core2;
+  struct shel_pak *s1, *s2;
 
-/* checks */
-g_assert(model != NULL);
-g_assert(model->zone_array != NULL);
+  /* checks */
+  g_assert(model != NULL);
+  g_assert(model->zone_array != NULL);
 
 #if DEBUG_REMOVE_DUPLICATES
-printf("Initial cores: %d\n", g_slist_length(model->cores));
-printf("Initial shels: %d\n", g_slist_length(model->shels));
+  printf("Initial cores: %d\n", g_slist_length(model->cores));
+  printf("Initial shels: %d\n", g_slist_length(model->shels));
 #endif
 
-/* enumerate all cores */
-for (list1=model->cores ; list1 ; list1=g_slist_next(list1))
+  /* enumerate all cores */
+  for (list1 = model->cores; list1; list1 = g_slist_next(list1))
   {
-  core1 = list1->data;
-  if (core1->status & DELETED)
-    continue;
+    core1 = list1->data;
+    if (core1->status & DELETED)
+      continue;
 
-/* enumerate cores in current locality */
-  zone = zone_get(core1->x, model->zone_array);
+    /* enumerate cores in current locality */
+    zone = zone_get(core1->x, model->zone_array);
 
 #if DEBUG_REMOVE_DUPLICATES_MORE
-printf(" + %s [%p] : [%p] :", core1->atom_label, core1, zone);
-P3VEC(" ", core1->x);
+    printf(" + %s [%p] : [%p] :", core1->atom_label, core1, zone);
+    P3VEC(" ", core1->x);
 #endif
-/* should use zone_area_cores() as a very small coord difference */
-/* can result in cores being put in different (neighbouring) zones */
-/*
-  for (list2=zone_cores(zone) ; list2 ; list2=g_slist_next(list2))
-*/
+    /* should use zone_area_cores() as a very small coord difference */
+    /* can result in cores being put in different (neighbouring) zones */
+    /*
+      for (list2=zone_cores(zone) ; list2 ; list2=g_slist_next(list2))
+    */
 
-  za_list = zone_area_cores(1, zone, model->zone_array);
-  for (list2=za_list ; list2 ; list2=g_slist_next(list2))
+    za_list = zone_area_cores(1, zone, model->zone_array);
+    for (list2 = za_list; list2; list2 = g_slist_next(list2))
     {
-    core2 = list2->data;
-    if (core2->status & DELETED)
-      continue;
+      core2 = list2->data;
+      if (core2->status & DELETED)
+        continue;
 
-/* avoid double counting */
-    if (core1 >= core2)
-      continue;
+      /* avoid double counting */
+      if (core1 >= core2)
+        continue;
 
-    if (core1->atom_code != core2->atom_code)
-      continue;
+      if (core1->atom_code != core2->atom_code)
+        continue;
 
 #if DEBUG_REMOVE_DUPLICATES_MORE
-printf(" - %s :", core2->atom_label);
-P3VEC(" ", core2->x);
+      printf(" - %s :", core2->atom_label);
+      P3VEC(" ", core2->x);
 #endif
 
-/* compute and test the minimum separation */
-    ARR3SET(vec, core1->x);
-    ARR3SUB(vec, core2->x);
+      /* compute and test the minimum separation */
+      ARR3SET(vec, core1->x);
+      ARR3SUB(vec, core2->x);
 
-    fractional_min(vec, model->periodic);
+      fractional_min(vec, model->periodic);
 
-    if (VEC3MAGSQ(vec) < FRACTION_TOLERANCE)
+      if (VEC3MAGSQ(vec) < FRACTION_TOLERANCE)
       {
-/* delete core2, unless primary AND core1 is non primary */
-      if (core2->primary && !core1->primary)
+        /* delete core2, unless primary AND core1 is non primary */
+        if (core2->primary && !core1->primary)
         {
-        core1->status |= DELETED;
+          core1->status |= DELETED;
 
 /* FIXME - this may be a problem since we start the core2 loop */
 /* requiring that core1 be undeleted */
 #if DEBUG_REMOVE_DUPLICATES_MORE
-printf(" * rm 1\n");
+          printf(" * rm 1\n");
 #endif
-        }
-      else
+        } else
         {
-        core2->status |= DELETED;
+          core2->status |= DELETED;
 
 #if DEBUG_REMOVE_DUPLICATES_MORE
-printf(" * rm 2\n");
+          printf(" * rm 2\n");
 #endif
         }
       }
     }
-  g_slist_free(za_list);
+    g_slist_free(za_list);
   }
 
-/* commit before searching for duplicate shells, as a commit */
-/* will delete some attached shells */
-delete_commit(model);
+  /* commit before searching for duplicate shells, as a commit */
+  /* will delete some attached shells */
+  delete_commit(model);
 
-for (list1=model->shels ; list1 ; list1=g_slist_next(list1))
+  for (list1 = model->shels; list1; list1 = g_slist_next(list1))
   {
-  s1 = list1->data;
-  if (s1->status & DELETED)
-    continue;
+    s1 = list1->data;
+    if (s1->status & DELETED)
+      continue;
 
-/* NEW - enumerate shells in the current locality */
-  zone = zone_get(s1->x, model->zone_array); 
-  for (list2=zone_shells(zone) ; list2 ; list2=g_slist_next(list2))
+    /* NEW - enumerate shells in the current locality */
+    zone = zone_get(s1->x, model->zone_array);
+    for (list2 = zone_shells(zone); list2; list2 = g_slist_next(list2))
     {
-    s2 = list2->data;
+      s2 = list2->data;
 
-    if (s2->status & DELETED)
-      continue;
-    if (s1 == s2)
-      continue;
+      if (s2->status & DELETED)
+        continue;
+      if (s1 == s2)
+        continue;
 
-    ARR3SET(vec, s1->x);
-    ARR3SUB(vec, s2->x);
+      ARR3SET(vec, s1->x);
+      ARR3SUB(vec, s2->x);
 
-/* adjust for periodicity */
-    fractional_min(vec, model->periodic);
+      /* adjust for periodicity */
+      fractional_min(vec, model->periodic);
 
-    if (VEC3MAGSQ(vec) < FRACTION_TOLERANCE)
+      if (VEC3MAGSQ(vec) < FRACTION_TOLERANCE)
       {
-/* delete shell2, unless primary AND shell1 is non primary */
-      if (s2->primary && !s1->primary)
-        s1->status |= DELETED;
-      else
-        s2->status |= DELETED;
+        /* delete shell2, unless primary AND shell1 is non primary */
+        if (s2->primary && !s1->primary)
+          s1->status |= DELETED;
+        else
+          s2->status |= DELETED;
       }
     }
   }
-delete_commit(model);
+  delete_commit(model);
 
 #if DEBUG_REMOVE_DUPLICATES
-printf("Final cores: %d\n", g_slist_length(model->cores));
-printf("Final shels: %d\n", g_slist_length(model->shels));
+  printf("Final cores: %d\n", g_slist_length(model->cores));
+  printf("Final shels: %d\n", g_slist_length(model->shels));
 #endif
 }
 
@@ -777,27 +772,27 @@ printf("Final shels: %d\n", g_slist_length(model->shels));
 #define DEBUG_FRAC_MINSQ 0
 void fractional_min(gdouble *x, gint dim)
 {
-gint i, j;
-gdouble whole;
+  gint i, j;
+  gdouble whole;
 
-g_assert(dim < 4);
+  g_assert(dim < 4);
 
 #if DEBUG_FRAC_MINSQ
-P3VEC("b4: ", x);
+  P3VEC("b4: ", x);
 #endif
 
-for (i=0 ; i<dim ; i++)
+  for (i = 0; i < dim; i++)
   {
-/* clamp value -1 < x < 1 */ 
-  x[i] = modf(x[i], &whole);
+    /* clamp value -1 < x < 1 */
+    x[i] = modf(x[i], &whole);
 
-/* clamp to range (-0.5, 0.5) */
-  j = (gint) (-2.0 * x[i]);
-  x[i] += (gdouble) j;
+    /* clamp to range (-0.5, 0.5) */
+    j = (gint) (-2.0 * x[i]);
+    x[i] += (gdouble) j;
   }
 
 #if DEBUG_FRAC_MINSQ
-P3VEC("af: ", x);
+  P3VEC("af: ", x);
 #endif
 }
 
@@ -807,38 +802,37 @@ P3VEC("af: ", x);
 #define DEBUG_CLAMP 0
 void fractional_clamp(gdouble *vec, gint *mov, gint dim)
 {
-gint i;
-gdouble ip;
+  gint i;
+  gdouble ip;
 
 #if DEBUG_CLAMP
-P3VEC("inp: ", vec);
+  P3VEC("inp: ", vec);
 #endif
 
-/* NB: init ALL 3 coords as isolated molecules call this */
-/* routine & it is expected that mov to be set to 0,0,0 */
-//mov[0] = mov[1] = mov[2] = 0;// _BUG_ fractional_clamp can be used with [2] mov dimension
-//solution -> initialize mov BEFORE entering fractional_clamp
+  /* NB: init ALL 3 coords as isolated molecules call this */
+  /* routine & it is expected that mov to be set to 0,0,0 */
+  // mov[0] = mov[1] = mov[2] = 0;// _BUG_ fractional_clamp can be used with [2] mov dimension
+  // solution -> initialize mov BEFORE entering fractional_clamp
 
-/*
-for (i=0 ; i<dim ; i++)
-*/
-for (i=dim ; i-- ; )
+  /*
+  for (i=0 ; i<dim ; i++)
+  */
+  for (i = dim; i--;)
   {
-  mov[i] = -vec[i];
-  if (vec[i] < 0.0)
-    {
-/* increment the move for -ve's with exception -1.0, -2.0, -3.0,... */
-    if (modf(vec[i], &ip) != 0.0)
-      mov[i]++;
-    }
-  else
     mov[i] = -vec[i];
+    if (vec[i] < 0.0)
+    {
+      /* increment the move for -ve's with exception -1.0, -2.0, -3.0,... */
+      if (modf(vec[i], &ip) != 0.0)
+        mov[i]++;
+    } else
+      mov[i] = -vec[i];
 
-  vec[i] += (gdouble) mov[i];
+    vec[i] += (gdouble) mov[i];
   }
 
 #if DEBUG_CLAMP
-P3VEC("out: ", vec);
+  P3VEC("out: ", vec);
 #endif
 }
 
@@ -847,35 +841,37 @@ P3VEC("out: ", vec);
 /********************************************/
 void coords_confine_cores(GSList *cores, struct model_pak *model)
 {
-gint dummy[3];
-gdouble x[3];
-GSList *list;
-struct core_pak *core;
-struct shel_pak *shell;
+  gint dummy[3];
+  gdouble x[3];
+  GSList *list;
+  struct core_pak *core;
+  struct shel_pak *shell;
 
-g_assert(model != NULL);
+  g_assert(model != NULL);
 
-if (!model->periodic)
-  return;
+  if (!model->periodic)
+    return;
 
-/* translate cores to within the cell */
-for (list=cores ; list ; list=g_slist_next(list))
+  /* translate cores to within the cell */
+  for (list = cores; list; list = g_slist_next(list))
   {
-  core = list->data;
-  dummy[0]=0;dummy[1]=0;dummy[2]=0;
-  fractional_clamp(core->x, dummy, model->periodic);
+    core = list->data;
+    dummy[0] = 0;
+    dummy[1] = 0;
+    dummy[2] = 0;
+    fractional_clamp(core->x, dummy, model->periodic);
 
-/* move shell */
-  if (core->shell)
+    /* move shell */
+    if (core->shell)
     {
-    shell = core->shell;
+      shell = core->shell;
 
-/* want core-shell distance to be smallest possible */
-    ARR3SET(x, shell->x);
-    ARR3SUB(x, core->x);
-    fractional_min(x, model->periodic);
-    ARR3SET(shell->x, core->x);
-    ARR3ADD(shell->x, x);
+      /* want core-shell distance to be smallest possible */
+      ARR3SET(x, shell->x);
+      ARR3SUB(x, core->x);
+      fractional_min(x, model->periodic);
+      ARR3SET(shell->x, core->x);
+      ARR3ADD(shell->x, x);
     }
   }
 }
@@ -885,24 +881,26 @@ for (list=cores ; list ; list=g_slist_next(list))
 /**********************************************/
 void coords_confine_centroid(struct mol_pak *mol, struct model_pak *model)
 {
-gint xlat[3];
-gdouble mov[3];
-GSList *list;
-struct core_pak *core;
+  gint xlat[3];
+  gdouble mov[3];
+  GSList *list;
+  struct core_pak *core;
 
-xlat[0]=0;xlat[1]=0;xlat[2]=0;
-/* calc moves required to bring centroid within pbc */
-fractional_clamp(mol->centroid, xlat, model->periodic);
-ARR3SET(mov, xlat);
+  xlat[0] = 0;
+  xlat[1] = 0;
+  xlat[2] = 0;
+  /* calc moves required to bring centroid within pbc */
+  fractional_clamp(mol->centroid, xlat, model->periodic);
+  ARR3SET(mov, xlat);
 
-/* apply to all atoms/shells in this molecule */
-for (list=mol->cores ; list ; list=g_slist_next(list))
+  /* apply to all atoms/shells in this molecule */
+  for (list = mol->cores; list; list = g_slist_next(list))
   {
-  core = list->data;
-  ARR3ADD(core->x, mov);
-  if (core->shell)
+    core = list->data;
+    ARR3ADD(core->x, mov);
+    if (core->shell)
     {
-    ARR3ADD((core->shell)->x, mov);
+      ARR3ADD((core->shell)->x, mov);
     }
   }
 }
@@ -913,11 +911,11 @@ for (list=mol->cores ; list ; list=g_slist_next(list))
 void update_box(gint x, gint y, struct model_pak *data, gint call_type)
 {
 
-switch (call_type)
+  switch (call_type)
   {
   case START:
-/* don't clean the selection (allows multiple box selections) */
-/* setup the box selection object */
+    /* don't clean the selection (allows multiple box selections) */
+    /* setup the box selection object */
     data->box_on = TRUE;
     data->select_box[0] = x;
     data->select_box[1] = y;
@@ -934,34 +932,32 @@ switch (call_type)
 #define DEBUG_SHELL_MATCH 0
 gint shel_match(const gchar *label, struct shel_pak *shell)
 {
-gint code;
+  gint code;
 
 #if DEBUG_SHELL_MATCH
-printf("[%s] : [%s]\n", label, shell->shell_label);
+  printf("[%s] : [%s]\n", label, shell->shell_label);
 #endif
 
-code = elem_symbol_test(label);
+  code = elem_symbol_test(label);
 
-/* if input label doesnt match the element symbol length - it means the */
-/* user has put in something like H1 - compare this with the atom label */
-if (code)
+  /* if input label doesnt match the element symbol length - it means the */
+  /* user has put in something like H1 - compare this with the atom label */
+  if (code)
   {
-  if (g_ascii_strcasecmp(label, elements[shell->atom_code].symbol) != 0)
+    if (g_ascii_strcasecmp(label, elements[shell->atom_code].symbol) != 0)
     {
-    if (g_ascii_strcasecmp(shell->shell_label, label) == 0)
-      return(1);
-    }
-  else
-    return(1);
-  }
-else
-  return(1);
+      if (g_ascii_strcasecmp(shell->shell_label, label) == 0)
+        return (1);
+    } else
+      return (1);
+  } else
+    return (1);
 
 #if DEBUG_SHELL_MATCH
-printf("rejected.\n");
+  printf("rejected.\n");
 #endif
 
-return(0);
+  return (0);
 }
 
 /**********************************************************/
@@ -970,34 +966,32 @@ return(0);
 #define DEBUG_ATOM_MATCH 0
 gint core_match(const gchar *label, struct core_pak *core)
 {
-gint code;
+  gint code;
 
 #if DEBUG_ATOM_MATCH
-printf("[%s] : [%s]\n", label, core->atom_label);
+  printf("[%s] : [%s]\n", label, core->atom_label);
 #endif
 
-code = elem_symbol_test(label);
+  code = elem_symbol_test(label);
 
-/* if input label doesn't match the element symbol length - it means the */
-/* user has put in something like H1 - compare this with the atom label */
-if (code)
+  /* if input label doesn't match the element symbol length - it means the */
+  /* user has put in something like H1 - compare this with the atom label */
+  if (code)
   {
-  if (g_ascii_strcasecmp(label, elements[core->atom_code].symbol) != 0)
+    if (g_ascii_strcasecmp(label, elements[core->atom_code].symbol) != 0)
     {
-    if (g_ascii_strcasecmp(core->atom_label, label) == 0)
-      return(1);
-    }
-  else
-    return(1);
-  }
-else
-  return(1);
+      if (g_ascii_strcasecmp(core->atom_label, label) == 0)
+        return (1);
+    } else
+      return (1);
+  } else
+    return (1);
 
 #if DEBUG_ATOM_MATCH
-printf("rejected.\n");
+  printf("rejected.\n");
 #endif
 
-return(0);
+  return (0);
 }
 
 /*************************************************************/
@@ -1005,161 +999,157 @@ return(0);
 /*************************************************************/
 /* can now go both ways via the direction flag (UP or DOWN) */
 #define DEBUG_REGION_SWITCH_ATOM 0
-gint region_move_atom(struct core_pak *core, gint direction,
-                                    struct model_pak *data)
+gint region_move_atom(struct core_pak *core, gint direction, struct model_pak *data)
 {
-gint flag, primary, secondary, mov[2];
-gdouble vec[3], tmp[3], d[3];
-GSList *list;
-struct core_pak *comp;
+  gint flag, primary, secondary, mov[2];
+  gdouble vec[3], tmp[3], d[3];
+  GSList *list;
+  struct core_pak *comp;
 
 #if DEBUG_REGION_SWITCH_ATOM
-printf("       model: %s\n", data->basename);
-printf(" periodicity: %d\n", data->periodic);
-printf("         hkl: %f %f %f\n", data->surface.miller[0],
-          data->surface.miller[1], data->surface.miller[2]);
-printf("        dhkl: %f\n", data->surface.dspacing);
-printf("region sizes: %f %f\n", data->surface.region[0], data->surface.region[1]);
-printf("      moving: ");
-if (direction == UP)
-  printf("UP\n");
-else
-  printf("DOWN\n");
-#endif
-
-/* checks */
-g_return_val_if_fail(data != NULL, 1);
-g_return_val_if_fail(data->periodic == 2, 1);
-if (data->surface.region[0] < 1)
-  {
-  gui_text_show(ERROR, "region 1 is empty.\n");
-  return(1);
-  }
-
-/* setup region switching labels */
-if (direction == UP)
-  {
-  primary = REGION1A;
-  secondary = REGION2A;
-  }
-else
-  {
-  primary = REGION2A;
-  secondary = REGION1A;
-  }
-
-/* get fractional depth translation vector */
-ARR3SET(vec, data->surface.depth_vec);
-vecmat(data->ilatmat, vec);
-
-/* calculate offset to region boundary */
-ARR3SET(tmp, vec);
-if (direction == DOWN)
-  {
-  VEC3MUL(tmp, data->surface.region[0]);
-  VEC3MUL(tmp, -1.0);
-  }
-else
-  {
-  if (data->surface.region[1] == 0)
-    {
-    VEC3MUL(tmp, data->surface.region[0]);
-    }
+  printf("       model: %s\n", data->basename);
+  printf(" periodicity: %d\n", data->periodic);
+  printf("         hkl: %f %f %f\n", data->surface.miller[0], data->surface.miller[1], data->surface.miller[2]);
+  printf("        dhkl: %f\n", data->surface.dspacing);
+  printf("region sizes: %f %f\n", data->surface.region[0], data->surface.region[1]);
+  printf("      moving: ");
+  if (direction == UP)
+    printf("UP\n");
   else
-    {
-    VEC3MUL(tmp, data->surface.region[1]);
-    }
-  }
-
-/* if region 2 is empty, just move core to the bottom */
-if (data->surface.region[1] == 0.0)
-  {
-  ARR3ADD(core->x, tmp);
-  if (core->shell)
-    {
-    ARR3ADD((core->shell)->x, tmp);
-    }
-  atom_colour_scheme(data->colour_scheme, core, data);
-  return(0);
-  }
-
-/* get coordinates of target atom */
-ARR3ADD(tmp, core->x);
-
-#if DEBUG_REGION_SWITCH_ATOM
-P3VEC("    translation: ", vec);
-P3VEC("  target coords: ", tmp);
+    printf("DOWN\n");
 #endif
 
-/* find the target */
-flag=0;
-for (list=data->cores ; list ; list=g_slist_next(list))
+  /* checks */
+  g_return_val_if_fail(data != NULL, 1);
+  g_return_val_if_fail(data->periodic == 2, 1);
+  if (data->surface.region[0] < 1)
   {
-  comp = list->data;
+    gui_text_show(ERROR, "region 1 is empty.\n");
+    return (1);
+  }
 
-/* only atoms of the same type need apply */
-  if (core->atom_code != comp->atom_code)
-    continue;
+  /* setup region switching labels */
+  if (direction == UP)
+  {
+    primary = REGION1A;
+    secondary = REGION2A;
+  } else
+  {
+    primary = REGION2A;
+    secondary = REGION1A;
+  }
 
-/* get difference vector */
-  ARR3SET(d, comp->x);
-  ARR3SUB(d, tmp);
+  /* get fractional depth translation vector */
+  ARR3SET(vec, data->surface.depth_vec);
+  vecmat(data->ilatmat, vec);
 
-/* pbc constraint */
-  while(d[0] < -FRACTION_TOLERANCE)
-    d[0] += 1.0;
-  while(d[0] > 0.5)
-    d[0] -= 1.0;
-  while(d[1] < -FRACTION_TOLERANCE)
-    d[1] += 1.0;
-  while(d[1] > 0.5)
-    d[1] -= 1.0;
+  /* calculate offset to region boundary */
+  ARR3SET(tmp, vec);
+  if (direction == DOWN)
+  {
+    VEC3MUL(tmp, data->surface.region[0]);
+    VEC3MUL(tmp, -1.0);
+  } else
+  {
+    if (data->surface.region[1] == 0)
+    {
+      VEC3MUL(tmp, data->surface.region[0]);
+    } else
+    {
+      VEC3MUL(tmp, data->surface.region[1]);
+    }
+  }
 
-/* test difference vector's magnitude */
-  if (VEC3MAGSQ(d) < FRACTION_TOLERANCE)
+  /* if region 2 is empty, just move core to the bottom */
+  if (data->surface.region[1] == 0.0)
+  {
+    ARR3ADD(core->x, tmp);
+    if (core->shell)
+    {
+      ARR3ADD((core->shell)->x, tmp);
+    }
+    atom_colour_scheme(data->colour_scheme, core, data);
+    return (0);
+  }
+
+  /* get coordinates of target atom */
+  ARR3ADD(tmp, core->x);
+
+#if DEBUG_REGION_SWITCH_ATOM
+  P3VEC("    translation: ", vec);
+  P3VEC("  target coords: ", tmp);
+#endif
+
+  /* find the target */
+  flag = 0;
+  for (list = data->cores; list; list = g_slist_next(list))
+  {
+    comp = list->data;
+
+    /* only atoms of the same type need apply */
+    if (core->atom_code != comp->atom_code)
+      continue;
+
+    /* get difference vector */
+    ARR3SET(d, comp->x);
+    ARR3SUB(d, tmp);
+
+    /* pbc constraint */
+    while (d[0] < -FRACTION_TOLERANCE)
+      d[0] += 1.0;
+    while (d[0] > 0.5)
+      d[0] -= 1.0;
+    while (d[1] < -FRACTION_TOLERANCE)
+      d[1] += 1.0;
+    while (d[1] > 0.5)
+      d[1] -= 1.0;
+
+    /* test difference vector's magnitude */
+    if (VEC3MAGSQ(d) < FRACTION_TOLERANCE)
     {
 /* change its labelling */
 #if DEBUG_REGION_SWITCH_ATOM
-printf("Matched core: %p\n", comp);
+      printf("Matched core: %p\n", comp);
 #endif
-    comp->region = secondary;
-    if (comp->shell)
+      comp->region = secondary;
+      if (comp->shell)
       {
-      (comp->shell)->region = secondary;
+        (comp->shell)->region = secondary;
       }
-    atom_colour_scheme(data->colour_scheme, comp, data);
-    flag++;
-    break;
+      atom_colour_scheme(data->colour_scheme, comp, data);
+      flag++;
+      break;
     }
   }
 
-if (!flag)
+  if (!flag)
   {
-  gui_text_show(ERROR, "Failed to find a boundary image.\n");
-  return(1);
+    gui_text_show(ERROR, "Failed to find a boundary image.\n");
+    return (1);
   }
 
-/* now move selected atom to bottom of region 2 */
-ARR3SET(tmp, vec);
-VEC3MUL(tmp, (data->surface.region[0] + data->surface.region[1]));
-if (direction == UP)
-  VEC3MUL(tmp, -1.0);
-ARR3SUB(core->x, tmp);
-core->region = primary;
-/* pbc constrain */
-mov[0]=0;mov[1]=0;/*_BUG_ mov[3] is initialized in fractional_clamp*/
-fractional_clamp(core->x, mov, 2);
+  /* now move selected atom to bottom of region 2 */
+  ARR3SET(tmp, vec);
+  VEC3MUL(tmp, (data->surface.region[0] + data->surface.region[1]));
+  if (direction == UP)
+    VEC3MUL(tmp, -1.0);
+  ARR3SUB(core->x, tmp);
+  core->region = primary;
+  /* pbc constrain */
+  mov[0] = 0;
+  mov[1] = 0; /*_BUG_ mov[3] is initialized in fractional_clamp*/
+  fractional_clamp(core->x, mov, 2);
 
-if (core->shell)
+  if (core->shell)
   {
-  ARR3SUB((core->shell)->x, tmp);
-  ARR2ADD((core->shell)->x, mov);
-  (core->shell)->region = primary;
+    ARR3SUB((core->shell)->x, tmp);
+    ARR2ADD((core->shell)->x, mov);
+    (core->shell)->region = primary;
   }
 
-atom_colour_scheme(data->colour_scheme, core, data);
+  atom_colour_scheme(data->colour_scheme, core, data);
 
-return(0);
+  return (0);
 }
 
 /*********************************************/
@@ -1167,17 +1157,16 @@ return(0);
 /*********************************************/
 gint region_max(struct model_pak *mdata)
 {
-gint max;
-GSList *list;
-struct core_pak *core;
+  gint max;
+  GSList *list;
+  struct core_pak *core;
 
-max = 0;
-for (list=mdata->cores ; list ; list=g_slist_next(list))
+  max = 0;
+  for (list = mdata->cores; list; list = g_slist_next(list))
   {
-  core = list->data;
-  if (core->region > max)
-    max = core->region;
+    core = list->data;
+    if (core->region > max)
+      max = core->region;
   }
-return(max);
+  return (max);
 }
-

@@ -30,26 +30,24 @@ The GNU GPL can also be found at http://www.gnu.org
 /* structures */
 /**************/
 
-struct canvas_pak
-{
-gint active;
-gint resize;
-gpointer model;
-gint x,y;
-gint width,height;
-gint size;
-/* openGL transformation data */
-GLint viewport[4];
-GLdouble modelview[16];
-GLdouble projection[16];
+struct canvas_pak {
+  gint active;
+  gint resize;
+  gpointer model;
+  gint x, y;
+  gint width, height;
+  gint size;
+  /* openGL transformation data */
+  GLint viewport[4];
+  GLdouble modelview[16];
+  GLdouble projection[16];
 };
 
-struct pipe_pak
-{
-gdouble v1[3];
-gdouble v2[3];
-gdouble radius;
-gdouble colour[4];
+struct pipe_pak {
+  gdouble v1[3];
+  gdouble v2[3];
+  gdouble radius;
+  gdouble colour[4];
 };
 
 /**************/
@@ -62,7 +60,7 @@ void draw_objs(struct canvas_pak *, struct model_pak *);
 void gl_draw(struct canvas_pak *, struct model_pak *);
 gint gl_init_visual(void);
 void gl_init_projection(struct canvas_pak *, struct model_pak *);
-void gl_select_box(GtkWidget *);
+void gl_select_box(void);
 void gl_project(gdouble *, gint, gint, struct canvas_pak *);
 void gl_unproject(gint *, gdouble *, struct canvas_pak *);
 gint gl_vertex_visible(gdouble *);
@@ -71,7 +69,6 @@ void gl_vertex_window(gint, gint, struct canvas_pak *);
 gpointer gl_seek_core(gint, gint, struct model_pak *);
 gpointer gl_seek_bond(gint, gint, struct model_pak *);
 
-void set_colour(GdkColor *, gint );
 gchar *get_mode_label(struct model_pak *);
 
 void gl_free_points(struct point_pak *);
@@ -89,14 +86,15 @@ void draw_arc(gdouble *, gdouble *, gdouble *);
 
 void gl_print_window(gchar *, gint, gint, struct canvas_pak *);
 void pango_print(const gchar *str, gint x, gint y, struct canvas_pak *canvas, guint font_size, gint rotate);
+/* Variant that uses gl_fontsize when font_size==0 */
+void pango_print_sz(const gchar *str, gint x, gint y, struct canvas_pak *canvas, gint font_size_override, gint rotate);
+extern gint gl_fontsize;
 void pango_print_world(gchar *str, gdouble *, struct canvas_pak *canvas);
 
 void stereo_init_window(struct canvas_pak *);
-gint stereo_expose_event(GtkWidget *, GdkEventExpose *);
+gint stereo_expose_event(gpointer, gpointer);
 void stereo_close_window(void);
 void stereo_open_window(void);
 void stereo_draw(void);
 
 void graph_draw(struct canvas_pak *, struct model_pak *);
-
-

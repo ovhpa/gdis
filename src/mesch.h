@@ -39,4 +39,3 @@ gint mesch_cols_get(gpointer);
 gint mesch_dim_get(gpointer);
 
 void mesch_sev_compute(gpointer, gpointer, gpointer);
-

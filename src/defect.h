@@ -24,24 +24,28 @@ The GNU GPL can also be found at http://www.gnu.org
 /* data */
 /********/
 
-struct defect_pak
-{
-/* debugg option */
-gint cluster;
-/* Mott-Littleton */
-gint cleave;
-gint neutral;
-gdouble region[2];
-/* geometry */
-gdouble orient[3];
-gdouble burgers[3];
-gdouble origin[2];
-gdouble center[2];
+struct defect_pak {
+  /* debugg option */
+  gint cluster;
+  /* Mott-Littleton */
+  gint cleave;
+  gint neutral;
+  gdouble region[2];
+  /* geometry */
+  gdouble orient[3];
+  gdouble burgers[3];
+  gdouble origin[2];
+  gdouble center[2];
 };
 
 /**************/
 /* prototypes */
 /**************/
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 void defect_new(struct defect_pak *, struct model_pak *);
-
+#ifdef __cplusplus
+}
+#endif

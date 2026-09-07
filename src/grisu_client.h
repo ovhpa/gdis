@@ -56,4 +56,3 @@ gchar *grisu_absolute_job_dir(const gchar *, const gchar *, const gchar *);
 gchar *grisu_relative_job_dir(const gchar *);
 gint grisu_file_upload(const gchar *, const gchar *);
 gint grisu_file_download(const gchar *, const gchar *);
-

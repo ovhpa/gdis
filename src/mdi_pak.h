@@ -24,30 +24,26 @@ The GNU GPL can also be found at http://www.gnu.org
 /* MDI structures */
 /******************/
 /* TODO - combine box_pak & cand_pak? */
-struct box_pak
-{
-gint component;
-gint x;
-gint y;
-gint z;
+struct box_pak {
+  gint component;
+  gint x;
+  gint y;
+  gint z;
 };
 
-struct mdi_pak
-{
-gint box_dim;
-gdouble latt_sep;
-gint num_comp;
-gint *comp_idx;
-gint *comp_req;
-gint *comp_done;
-gint *array;
+struct mdi_pak {
+  gint box_dim;
+  gdouble latt_sep;
+  gint num_comp;
+  gint *comp_idx;
+  gint *comp_req;
+  gint *comp_done;
+  gint *array;
 };
 
-struct cand_pak
-{
-gint pos;
-gint x;
-gint y;
-gint z;
+struct cand_pak {
+  gint pos;
+  gint x;
+  gint y;
+  gint z;
 };
-

@@ -20,19 +20,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 The GNU GPL can also be found at http://www.gnu.org
 */
 
-struct folder_pak
-{
-GSList *list;
+struct folder_pak {
+  GSList *list;
 };
 
-struct entry_pak
-{
-gpointer offset;
-gchar *name;
-GString *info;
+struct entry_pak {
+  gpointer offset;
+  gchar *name;
+  GString *info;
 };
 
 void library_init(void);
 gint library_entry_get(gpointer, struct model_pak *);
-void gui_library_window(GtkWidget *);
-

@@ -14,69 +14,79 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+along with this program; if not, write to the Free Software Foundation,
+Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 The GNU GPL can also be found at http://www.gnu.org
 */
 
 /* constants */
 
-enum {MEASURE_BOND, MEASURE_INTRA, MEASURE_INTER, MEASURE_DISTANCE,
-      MEASURE_ANGLE, MEASURE_TORSION};
+enum { MEASURE_BOND, MEASURE_INTRA, MEASURE_INTER, MEASURE_DISTANCE, MEASURE_ANGLE, MEASURE_TORSION };
+
+/* data structure */
+#define MEASURE_MAX_CORES 4
+
+struct measure_pak {
+  int type; /* distance, angle, etc. */
+  char *value;
+  void *core[MEASURE_MAX_CORES];   /* participants */
+  int image[MEASURE_MAX_CORES][3]; /* periodic image offset for each core */
+  double colour[3];
+};
 
 /* prototypes */
 
-gpointer measure_bond_test(struct core_pak **,
-                           gdouble,
-                           gdouble,
-                           struct model_pak *);
-gpointer measure_distance_test(gint,
-                               struct core_pak **,
-                               gdouble,
-                               gdouble,
-                               struct model_pak *);
-gpointer measure_angle_test(struct core_pak **,
-                            gdouble,
-                            gdouble,
-                            struct model_pak *);
-gpointer measure_torsion_test(struct core_pak **,
-                              gdouble,
-                              gdouble,
-                              struct model_pak *);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-void measure_bond_search(const gchar **, gdouble, gdouble, struct model_pak *);
-void measure_distance_search(const gchar **, gint, gdouble, gdouble, struct model_pak *);
-void measure_bangle_search(const gchar **, gdouble, gdouble, struct model_pak *);
-void measure_angle_search(const gchar **, gdouble *, struct model_pak *);
+/* Measurement creation/testing */
+void *measure_bond_test(struct core_pak **, double, double, struct model_pak *);
+void *measure_distance_test(int, struct core_pak **, double, double, struct model_pak *);
+void *measure_angle_test(struct core_pak **, double, double, struct model_pak *);
+void *measure_torsion_test(struct core_pak **, double, double, struct model_pak *);
 
-gint measure_type_get(gpointer);
-gchar *measure_value_get(gpointer);
-GSList *measure_cores_get(gpointer);
-void measure_colour_get(gdouble *, gpointer);
-void measure_coord_get(gdouble *, gint, gpointer, struct model_pak *);
-gboolean measure_has_core(struct core_pak *, gpointer);
+/* Measurement search */
+void measure_bond_search(const char **, double, double, struct model_pak *);
+void measure_distance_search(const char **, int, double, double, struct model_pak *);
+void measure_bangle_search(const char **, double, double, struct model_pak *);
+void measure_angle_search(const char **, double *, struct model_pak *);
 
-gchar *measure_type_label_create(gpointer);
-gchar *measure_constituents_create(gpointer);
+/* Measurement type/value access */
+int measure_type_get(void *);
+char *measure_value_get(void *);
+void *measure_cores_get(void *);
+void measure_colour_get(double *, void *);
+void measure_coord_get(double *, int, void *, struct model_pak *);
+int measure_has_core(struct core_pak *, void *);
 
-void measure_colour_set(gdouble, gdouble, gdouble, gpointer);
+/* Measurement label/constituent creation */
+char *measure_type_label_create(void *);
+char *measure_constituents_create(void *);
 
-void measure_free(gpointer, struct model_pak *);
+/* Measurement colour */
+void measure_colour_set(double, double, double, void *);
+
+/* Measurement free/dump */
+void measure_free(void *, struct model_pak *);
 void measure_free_all(struct model_pak *);
 void measure_dump_all(struct model_pak *);
 void measure_select_all(void);
 
-void meas_prune_model(struct model_pak *);
+/* Measurement tree grafting */
 void meas_graft_model(struct model_pak *);
 
-gdouble measure_update_single(gpointer, struct model_pak *);
+/* Measurement update */
+double measure_update_single(void *, struct model_pak *);
 void measure_update_global(struct model_pak *);
 
+/* Measurement geometry calculations */
 gdouble measure_distance(gdouble *, gdouble *);
 gdouble measure_angle(gdouble *, gdouble *, gdouble *);
 gdouble measure_dihedral(gdouble *, gdouble *, gdouble *, gdouble *);
-
-/* bonded case of dihedral */
 gdouble measure_torsion(struct core_pak **);
 
+#ifdef __cplusplus
+}
+#endif

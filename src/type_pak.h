@@ -22,24 +22,21 @@ The GNU GPL can also be found at http://www.gnu.org
 
 /* typing rule structures */
 
-struct type_pak
-{
-/* atom assignment flags */
-gint set_ff;
-gint set_charge;
+struct type_pak {
+  /* atom assignment flags */
+  gint set_ff;
+  gint set_charge;
 
-/* atom assignment values */
-gchar *ff;
-gdouble charge;
+  /* atom assignment values */
+  gchar *ff;
+  gdouble charge;
 
-/* matching rules */
-GSList *rules;
+  /* matching rules */
+  GSList *rules;
 };
 
-struct rule_pak
-{
-gint atom_number;
-gint count;
-gint level;
+struct rule_pak {
+  gint atom_number;
+  gint count;
+  gint level;
 };
-

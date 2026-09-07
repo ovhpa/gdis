@@ -35,31 +35,30 @@ The GNU GPL can also be found at http://www.gnu.org
 /* top level data structure */
 extern struct sysenv_pak sysenv;
 
-/* the essential aim of the job structure is simply to establish a link between 
+/* the essential aim of the job structure is simply to establish a link between
 input/ouput file pairs (local <-> remote) so that jobs can be tracked/updated.
 NB: Place each remotely executed job in its own directory ( job1 job2 etc ) and give
-the user an option to copy ALL files in that directory back to the local machine 
+the user an option to copy ALL files in that directory back to the local machine
 (by default copy only the output file) This way we get addition data
 such as e density and anything else copied back if desired ... possible refinements
-include a list of all files with size and type that user can check/uncheck as 
+include a list of all files with size and type that user can check/uncheck as
 transaction transfers ... binary files may be a problem */
 
-struct job_pak 
-{
-gint id;
-gint type;
-gint count;
-gint status;
+struct job_pak {
+  gint id;
+  gint type;
+  gint count;
+  gint status;
 
-gchar *local_dir;
-gchar *local_input;
-gchar *local_output;
+  gchar *local_dir;
+  gchar *local_input;
+  gchar *local_output;
 
-gchar *remote_dir;
-gchar *remote_input;
-gchar *remote_output;
+  gchar *remote_dir;
+  gchar *remote_input;
+  gchar *remote_output;
 
-gpointer host;
+  gpointer host;
 };
 
 /**********************/
@@ -67,13 +66,13 @@ gpointer host;
 /**********************/
 void job_free(struct job_pak *job)
 {
-g_free(job->local_dir);
-g_free(job->local_input);
-g_free(job->local_output);
-g_free(job->remote_dir);
-g_free(job->remote_input);
-g_free(job->remote_output);
-g_free(job);
+  g_free(job->local_dir);
+  g_free(job->local_input);
+  g_free(job->local_output);
+  g_free(job->remote_dir);
+  g_free(job->remote_input);
+  g_free(job->remote_output);
+  g_free(job);
 }
 
 /******************************/
@@ -81,36 +80,36 @@ g_free(job);
 /******************************/
 gpointer job_setup(const gchar *name, struct model_pak *model)
 {
-static gint count=0;
-struct job_pak *job;
+  static gint count = 0;
+  struct job_pak *job;
 
-job = g_malloc(sizeof(struct job_pak));
+  job = g_malloc(sizeof(struct job_pak));
 
-/* use this to give unique job names (within cwd of an ssh session) */
-/* since the cwd is date/time based we wont get overwrites */
-job->count = count++;
-job->host = NULL;
-job->local_dir = NULL;
-job->local_input = NULL;
-job->local_output = NULL;
-job->remote_dir = NULL;
-job->remote_input = NULL;
-job->remote_output = NULL;
+  /* use this to give unique job names (within cwd of an ssh session) */
+  /* since the cwd is date/time based we wont get overwrites */
+  job->count = count++;
+  job->host = NULL;
+  job->local_dir = NULL;
+  job->local_input = NULL;
+  job->local_output = NULL;
+  job->remote_dir = NULL;
+  job->remote_input = NULL;
+  job->remote_output = NULL;
 
-if (g_ascii_strncasecmp("gulp", name, 4) == 0)
-  job->type = JOB_GULP;
+  if (g_ascii_strncasecmp("gulp", name, 4) == 0)
+    job->type = JOB_GULP;
 
-switch (job->type)
+  switch (job->type)
   {
   case JOB_GULP:
     job->local_dir = g_strdup(sysenv.cwd);
     job->local_input = g_strdup(model->gulp.temp_file);
     job->local_output = g_strdup(model->gulp.out_file);
 
-/* FIXME - filename is not the full path name ... which strictly it should be */
-/* however - job->local_input is expected to contain only the filename (without */
-/* the path) by the subsequent job_start() call */
-write_gulp(job->local_input, model);
+    /* FIXME - filename is not the full path name ... which strictly it should be */
+    /* however - job->local_input is expected to contain only the filename (without */
+    /* the path) by the subsequent job_start() call */
+    write_gulp(job->local_input, model);
 
     break;
 
@@ -120,7 +119,7 @@ write_gulp(job->local_input, model);
     job = NULL;
   }
 
-return(job);
+  return (job);
 }
 
 /********************************/
@@ -129,41 +128,38 @@ return(job);
 #define DEBUG_JOB_START 1
 void job_start(gpointer host, gpointer data)
 {
-gchar *tmp;
-struct job_pak *job = data;
+  gchar *tmp;
+  struct job_pak *job = data;
 
-/* assign host to job, and initialize */
-job->host = host;
-job->remote_dir = g_strdup(host_cwd(host));
+  /* assign host to job, and initialize */
+  job->host = host;
+  job->remote_dir = g_strdup(host_cwd(host));
 
-/* build full path remote names */
-job->remote_input = g_build_filename(job->remote_dir, job->local_input, NULL);
-job->remote_output = g_build_filename(job->remote_dir, job->local_output, NULL);
+  /* build full path remote names */
+  job->remote_input = g_build_filename(job->remote_dir, job->local_input, NULL);
+  job->remote_output = g_build_filename(job->remote_dir, job->local_output, NULL);
 
-/* convert local names to full path names */
-tmp = g_build_filename(job->local_dir, job->local_input, NULL);
-g_free(job->local_input);
-job->local_input = tmp;
+  /* convert local names to full path names */
+  tmp = g_build_filename(job->local_dir, job->local_input, NULL);
+  g_free(job->local_input);
+  job->local_input = tmp;
 
-tmp = g_build_filename(job->local_dir, job->local_output, NULL);
-g_free(job->local_output);
-job->local_output = tmp;
+  tmp = g_build_filename(job->local_dir, job->local_output, NULL);
+  g_free(job->local_output);
+  job->local_output = tmp;
 
 #if DEBUG_JOB_START
-printf("local dir: %s\n", job->local_dir);
-printf("local inp: %s\n", job->local_input);
-printf("local out: %s\n", job->local_output);
-printf("remote dir: %s\n", job->remote_dir);
-printf("remote inp: %s\n", job->remote_input);
-printf("remote out: %s\n", job->remote_output);
+  printf("local dir: %s\n", job->local_dir);
+  printf("local inp: %s\n", job->local_input);
+  printf("local out: %s\n", job->local_output);
+  printf("remote dir: %s\n", job->remote_dir);
+  printf("remote inp: %s\n", job->remote_input);
+  printf("remote out: %s\n", job->remote_output);
 #endif
 
-host_file_write(host, job->local_input, job->remote_input);
+  host_file_write(host, job->local_input, job->remote_input);
 
-
-/* TODO - execute ... bg or queued ... on remote host */
-
-
+  /* TODO - execute ... bg or queued ... on remote host */
 }
 
 /***************************/
@@ -171,41 +167,39 @@ host_file_write(host, job->local_input, job->remote_input);
 /***************************/
 gint job_new(const gchar *name, struct model_pak *model)
 {
-gpointer host, service, job;
+  gpointer host, service, job;
 
-if (!sysenv.host_list)
+  if (!sysenv.host_list)
   {
-  printf("No active connections.\n");
-  return(FALSE);
+    printf("No active connections.\n");
+    return (FALSE);
   }
-host = sysenv.host_list->data;
+  host = sysenv.host_list->data;
 
-service = host_service_get(host, name);
-if (!service)
+  service = host_service_get(host, name);
+  if (!service)
   {
-  printf("Unknown service: %s.\n", name);
-  return(FALSE);
-  }
-
-if (!host_service_available(service))
-  {
-  printf("Service: %s not available on active host.\n", name);
-  return(FALSE);
+    printf("Unknown service: %s.\n", name);
+    return (FALSE);
   }
 
-printf("Requesting service: %s on host %s\n", name, host_name(host));
+  if (!host_service_available(service))
+  {
+    printf("Service: %s not available on active host.\n", name);
+    return (FALSE);
+  }
 
-job = job_setup(name, model);
+  printf("Requesting service: %s on host %s\n", name, host_name(host));
 
-/* TODO - put elsewhere (some sort of scheduler decides the host part?) */
-job_start(host, job);
+  job = job_setup(name, model);
 
+  /* TODO - put elsewhere (some sort of scheduler decides the host part?) */
+  job_start(host, job);
 
-/* TODO - this'll get placed in job cleanup when jobs are actually run */
-job_free(job);
+  /* TODO - this'll get placed in job cleanup when jobs are actually run */
+  job_free(job);
 
-
-return(TRUE);
+  return (TRUE);
 }
 
 /********************************/
@@ -213,29 +207,24 @@ return(TRUE);
 /********************************/
 void job_status_get(gpointer data)
 {
-struct job_pak *job = data;
+  struct job_pak *job = data;
 
-g_assert(job != NULL);
+  g_assert(job != NULL);
 
-/* TODO - more than one way of doing this ... eg could have qstat for queued jobs */
-/* etc ... scanning output is more portable ... but wont determine if a job has crashed */
+  /* TODO - more than one way of doing this ... eg could have qstat for queued jobs */
+  /* etc ... scanning output is more portable ... but wont determine if a job has crashed */
 
-/* could record the last time the output file had new stuff added ... */
+  /* could record the last time the output file had new stuff added ... */
 
-/* get output file */
-host_file_read(job->host, job->local_output, job->remote_output);
+  /* get output file */
+  host_file_read(job->host, job->local_output, job->remote_output);
 
-/* scan output */
-
-
+  /* scan output */
 }
 
 /************************************/
 /* eg use to kill/stop/restart jobs */
 /************************************/
-void job_status_set()
-{
-}
+void job_status_set() {}
 
 #endif
-

@@ -39,6 +39,4 @@ gint host_service_available(gpointer);
 gint host_service_flags(gpointer);
 gchar *host_service_fullpath(gpointer);
 
-enum {SERVICE_BACKGROUND, SERVICE_MPI, SERVICE_QSUB,
-      SERVICE_QSUB_MPI, SERVICE_PRIMARY, SERVICE_SECONDARY};
-
+enum { SERVICE_BACKGROUND, SERVICE_MPI, SERVICE_QSUB, SERVICE_QSUB_MPI, SERVICE_PRIMARY, SERVICE_SECONDARY };

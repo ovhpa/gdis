@@ -1,17 +1,17 @@
 /*
-	logging.h
+        logging.h
 
-	Message logging plugin and stat collector for webserver.
+        Message logging plugin and stat collector for webserver.
 
-	Register the plugin with:
-		soap_register_plugin(soap, logging);
+        Register the plugin with:
+                soap_register_plugin(soap, logging);
 
-	Change logging destinations:
-		soap_set_logging_inbound(struct soap*, FILE*);
-		soap_set_logging_outbound(struct soap*, FILE*);
+        Change logging destinations:
+                soap_set_logging_inbound(struct soap*, FILE*);
+                soap_set_logging_outbound(struct soap*, FILE*);
 
-	Obtain stats (sent and recv octet count):
-		soap_get_logging_stats(soap, size_t *sent, size_t *recv);
+        Obtain stats (sent and recv octet count):
+                soap_get_logging_stats(soap, size_t *sent, size_t *recv);
 
 gSOAP XML Web services tools
 Copyright (C) 2000-2008, Robert van Engelen, Genivia Inc., All Rights Reserved.
@@ -69,14 +69,13 @@ extern "C" {
 
 extern const char logging_id[];
 
-struct logging_data
-{
+struct logging_data {
   FILE *inbound;
   FILE *outbound;
   size_t stat_sent;
   size_t stat_recv;
-  int (*fsend)(struct soap*, const char*, size_t); /* to save and use send callback */
-  size_t (*frecv)(struct soap*, char*, size_t); /* to save and use recv callback */
+  int (*fsend)(struct soap *, const char *, size_t); /* to save and use send callback */
+  size_t (*frecv)(struct soap *, char *, size_t);    /* to save and use recv callback */
 };
 
 int logging(struct soap *soap, struct soap_plugin *plugin, void *arg);

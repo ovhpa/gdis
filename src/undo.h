@@ -25,4 +25,3 @@ void undo_free(struct model_pak *);
 void undo_register(struct model_pak *, gpointer, GSList *);
 void undo_single(struct model_pak *);
 void undo_active(void);
-

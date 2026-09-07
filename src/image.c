@@ -35,85 +35,55 @@ The GNU GPL can also be found at http://www.gnu.org
 #include "interface.h"
 #include "gui_image.h"
 
-
-#include "folder.xpm"
-#include "disk.xpm"
-#include "arrow.xpm"
-#include "axes.xpm"
-#include "tools.xpm"
-#include "palette.xpm"
-#include "cross.xpm"
-#include "geom.xpm"
-#include "cell.xpm"
-#include "camera.xpm"
-#include "element.xpm"
-#include "tb_animate.xpm"
-#include "tb_diffraction.xpm"
-#include "tb_isosurface.xpm"
-#include "tb_surface.xpm"
-#include "canvas_single.xpm"
-#include "canvas_create.xpm"
-#include "canvas_delete.xpm"
-
+// #include "folder.xpm"
+// #include "disk.xpm"
+// #include "arrow.xpm"
+// #include "axes.xpm"
+// #include "tools.xpm"
+// #include "palette.xpm"
+// #include "cross.xpm"
+// #include "geom.xpm"
+// #include "cell.xpm"
+// #include "camera.xpm"
+// #include "element.xpm"
+// #include "tb_animate.xpm"
+// #include "tb_diffraction.xpm"
+// #include "tb_isosurface.xpm"
+// #include "tb_surface.xpm"
+// #include "canvas_single.xpm"
+// #include "canvas_create.xpm"
+// #include "canvas_delete.xpm"
 /* NEW: include a button to create a new model */
-#include "plus.xpm"
+// #include "plus.xpm"
 /* NEW: include a control for plots and eps/png export tool -- OVHPA */
-#include "plots.xpm"
-#include "to_eps.xpm"
-#include "to_png.xpm"
+// #include "plots.xpm"
+// #include "to_eps.xpm"
+// #include "to_png.xpm"
 /* NEW: tracking system --OVHPA */
-#include "track.xpm"
+// #include "track.xpm"
 /* NEW: include buttons for aligning model */
-#include "xview.xpm"
-#include "yview.xpm"
-#include "zview.xpm"
-#include "aview.xpm"
-#include "bview.xpm"
-#include "cview.xpm"
-#include "rotate1.xpm"
-#include "rotate2.xpm"
-#include "rotate3.xpm"
-#include "select_all.xpm"
+// #include "xview.xpm"
+// #include "yview.xpm"
+// #include "zview.xpm"
+// #include "aview.xpm"
+// #include "bview.xpm"
+// #include "cview.xpm"
+// #include "rotate1.xpm"
+// #include "rotate2.xpm"
+// #include "rotate3.xpm"
+// #include "select_all.xpm"
 
 extern struct sysenv_pak sysenv;
-
-extern GtkWidget *window;
-
-/****************************************/
-/* write an image of the current canvas */
-/****************************************/
-void image_write(gpointer w)
-{
-GdkPixbuf *pixbuf;
-GError *error=NULL;
-
-pixbuf = gdk_pixbuf_get_from_drawable(NULL, w, NULL,
-                                      0, 0, 0, 0,
-                                      sysenv.width, sysenv.height);
-
-gdk_pixbuf_save(pixbuf, sysenv.snapshot_filename, "jpeg",
-                &error, "quality", "90", NULL);
-
-g_free(sysenv.snapshot_filename);
-sysenv.snapshot = FALSE;
-}
 
 /****************************************/
 /* callback to schedule a canvas export */
 /****************************************/
 void image_export(gchar *name)
 {
-g_assert(name != NULL);
+  g_assert(name != NULL);
 
-dialog_destroy_type(FILE_SELECT);
-
-/* FIXME - all GTK stuff (ie closing the file dialog/raising windows */
-/* to the foreground etc.) will be done only AFTER this routine ends */
-/* ie returns to the control of gtk_main_loop - so there is no way */
-/* of preventing the dialog from getting in the way */
-/* probably have to set a flag to do it after the next redraw_canvas() */
-sysenv.snapshot = TRUE;
-sysenv.snapshot_filename = g_build_filename(sysenv.cwd, name, NULL);
+  sysenv.snapshot = TRUE;
+  sysenv.snapshot_filename = g_build_filename(sysenv.cwd, name, NULL);
 }
 
 /*************************************************/
@@ -121,218 +91,29 @@ sysenv.snapshot_filename = g_build_filename(sysenv.cwd, name, NULL);
 /*************************************************/
 void image_import(const gchar *name)
 {
-gchar *picture;
-struct model_pak *model;
+  gchar *picture;
+  struct model_pak *model;
 
-/* checks */
-/* TODO - check file validity */
-g_assert(name != NULL);
+  /* checks */
+  /* TODO - check file validity */
+  g_assert(name != NULL);
 
-dialog_destroy_type(FILE_SELECT);
+  model = sysenv.active_model;
+  if (!model)
+    return;
 
-model = sysenv.active_model;
-if (!model)
-  return;
+  picture = g_strdup(name);
 
-picture = g_strdup(name);
+  model->picture_list = g_slist_append(model->picture_list, picture);
+  model->picture_active = picture;
+  model->graph_active = NULL;
 
-model->picture_list = g_slist_append(model->picture_list, picture);
-model->picture_active = picture;
-model->graph_active = NULL;
-
-/* updates */
-tree_model_add(model);
-redraw_canvas(SINGLE);
-}
-
-/***********************************/
-/* get a filename for image export */
-/***********************************/
-void image_export_dialog(void)
-{
-if (sysenv.active_model)
-  file_dialog("Export image", NULL, FILE_SAVE, 
-             (gpointer) image_export, PICTURE);
-}
-
-/*******************************************/
-/* get a file dialog for picture selection */
-/*******************************************/
-void image_import_dialog(void)
-{
-if (sysenv.active_model)
-  file_dialog("Import picture", NULL, FILE_LOAD, 
-             (gpointer) image_import, PICTURE);
+  /* updates */
+  tree_model_add(model);
+  redraw_canvas(SINGLE);
 }
 
 /**************************************/
 /* retrieve a standard image's pixbuf */
 /**************************************/
-gpointer image_table_lookup(const gchar *name)
-{
-return(g_hash_table_lookup(sysenv.image_table, name));
-}
-
-/*******************************************/
-/* set up the internal pixbuf lookup table */
-/*******************************************/
-void image_table_init(void)
-{
-gint i;
-gchar *name;
-GdkPixbuf *pixbuf;
-
-sysenv.image_table = g_hash_table_new(g_str_hash, g_str_equal);
-
-for (i=0 ; i<IMAGE_LAST ; i++)
-  {
-/* init the name and pixbuf data */
-  switch (i)
-    {
-    case IMAGE_ANIMATE:
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) tb_animate_xpm);
-      name = "image_animate";
-      break;
-    case IMAGE_ARROW:
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) arrow_xpm);
-      name = "image_arrow";
-      break;
-    case IMAGE_AXES:
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) axes_xpm);
-      name = "image_axes";
-      break;
-    case IMAGE_CANVAS_SINGLE:
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) canvas_single_xpm);
-      name = "image_canvas_single";
-      break;
-    case IMAGE_CANVAS_CREATE:
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) canvas_create_xpm);
-      name = "image_canvas_create";
-      break;
-    case IMAGE_CANVAS_DELETE:
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) canvas_delete_xpm);
-      name = "image_canvas_delete";
-      break;
-    case IMAGE_CAMERA:
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) camera_xpm);
-      name = "image_camera";
-      break;
-    case IMAGE_COMPASS:
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) geom_xpm);
-      name = "image_compass";
-      break;
-    case IMAGE_CROSS:
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) cross_xpm);
-      name = "image_cross";
-      break;
-    case IMAGE_DIFFRACTION:
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) tb_diffraction_xpm);
-      name = "image_diffraction";
-      break;
-    case IMAGE_DISK:
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) disk_xpm);
-      name = "image_disk";
-      break;
-    case IMAGE_ELEMENT:
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) element_xpm);
-      name = "image_element";
-      break;
-    case IMAGE_FOLDER:
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) folder_xpm);
-      name = "image_folder";
-      break;
-    case IMAGE_ISOSURFACE:
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) tb_isosurface_xpm);
-      name = "image_isosurface";
-      break;
-    case IMAGE_MEASURE:
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) geom_xpm);
-      name = "image_measure";
-      break;
-    case IMAGE_PERIODIC:
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) cell_xpm);
-      name = "image_periodic";
-      break;
-    case IMAGE_PALETTE:
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) palette_xpm);
-      name = "image_palette";
-      break;
-    case IMAGE_PLOTS:
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) plots_xpm);
-      name = "image_plots";
-      break;
-    case IMAGE_TO_EPS:
-if(sysenv.have_eps){
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) to_eps_xpm);
-}else{
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) to_png_xpm);
-}
-      name = "image_to_eps";
-      break;
-    case IMAGE_PLUS:
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) plus_xpm);
-      name = "image_plus";
-      break;    
-    case IMAGE_SELECT_ALL:
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) select_all_xpm);
-      name = "image_select_all";
-      break;
-    case IMAGE_SURFACE:
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) tb_surface_xpm);
-      name = "image_surface";
-      break;
-    case IMAGE_TOOLS:
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) tools_xpm);
-      name = "image_tools";
-      break;
-    case IMAGE_TRACK:
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) track_xpm);
-      name = "image_track";
-      break;
-    case IMAGE_XVIEW:
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) xview_xpm);
-      name = "image_xview";
-      break;
-    case IMAGE_YVIEW:
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) yview_xpm);
-      name = "image_yview";
-      break;
-    case IMAGE_ZVIEW:
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) zview_xpm);
-      name = "image_zview";
-      break;
-    case IMAGE_AVIEW:
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) aview_xpm);
-      name = "image_aview";
-      break;
-    case IMAGE_BVIEW:
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) bview_xpm);
-      name = "image_bview";
-      break;
-    case IMAGE_CVIEW:
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) cview_xpm);
-      name = "image_cview";
-      break;
-    case IMAGE_XROTATE:
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) rotate1_xpm);
-      name = "image_rotate1";
-      break;
-    case IMAGE_YROTATE:
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) rotate2_xpm);
-      name = "image_rotate2";
-      break;
-    case IMAGE_ZROTATE:
-      pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **) rotate3_xpm);
-      name = "image_rotate3";
-      break;
-    default:
-      pixbuf = NULL;
-      name = NULL;
-    }
-
-/* add the entry */
-  if (name && pixbuf)
-    g_hash_table_insert(sysenv.image_table, name, pixbuf);
-  }
-}
-
+gpointer image_table_lookup(const gchar *name) { return (g_hash_table_lookup(sysenv.image_table, name)); }

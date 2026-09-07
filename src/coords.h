@@ -19,174 +19,173 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 The GNU GPL can also be found at http://www.gnu.org
 */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*******************************/
 /* model sub-structure (atoms) */
 /*******************************/
-struct core_pak
-{
-/* identifiers */
-gint atom_code;
-guint atom_order;
-gchar *atom_label; /* NEW - replacement for label[] */
-gchar *atom_type;  /* NEW - FF type */
+struct core_pak {
+  /* identifiers */
+  gint atom_code;
+  guint atom_order;
+  gchar *atom_label; /* NEW - replacement for label[] */
+  gchar *atom_type;  /* NEW - FF type */
 
-/*VZ*/
-gdouble atom_nmr_shift;//isotropic shift
-gdouble atom_nmr_aniso;//CSA anisotropy
-gdouble atom_nmr_asym;//CSA assymetry
-gdouble atom_nmr_cq;//EFG Cq
-gdouble atom_nmr_efgasym;//EFG assymetry
+  /*VZ*/
+  gdouble atom_nmr_shift;   // isotropic shift
+  gdouble atom_nmr_aniso;   // CSA anisotropy
+  gdouble atom_nmr_asym;    // CSA assymetry
+  gdouble atom_nmr_cq;      // EFG Cq
+  gdouble atom_nmr_efgasym; // EFG assymetry
 
-/* TODO - data structure that contains res_name and res_no and each atom points to this */
-gchar *res_name;   /* NEW - residue name */
-gint res_no;       /* NEW - residue number */
-gchar chain;       /* NEW - chaincw name */
+  /* TODO - data structure that contains res_name and res_no and each atom points to this */
+  gchar *res_name; /* NEW - residue name */
+  gint res_no;     /* NEW - residue number */
+  gchar chain;     /* NEW - chaincw name */
 
-/* flags */
-gint status;
-gint primary;          /* one of the initial atoms? */
-gint orig;             /* original atom? (ie part of whole unit cell) */
-gint ghost;            /* QM ghost atom */
-gint breathe;
-gint growth;           /* growth slice */
-gint translate;        /* translation marker */
-gint render_mode;      /* render type */
-gint render_wire;      /* render as wire-frame */
+  /* flags */
+  gint status;
+  gint primary; /* one of the initial atoms? */
+  gint orig;    /* original atom? (ie part of whole unit cell) */
+  gint ghost;   /* QM ghost atom */
+  gint breathe;
+  gint growth;      /* growth slice */
+  gint translate;   /* translation marker */
+  gint render_mode; /* render type */
+  gint render_wire; /* render as wire-frame */
 
-/* connectivity data */
-gint molecule;
-GSList *bonds;
-struct shel_pak *shell;
-struct mol_pak *mol;
+  /* connectivity data */
+  gint molecule;
+  GSList *bonds;
+  struct shel_pak *shell;
+  struct mol_pak *mol;
 
-/* symmetry related core (if non primary) */
-struct core_pak *primary_core;
+  /* symmetry related core (if non primary) */
+  struct core_pak *primary_core;
 
-/* region type */
-gint region;
-/* coordinate data, fractional or cartesian (inhomogeneous) */
-gdouble x[4];
-/* rotated cartesian (inhomogeneous) */
-gdouble rx[4];
-/* velocities */
-gdouble v[3];
+  /* region type */
+  gint region;
+  /* coordinate data, fractional or cartesian (inhomogeneous) */
+  gdouble x[4];
+  /* rotated cartesian (inhomogeneous) */
+  gdouble rx[4];
+  /* velocities */
+  gdouble v[3];
 
-/* vibration vector lists */
-GSList *vibx_list;
-GSList *viby_list;
-GSList *vibz_list;
+  /* vibration vector lists */
+  GSList *vibx_list;
+  GSList *viby_list;
+  GSList *vibz_list;
 
-/* NEW: is a hydrogen capable of forming a h-bond
-   instead of connecting all hydrogens within a cut-off
-   distance to acceptor atoms, only connect them if this 
-   flag is true */
-gboolean hydrogen_bond;
+  /* NEW: is a hydrogen capable of forming a h-bond
+     instead of connecting all hydrogens within a cut-off
+     distance to acceptor atoms, only connect them if this
+     flag is true */
+  gboolean hydrogen_bond;
 
-/* bonding cutoff */
-gdouble bond_cutoff;
-/* site occupancy factor */
-gint has_sof;
-gdouble sof;
-/* breathing radius */
-gdouble radius;
-/* charge info */
-gint lookup_charge;
-gdouble charge;
-/* mass info */
-gint lookup_mass;
-gdouble mass;
-/* fitting flags */
-gchar *flags;
+  /* bonding cutoff */
+  gdouble bond_cutoff;
+  /* site occupancy factor */
+  gint has_sof;
+  gdouble sof;
+  /* breathing radius */
+  gdouble radius;
+  /* charge info */
+  gint lookup_charge;
+  gdouble charge;
+  /* mass info */
+  gint lookup_mass;
+  gdouble mass;
+  /* fitting flags */
+  gchar *flags;
 
-/* display data */
-gdouble colour[4];
-gdouble offset[3];
+  /* display data */
+  gdouble colour[4];
+  gdouble offset[3];
 };
 
 /********************************/
 /* model sub-structure (shells) */
 /********************************/
-struct shel_pak
-{
-/* identifiers */
-gchar *shell_label;
-/*
-gchar element[ELEM_LABEL_SIZE];
-*/
-/* flags */
-gint atom_code;    /* atom type of the shell */
-gint status;       /* normal, deleted, highlighted etc. */
-gint primary;      /* one of the initial atoms? */
-gint orig;         /* original atom? (ie part of whole unit cell) */
-gint breathe;
-gint translate;    /* translation marker */
-/* associated core (if any) */
-struct core_pak *core;
-/* symmetry related shell (if non primary) */
-struct shel_pak *primary_shell;
-/* breathing radius */
-gdouble radius;
-/* region type */
-gint region;
-/* coord data */
-gdouble x[4];
-gdouble rx[4];
-/* velocity */
-gdouble v[3];
-/* periodic image coordinate */
-gint pic[3];
-/* charge info */
-gint lookup_charge;
-gdouble charge;
-/* mass info */
-gint lookup_mass;
-gdouble mass;
-/* site occupancy factor */
-gint has_sof;
-gdouble sof;
-/* display data */
-gdouble colour[3];
-/* fitting flags */
-gchar *flags;
-/* offset (shell only, NOT global) */
-gdouble offset[3];
+struct shel_pak {
+  /* identifiers */
+  gchar *shell_label;
+  /*
+  gchar element[ELEM_LABEL_SIZE];
+  */
+  /* flags */
+  gint atom_code; /* atom type of the shell */
+  gint status;    /* normal, deleted, highlighted etc. */
+  gint primary;   /* one of the initial atoms? */
+  gint orig;      /* original atom? (ie part of whole unit cell) */
+  gint breathe;
+  gint translate; /* translation marker */
+  /* associated core (if any) */
+  struct core_pak *core;
+  /* symmetry related shell (if non primary) */
+  struct shel_pak *primary_shell;
+  /* breathing radius */
+  gdouble radius;
+  /* region type */
+  gint region;
+  /* coord data */
+  gdouble x[4];
+  gdouble rx[4];
+  /* velocity */
+  gdouble v[3];
+  /* periodic image coordinate */
+  gint pic[3];
+  /* charge info */
+  gint lookup_charge;
+  gdouble charge;
+  /* mass info */
+  gint lookup_mass;
+  gdouble mass;
+  /* site occupancy factor */
+  gint has_sof;
+  gdouble sof;
+  /* display data */
+  gdouble colour[3];
+  /* fitting flags */
+  gchar *flags;
+  /* offset (shell only, NOT global) */
+  gdouble offset[3];
 };
 
 /*******************************/
 /* model sub-structure (bonds) */
 /*******************************/
-struct bond_pak
-{
-/* deleted/normal/hidden */
-gint status;
-/* single/double etc. */
-gint type;
-/* relative (to atom1) fractional offset for bond midpoint */
-gdouble offset[3];
+struct bond_pak {
+  /* deleted/normal/hidden */
+  gint status;
+  /* single/double etc. */
+  gint type;
+  /* relative (to atom1) fractional offset for bond midpoint */
+  gdouble offset[3];
 
-/* constituent atom indices */
-struct core_pak *atom1;
-struct core_pak *atom2;
+  /* constituent atom indices */
+  struct core_pak *atom1;
+  struct core_pak *atom2;
 };
 
 /***********************************/
 /* model sub-structure (molecules) */
 /***********************************/
-struct mol_pak
-{
-GSList *cores;
-gdouble centroid[3];
+struct mol_pak {
+  GSList *cores;
+  gdouble centroid[3];
 };
 
 /****************************/
 /* periodic image structure */
 /****************************/
-struct image_pak
-{
-/* image coordinates */
-gint pic[3];
-/* cartesian coordinates */
-gdouble rx[3];
+struct image_pak {
+  /* image coordinates */
+  gint pic[3];
+  /* cartesian coordinates */
+  gdouble rx[3];
 };
 
 /**********************************/
@@ -240,11 +239,10 @@ GSList *dup_shell_list(GSList *);
 
 struct core_pak *copy_core(struct core_pak *, struct model_pak *, struct model_pak *);
 
-void delete_commit(struct model_pak *);
+/* delete_commit declared in edit.h */
 void delete_core(struct core_pak *);
 void delete_shell(struct shel_pak *);
 void delete_duplicate_cores(struct model_pak *);
-void add_atom(gint, gint, struct model_pak *);
 
 void elem_init(struct core_pak *, struct model_pak *);
 
@@ -286,8 +284,9 @@ void connect_make_bond(struct core_pak *, gint, struct model_pak *);
 void connect_merge_user(struct model_pak *);
 
 void connect_fragment_init(struct model_pak *);
-GSList *connect_fragment_get(struct core_pak *,
-                             struct core_pak *,
-                             struct model_pak *);
-GSList *connect_neighbours(struct core_pak *) ;
+GSList *connect_fragment_get(struct core_pak *, struct core_pak *, struct model_pak *);
+GSList *connect_neighbours(struct core_pak *);
 
+#ifdef __cplusplus
+}
+#endif

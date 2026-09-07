@@ -28,34 +28,25 @@ The GNU GPL can also be found at http://www.gnu.org
 /*****************************/
 /* matrix creation primitive */
 /*****************************/
-gpointer mesch_mat_new(gint i, gint j)
-{
-return(m_get(i,j));
-}
+gpointer mesch_mat_new(gint i, gint j) { return (m_get(i, j)); }
 
 /*****************************/
 /* vector creation primitive */
 /*****************************/
-gpointer mesch_vec_new(gint i)
-{
-return(v_get(i));
-}
+gpointer mesch_vec_new(gint i) { return (v_get(i)); }
 
 /********************************/
 /* matrix destruction primitive */
 /********************************/
-void mesch_m_free(gpointer data)
-{
-m_free(data);
-}
+void mesch_m_free(gpointer data) { m_free(data); }
 
 /**********************/
 /* element assignment */
 /**********************/
 void mesch_me_set(gpointer data, gint i, gint j, gdouble f)
 {
-MAT *mat = data;
-mat->me[i][j] = f;
+  MAT *mat = data;
+  mat->me[i][j] = f;
 }
 
 /********************/
@@ -63,8 +54,8 @@ mat->me[i][j] = f;
 /********************/
 void mesch_me_add(gpointer data, gint i, gint j, gdouble f)
 {
-MAT *mat = data;
-mat->me[i][j] += f;
+  MAT *mat = data;
+  mat->me[i][j] += f;
 }
 
 /**************************/
@@ -72,8 +63,8 @@ mat->me[i][j] += f;
 /**************************/
 void mesch_me_mul(gpointer data, gint i, gint j, gdouble f)
 {
-MAT *mat = data;
-mat->me[i][j] *= f;
+  MAT *mat = data;
+  mat->me[i][j] *= f;
 }
 
 /****************************/
@@ -81,8 +72,8 @@ mat->me[i][j] *= f;
 /****************************/
 gdouble mesch_me_get(gpointer data, gint i, gint j)
 {
-MAT *mat = data;
-return(mat->me[i][j]);
+  MAT *mat = data;
+  return (mat->me[i][j]);
 }
 
 /****************************/
@@ -90,8 +81,8 @@ return(mat->me[i][j]);
 /****************************/
 gdouble mesch_ve_get(gpointer data, gint i)
 {
-VEC *vec = data;
-return(vec->ve[i]);
+  VEC *vec = data;
+  return (vec->ve[i]);
 }
 
 /****************************/
@@ -99,8 +90,8 @@ return(vec->ve[i]);
 /****************************/
 void mesch_ve_set(gpointer data, gint i, gdouble value)
 {
-VEC *vec = data;
-vec->ve[i] = value;
+  VEC *vec = data;
+  vec->ve[i] = value;
 }
 
 /***********************/
@@ -108,8 +99,8 @@ vec->ve[i] = value;
 /***********************/
 gint mesch_rows_get(gpointer data)
 {
-MAT *mat = data;
-return(mat->m);
+  MAT *mat = data;
+  return (mat->m);
 }
 
 /***********************/
@@ -117,8 +108,8 @@ return(mat->m);
 /***********************/
 gint mesch_cols_get(gpointer data)
 {
-MAT *mat = data;
-return(mat->n);
+  MAT *mat = data;
+  return (mat->n);
 }
 
 /***********************/
@@ -126,8 +117,8 @@ return(mat->n);
 /***********************/
 gint mesch_dim_get(gpointer data)
 {
-VEC *vec = data;
-return(vec->dim);
+  VEC *vec = data;
+  return (vec->dim);
 }
 
 /*******************************/
@@ -135,12 +126,12 @@ return(vec->dim);
 /*******************************/
 void mesch_m_zero(gpointer data)
 {
-gint i, j;
-MAT *mat = data;
+  gint i, j;
+  MAT *mat = data;
 
-for (i=mat->m ; i-- ; )
-  for (j=mat->n ; j-- ; )
-     mat->me[i][j] = 0.0;
+  for (i = mat->m; i--;)
+    for (j = mat->n; j--;)
+      mat->me[i][j] = 0.0;
 }
 
 /*******************************/
@@ -148,17 +139,14 @@ for (i=mat->m ; i-- ; )
 /*******************************/
 void mesch_v_zero(gpointer data)
 {
-gint i, n;
+  gint i, n;
 
-n = mesch_dim_get(data);
-for (i=n ; i-- ; )
-   mesch_ve_set(data, i, 0.0);
+  n = mesch_dim_get(data);
+  for (i = n; i--;)
+    mesch_ve_set(data, i, 0.0);
 }
 
 /************************************************************/
 /* interface to eigenvalue calculation for symmetric matrix */
 /************************************************************/
-void mesch_sev_compute(gpointer m1, gpointer m2, gpointer v)
-{
-symmeig(m1, m2, v);
-}
+void mesch_sev_compute(gpointer m1, gpointer m2, gpointer v) { symmeig(m1, m2, v); }

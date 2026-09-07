@@ -24,30 +24,29 @@ The GNU GPL can also be found at http://www.gnu.org
 #define FF_MAX_SYMBOL 8
 #define FF_MAX_DATA 7
 
-struct forcefield_pak
-{
-/* FF type */
-gint type;
-/* atomic symbols */
-gchar atom[FF_MAX_ATOMS][FF_MAX_SYMBOL];
+struct forcefield_pak {
+  /* FF type */
+  gint type;
+  /* atomic symbols */
+  gchar atom[FF_MAX_ATOMS][FF_MAX_SYMBOL];
 
-/* units for forcefield parameters */
-gint bond_units;
-gint data_units;
+  /* units for forcefield parameters */
+  gint bond_units;
+  gint data_units;
 
-/* FF parameters */
-gdouble bond_value;
-gdouble data[FF_MAX_DATA];
+  /* FF parameters */
+  gdouble bond_value;
+  gdouble data[FF_MAX_DATA];
 
-/* internal parsing data */
-gint atoms_expected;
-gint atoms_current;
-gint data_expected;
-gint data_current;
-gint bond_expected;
+  /* internal parsing data */
+  gint atoms_expected;
+  gint atoms_current;
+  gint data_expected;
+  gint data_current;
+  gint bond_expected;
 
-/* indicates which of the data[] values should contain the bond length/angle (if any) */
-gint bond_index;
+  /* indicates which of the data[] values should contain the bond length/angle (if any) */
+  gint bond_index;
 };
 
 /* prototypes */
@@ -55,4 +54,3 @@ gint ff_match_code(struct forcefield_pak *, gint *, gint);
 gint ff_match_label(struct forcefield_pak *, gchar **, gint);
 
 void ff_swap_atoms(struct forcefield_pak *, gint, gint);
-

@@ -21,5 +21,4 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 The GNU GPL can also be found at http://www.gnu.org
 */
 
-enum {SVWN, BLYP, B3LYP};
-
+enum { SVWN, BLYP, B3LYP };

@@ -48,37 +48,35 @@ void grid_cleanup(void);
 void grid_free(gpointer);
 gpointer grid_new(void);
 
-enum {GRID_MYPROXY, GRID_LOCALPROXY, GRID_SHIBBOLETH};
-enum {GRID_SERIAL, GRID_MPI}; // other parallel types?
+enum { GRID_MYPROXY, GRID_LOCALPROXY, GRID_SHIBBOLETH };
+enum { GRID_SERIAL, GRID_MPI }; // other parallel types?
 
 /* stuff in a job xml file - can be filled out by querying the server */
-struct grid_pak
-{
-/* CURRENT - bit of a hack for MDS query/setup */
-gint jobcode;
-gchar *exename;
-gchar *exe_version;
+struct grid_pak {
+  /* CURRENT - bit of a hack for MDS query/setup */
+  gint jobcode;
+  gchar *exename;
+  gchar *exe_version;
 
-/* auth */
-gchar *user_vo;
+  /* auth */
+  gchar *user_vo;
 
-/* submission */
-gchar *jobname;
-gchar *remote_q;
-gchar *remote_root;
-gchar *remote_exe;
-gchar *remote_exe_module;
-gchar *remote_site;
+  /* submission */
+  gchar *jobname;
+  gchar *remote_q;
+  gchar *remote_root;
+  gchar *remote_exe;
+  gchar *remote_exe_module;
+  gchar *remote_site;
 
-/* processor specific */
-gint remote_exe_type;
-gint remote_exe_np;
+  /* processor specific */
+  gint remote_exe_type;
+  gint remote_exe_np;
 
-/* source/output destination for the job */
-gchar *local_cwd; // if NULL on download - ask user
-gchar *local_input;
-gchar *local_output;
+  /* source/output destination for the job */
+  gchar *local_cwd; // if NULL on download - ask user
+  gchar *local_input;
+  gchar *local_output;
 
-/* TODO - local_upload_list if multiple data files need to be sent eg basis */
+  /* TODO - local_upload_list if multiple data files need to be sent eg basis */
 };
-

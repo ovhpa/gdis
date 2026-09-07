@@ -31,34 +31,28 @@ The GNU GPL can also be found at http://www.gnu.org
 extern struct sysenv_pak sysenv;
 
 gint error_table_display = TRUE;
-GHashTable *error_table=NULL;
+GHashTable *error_table = NULL;
 
 #define MAX_ERROR_COUNT 1000
 
 /********************************/
 /* error table printing display */
 /********************************/
-void error_table_disable(void)
-{
-error_table_display = FALSE;
-}
+void error_table_disable(void) { error_table_display = FALSE; }
 
 /********************************/
 /* error table printing display */
 /********************************/
-void error_table_enable(void)
-{
-error_table_display = TRUE;
-}
+void error_table_enable(void) { error_table_display = TRUE; }
 
 /****************************************/
 /* remove all entries in the hash table */
 /****************************************/
 void error_table_clear(void)
 {
-if (error_table)
-  g_hash_table_destroy(error_table);
-error_table=g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+  if (error_table)
+    g_hash_table_destroy(error_table);
+  error_table = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 }
 
 /************************/
@@ -66,19 +60,19 @@ error_table=g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 /************************/
 void error_table_print(gpointer key, gpointer value, gpointer data)
 {
-gchar *msg, *text = key;
-gint *count = value;
+  gchar *msg, *text = key;
+  gint *count = value;
 
-/* TODO - strstr - if error -> gui_show_text ERROR/WARNING/etc */
+  /* TODO - strstr - if error -> gui_show_text ERROR/WARNING/etc */
 
-if (*count > MAX_ERROR_COUNT)
-  msg = g_strdup_printf("[count >%d] %s", MAX_ERROR_COUNT, text);
-else
-  msg = g_strdup_printf("[count %d] %s", *count, text);
+  if (*count > MAX_ERROR_COUNT)
+    msg = g_strdup_printf("[count >%d] %s", MAX_ERROR_COUNT, text);
+  else
+    msg = g_strdup_printf("[count %d] %s", *count, text);
 
-gui_text_show(ERROR,msg);
+  gui_text_show(ERROR, msg);
 
-g_free(msg);
+  g_free(msg);
 }
 
 /******************************************/
@@ -86,9 +80,9 @@ g_free(msg);
 /******************************************/
 void error_table_print_all(void)
 {
-/* allow display to be disabled (eg animations) */
-if (error_table_display)
-  g_hash_table_foreach(error_table, error_table_print, NULL);
+  /* allow display to be disabled (eg animations) */
+  if (error_table_display)
+    g_hash_table_foreach(error_table, error_table_print, NULL);
 }
 
 /**************************************/
@@ -96,14 +90,13 @@ if (error_table_display)
 /**************************************/
 void error_table_entry(const gchar *text)
 {
-gint *count;
+  gint *count;
 
-count = g_hash_table_lookup(error_table, text);
-if (!count)
+  count = g_hash_table_lookup(error_table, text);
+  if (!count)
   {
-  count = g_malloc0(sizeof(gint));
-  g_hash_table_insert(error_table, g_strdup(text), count);
+    count = g_malloc0(sizeof(gint));
+    g_hash_table_insert(error_table, g_strdup(text), count);
   }
-(*count)++;
+  (*count)++;
 }
-
