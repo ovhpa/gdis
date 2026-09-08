@@ -2958,6 +2958,25 @@ void render_mode_set(gpointer data)
   else
     core_render_mode_set(mode, model->cores);
 
+  /* When switching away from ZONE mode, any cores still in ZONE were set by
+   * render_mode_zone() (a global view). Restore them to the new mode so they
+   * are not left hidden. ZONE is the only render mode that is inherently global;
+   * all other modes (CPK, BALL_STICK, etc.) are per-atom and may be mixed. */
+  if (mode != ZONE)
+  {
+    GSList *list;
+    struct core_pak *core;
+    for (list = model->cores; list; list = g_slist_next(list))
+    {
+      core = list->data;
+      if (core->render_mode == ZONE)
+        core->render_mode = mode;
+    }
+  }
+
+  /* Changing render mode alters how atoms are drawn — clear old geometry
+   * so the new rendering doesn't superpose on top of the previous frame. */
+  model->need_clear = TRUE;
   redraw_canvas(SINGLE);
 }
 void render_wire_atoms(void)
@@ -2973,6 +2992,8 @@ void render_wire_atoms(void)
   else
     core_render_wire_set(TRUE, model->cores);
 
+  /* Toggling wire mode changes how atoms are drawn — clear old geometry */
+  model->need_clear = TRUE;
   redraw_canvas(SINGLE);
 }
 void render_solid_atoms(void)
@@ -2988,6 +3009,8 @@ void render_solid_atoms(void)
   else
     core_render_wire_set(FALSE, model->cores);
 
+  /* Toggling solid mode changes how atoms are drawn — clear old geometry */
+  model->need_clear = TRUE;
   redraw_canvas(SINGLE);
 }
 void render_mode_polyhedral(void)
@@ -3000,6 +3023,9 @@ void render_mode_polyhedral(void)
 
   create_polyhedra(model);
   coords_init(REDO_COORDS, model);
+
+  /* Polyhedral rendering adds new geometry — clear old frame */
+  model->need_clear = TRUE;
   redraw_canvas(SINGLE);
 }
 void render_mode_zone(void)
@@ -3019,6 +3045,11 @@ void render_mode_zone(void)
   zone_free(za);
 
   coords_init(REDO_COORDS, model);
+
+  /* Switching to zone mode hides all atoms and draws a zone grid instead.
+   * The old framebuffer contains stale atom geometry — force a clear so
+   * the new zone rendering doesn't superpose on top of the previous frame. */
+  model->need_clear = TRUE;
   redraw_canvas(SINGLE);
 }
 
